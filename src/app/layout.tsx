@@ -4,7 +4,6 @@ import { Toaster } from "@/components/ui/toaster"
 import { FirebaseClientProvider } from '@/firebase';
 import { FaviconManager } from '@/components/favicon-manager';
 import { Inter, Lora } from 'next/font/google';
-import { BackgroundPattern } from '@/components/landing/BackgroundPattern';
 
 const sans = Inter({
   subsets: ['latin'],
@@ -33,7 +32,6 @@ export default function RootLayout({
     <html lang="id" suppressHydrationWarning>
       <body className={`${sans.variable} ${display.variable} font-sans antialiased relative min-h-screen overflow-x-hidden`}>
         <FirebaseClientProvider>
-          <BackgroundPattern />
           <FaviconManager />
           {children}
           <Toaster />
