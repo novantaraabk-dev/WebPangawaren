@@ -1,0 +1,236 @@
+
+{
+  "entities": {
+    "Official": {
+      "title": "Official",
+      "type": "object",
+      "description": "Data pengurus desa (Perangkat, BPD, RT/RW).",
+      "properties": {
+        "name": { "type": "string" },
+        "position": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "category": { "type": "string", "enum": ["perangkat", "bpd", "rtrw"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "position", "category"]
+    },
+    "PelayananDoc": {
+      "title": "PelayananDoc",
+      "type": "object",
+      "description": "Dokumen informasi pelayanan desa (PDF).",
+      "properties": {
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "fileId": { "type": "string" },
+        "fileName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "category", "fileId"]
+    },
+    "Counter": {
+      "title": "Counter",
+      "description": "A generic counter document for sequential numbering.",
+      "type": "object",
+      "properties": {
+        "value": { "type": "number" }
+      },
+      "required": ["value"]
+    },
+    "KopSurat": {
+      "title": "KopSurat",
+      "type": "object",
+      "properties": {
+        "letterheadImageUrl": { "type": "string" }
+      },
+      "required": ["letterheadImageUrl"]
+    },
+    "DriveSettings": {
+      "title": "DriveSettings",
+      "type": "object",
+      "properties": {
+        "googleDriveLink": { "type": "string" },
+        "appsScriptUrl": { "type": "string" },
+        "rootFolderId": { "type": "string" }
+      }
+    },
+    "VillageLogo": {
+      "title": "VillageLogo",
+      "type": "object",
+      "properties": {
+        "logoImageUrl": { "type": "string" }
+      },
+      "required": ["logoImageUrl"]
+    },
+    "HeroImage": {
+      "title": "HeroImage",
+      "type": "object",
+      "properties": {
+        "imageUrl": { "type": "string" }
+      },
+      "required": ["imageUrl"]
+    },
+    "News": {
+      "title": "News",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "subtitle": { "type": "string" },
+        "content": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "date": { "type": "string" },
+        "author": { "type": "string" },
+        "isHeadline": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "content", "imageUrl", "date", "author"]
+    },
+    "Resident": {
+      "title": "Resident",
+      "type": "object",
+      "properties": {
+        "nik": { "type": "string" },
+        "noKk": { "type": "string" },
+        "fullName": { "type": "string" },
+        "gender": { "type": "string" },
+        "dateOfBirth": { "type": "string" },
+        "age": { "type": "string" },
+        "placeOfBirth": { "type": "string" },
+        "address": { "type": "string" },
+        "rt": { "type": "string" },
+        "rw": { "type": "string" },
+        "kelurahan": { "type": "string" },
+        "relationshipToHeadOfFamily": { "type": "string" },
+        "maritalStatus": { "type": "string" },
+        "educationLevel": { "type": "string" },
+        "religion": { "type": "string" },
+        "occupation": { "type": "string" },
+        "bloodType": { "type": "string" },
+        "hasBirthCertificate": { "type": "string" },
+        "birthCertificateNumber": { "type": "string" },
+        "hasMarriageCertificate": { "type": "string" },
+        "marriageCertificateNumber": { "type": "string" },
+        "hasDivorceCertificate": { "type": "string" },
+        "divorceCertificateNumber": { "type": "string" },
+        "fatherName": { "type": "string" },
+        "motherName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "CitizenProfile": {
+      "title": "CitizenProfile",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "phoneNumber": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Complaint": {
+      "title": "Complaint",
+      "type": "object",
+      "properties": {
+        "description": { "type": "string" },
+        "summaryLLM": { "type": "string" },
+        "sentiment": { "type": "string", "enum": ["positive", "neutral", "negative"] },
+        "keywords": { "type": "array", "items": { "type": "string" } },
+        "submitterAuthUid": { "type": "string" },
+        "adminResponse": { "type": "string" },
+        "status": { "type": "string" },
+        "submissionDate": { "type": "string", "format": "date-time" }
+      }
+    },
+    "LetterRequest": {
+      "title": "LetterRequest",
+      "type": "object",
+      "properties": {
+        "requesterName": { "type": "string" },
+        "nik": { "type": "string" },
+        "phoneNumber": { "type": "string" },
+        "email": { "type": "string" },
+        "letterType": { "type": "string" },
+        "status": { "type": "string" },
+        "submissionData": { "type": "string" },
+        "documentNumber": { "type": "string" },
+        "requestorAuthUid": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Announcement": {
+      "title": "Announcement",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "authorName": { "type": "string" },
+        "publishDate": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "auth": {
+    "providers": ["password", "anonymous"]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/officials/{officialId}",
+        "definition": {
+          "entityName": "Official",
+          "schema": { "$ref": "#/backend/entities/Official" },
+          "description": "Daftar pengurus pemerintahan desa."
+        }
+      },
+      {
+        "path": "/pelayananDocs/{docId}",
+        "definition": { "entityName": "PelayananDoc", "schema": { "$ref": "#/backend/entities/PelayananDoc" } }
+      },
+      {
+        "path": "/news/{newsId}",
+        "definition": { "entityName": "News", "schema": { "$ref": "#/backend/entities/News" } }
+      },
+      {
+        "path": "/counters/{counterId}",
+        "definition": { "entityName": "Counter", "schema": { "$ref": "#/backend/entities/Counter" } }
+      },
+      {
+        "path": "/kopSurat/{settingId}",
+        "definition": { "entityName": "KopSurat", "schema": { "$ref": "#/backend/entities/KopSurat" } }
+      },
+      {
+        "path": "/driveSettings/{settingId}",
+        "definition": { "entityName": "DriveSettings", "schema": { "$ref": "#/backend/entities/DriveSettings" } }
+      },
+      {
+        "path": "/villageLogo/{logoId}",
+        "definition": { "entityName": "VillageLogo", "schema": { "$ref": "#/backend/entities/VillageLogo" } }
+      },
+      {
+        "path": "/heroImage/{heroId}",
+        "definition": { "entityName": "HeroImage", "schema": { "$ref": "#/backend/entities/HeroImage" } }
+      },
+      {
+        "path": "/citizens/{userId}",
+        "definition": { "entityName": "CitizenProfile", "schema": { "$ref": "#/backend/entities/CitizenProfile" } }
+      },
+      {
+        "path": "/residents/{nik}",
+        "definition": { "entityName": "Resident", "schema": { "$ref": "#/backend/entities/Resident" } }
+      },
+      {
+        "path": "/complaints/{complaintId}",
+        "definition": { "entityName": "Complaint", "schema": { "$ref": "#/backend/entities/Complaint" } }
+      },
+      {
+        "path": "/letterRequests/{requestId}",
+        "definition": { "entityName": "LetterRequest", "schema": { "$ref": "#/backend/entities/LetterRequest" } }
+      },
+      {
+        "path": "/announcements/{announcementId}",
+        "definition": { "entityName": "Announcement", "schema": { "$ref": "#/backend/entities/Announcement" } }
+      }
+    ]
+  }
+}

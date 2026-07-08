@@ -1,0 +1,125 @@
+'use client';
+
+import Link from 'next/link';
+import { Facebook, Instagram, Youtube, Mail, MapPin, Phone, Clock3 } from 'lucide-react';
+import { Logo } from '@/components/logo';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { FooterLogosInfo } from '@/lib/types';
+import Image from 'next/image';
+import { useMemo } from 'react';
+
+export function Footer() {
+  const firestore = useFirestore();
+
+  const footerLogosRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return doc(firestore, 'footerLogos', 'default');
+  }, [firestore]);
+
+  const { data: footerLogosData } = useDoc<FooterLogosInfo>(footerLogosRef);
+
+  const activeLogo = useMemo(() => {
+    if (!footerLogosData) return [];
+    return [
+      {
+        url: footerLogosData.logo1Url,
+        link: footerLogosData.logo1Link,
+      },
+      {
+        url: footerLogosData.logo2Url,
+        link: footerLogosData.logo2Link,
+      },
+      {
+        url: footerLogosData.logo3Url,
+        link: footerLogosData.logo3Link,
+      },
+      {
+        url: footerLogosData.logo4Url,
+        link: footerLogosData.logo4Link,
+      },
+    ].filter(logo => logo.url);
+  }, [footerLogosData]);
+
+  return (
+    <footer className="border-t border-slate-200 bg-slate-950 text-slate-300">
+      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="grid gap-10 lg:grid-cols-4">
+          <div className="space-y-5">
+            <Logo />
+            <p className="max-w-sm text-sm leading-7 text-slate-400">
+              Portal resmi layanan masyarakat Desa Pangawaren yang menghubungkan warga dengan informasi, administrasi, dan pelayanan publik secara digital.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-[0.25em] text-white">Tentang</h3>
+            <ul className="mt-5 space-y-3 text-sm text-slate-400">
+              <li><Link href="/profil-desa" className="transition-colors hover:text-white">Profil Desa</Link></li>
+              <li><Link href="/pelayanan-desa" className="transition-colors hover:text-white">Pelayanan Desa</Link></li>
+              <li><Link href="/statistik" className="transition-colors hover:text-white">Statistik</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-[0.25em] text-white">Kontak</h3>
+            <ul className="mt-5 space-y-4 text-sm text-slate-400">
+              <li className="flex gap-3"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" /><span>Desa Pangawaren, Kecamatan Karangpucung, Cilacap</span></li>
+              <li className="flex gap-3"><Phone className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" /><span>0851-1131-8412</span></li>
+              <li className="flex gap-3"><Mail className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" /><span>pemdespangawaren@gmail.com</span></li>
+              <li className="flex gap-3"><Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" /><span>Senin - Jumat, 08.00 - 16.00 WIB</span></li>
+            </ul>
+          </div>
+
+          <div className="flex flex-col items-start gap-4 lg:items-end lg:text-right">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.25em] text-white">Media Sosial</h3>
+            <div className="flex gap-3">
+              <Link href="#" className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-300 transition-colors hover:border-emerald-400 hover:text-white" aria-label="Facebook Desa Pangawaren">
+                <Facebook className="h-4 w-4" />
+              </Link>
+              <Link href="#" className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-300 transition-colors hover:border-emerald-400 hover:text-white" aria-label="Instagram Desa Pangawaren">
+                <Instagram className="h-4 w-4" />
+              </Link>
+              <Link href="#" className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-300 transition-colors hover:border-emerald-400 hover:text-white" aria-label="YouTube Desa Pangawaren">
+                <Youtube className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-12 border-t border-white/10 pt-6 flex flex-col-reverse gap-6 md:flex-row md:items-center md:justify-between">
+          <div className="text-center text-sm text-slate-500 md:text-left">
+            © 2026 Pemerintah Desa Pangawaren. Semua hak cipta dilindungi.
+          </div>
+          {activeLogo.length > 0 && (
+            <div className="flex flex-wrap items-center justify-center gap-6 md:justify-end">
+              {activeLogo.map((logo, idx) => (
+                <div key={idx} className="flex h-20 w-auto items-center justify-center">
+                  {logo.link ? (
+                    <a href={logo.link} target="_blank" rel="noopener noreferrer" className="flex h-full items-center justify-center">
+                      <Image
+                        src={logo.url!}
+                        alt={`Logo ${idx + 1}`}
+                        width={80}
+                        height={80}
+                        className="h-16 w-auto object-contain"
+                      />
+                    </a>
+                  ) : (
+                    <Image
+                      src={logo.url!}
+                      alt={`Logo ${idx + 1}`}
+                      width={80}
+                      height={80}
+                      className="h-16 w-auto object-contain"
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </footer>
+  );
+}

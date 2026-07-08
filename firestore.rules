@@ -1,0 +1,130 @@
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- HELPER FUNCTIONS ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return true;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function isResourceOwner(fieldName) {
+      return isSignedIn() && resource.data[fieldName] == request.auth.uid;
+    }
+
+    function isRequestOwner(fieldName) {
+      return isSignedIn() && request.resource.data[fieldName] == request.auth.uid;
+    }
+
+    // --- PUBLIC COLLECTIONS ---
+    match /officials/{id} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /pelayananDocs/{id} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /villageProfile/{id} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /news/{id} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /announcements/{id} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /villageLogo/{id} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /kopSurat/{id} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /heroImage/{id} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /driveSettings/{id} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /apbdes/{id} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /realisasiApbdes/{id} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /produkHukumDesa/{id} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /footerLogos/{id} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // --- PUBLIC / STATISTICAL DATA ---
+    match /residents/{nik} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // --- PRIVATE COLLECTIONS ---
+    match /complaints/{id} {
+      allow create: if true;
+      allow get, list: if isAdmin() || isResourceOwner('submitterAuthUid');
+      allow update, delete: if isAdmin();
+    }
+
+    match /letterRequests/{id} {
+      allow create: if isSignedIn() && isRequestOwner('requestorAuthUid');
+      allow get: if isAdmin() || isResourceOwner('requestorAuthUid');
+      allow list: if isAdmin() || isResourceOwner('requestorAuthUid');
+      allow update, delete: if isAdmin() || isResourceOwner('requestorAuthUid');
+    }
+
+    match /citizens/{uid} {
+      allow create: if isSignedIn() && request.auth.uid == uid;
+      allow get, update, delete: if isOwner(uid);
+    }
+
+    match /counters/{id} {
+      // NOTE: Current app uses server-side tooling with client SDK credentials.
+      // This remains permissive for compatibility, but should be migrated to
+      // Admin SDK or authenticated service account if possible.
+      allow get, list, create, update, delete: if true;
+    }
+
+    // --- DENY BY DEFAULT ---
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
