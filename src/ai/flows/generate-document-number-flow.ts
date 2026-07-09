@@ -3,8 +3,8 @@
  * @fileOverview A Genkit flow for generating a formatted document number from a manual input.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'zod';
+import { ai } from '@/ai/genkit';
+import { z } from 'zod';
 
 const GenerateDocumentNumberInputSchema = z.object({
   manualNumber: z.number().positive('Nomor surat harus angka positif.'),
@@ -16,7 +16,7 @@ export type GenerateDocumentNumberOutput = z.infer<typeof GenerateDocumentNumber
 
 // Helper function to convert month to Roman numeral
 function toRoman(num: number): string {
-  const roman = {M: 1000, CM: 900, D: 500, CD: 400, C: 100, XC: 90, L: 50, XL: 40, X: 10, IX: 9, V: 5, IV: 4, I: 1};
+  const roman = { M: 1000, CM: 900, D: 500, CD: 400, C: 100, XC: 90, L: 50, XL: 40, X: 10, IX: 9, V: 5, IV: 4, I: 1 };
   let str = '';
   for (const i of Object.keys(roman)) {
     const q = Math.floor(num / roman[i as keyof typeof roman]);
@@ -48,7 +48,7 @@ const generateDocumentNumberFlow = ai.defineFlow(
     const now = new Date();
     const monthInRoman = toRoman(now.getMonth() + 1);
     const year = now.getFullYear();
-    const villageCode = '06';
+    const villageCode = '02';
 
     const formattedNumber = `${String(newNumber).padStart(3, '0')}/${monthInRoman}/${villageCode}/${year}`;
 

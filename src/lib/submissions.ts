@@ -14,6 +14,7 @@ import {
   limit,
   DocumentReference,
 } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 import { LetterSubmission, UploadedFile, DriveSettingsInfo } from './types';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -178,6 +179,7 @@ export const addSubmission = async (
   }
 
   // Step 2: Save submission metadata to Firestore
+  const auth = getAuth();
   const docToSave = {
     ...formData,
     ...restOfData,
@@ -185,7 +187,7 @@ export const addSubmission = async (
     status: 'pending',
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
-    requestorAuthUid: requestorAuthUid || 'anonymous', 
+    requestorAuthUid: requestorAuthUid || auth.currentUser?.uid || 'anonymous', 
   };
 
   try {

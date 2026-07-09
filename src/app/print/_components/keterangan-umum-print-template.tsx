@@ -4,25 +4,25 @@ import { PrintLayout, DataRow, formatTTL } from './print-layout';
 
 export function KeteranganUmumPrintTemplate({ submission }: { submission: LetterSubmission }) {
   const { formData } = submission;
-  
+
   return (
     <PrintLayout submission={submission}>
       <p className="mt-8 text-justify leading-relaxed">
         Yang bertanda tangan di bawah ini Kepala Desa Pangawaren, Kecamatan
-        Pangawaren, Kabupaten Cilacap, menerangkan dengan sebenarnya bahwa:
+        Karangpucung, Kabupaten Cilacap, menerangkan dengan sebenarnya bahwa:
       </p>
 
       <table className="mt-4 border-collapse w-full">
         <tbody>
-            <DataRow label="Nama Lengkap" value={formData.name} />
-            <DataRow label="NIK" value={formData.nik} />
-            <DataRow label="Jenis Kelamin" value={formData.gender} />
-            <DataRow label="Tempat / Tgl Lahir" value={formatTTL(formData.birthPlace, formData.birthDate)} />
-            <DataRow label="Pekerjaan" value={formData.job} />
-            <DataRow label="Alamat" value={formData.address} />
+          <DataRow label="Nama Lengkap" value={formData.name} />
+          <DataRow label="NIK" value={formData.nik} />
+          <DataRow label="Jenis Kelamin" value={formData.gender} />
+          <DataRow label="Tempat / Tgl Lahir" value={formatTTL(formData.birthPlace, formData.birthDate)} />
+          <DataRow label="Pekerjaan" value={formData.job} />
+          <DataRow label="Alamat" value={formData.address} />
         </tbody>
       </table>
-      
+
       <p className="mt-8 text-justify leading-relaxed">
         Berdasarkan catatan yang ada di kantor kami, nama tersebut di atas adalah benar-benar warga Desa Pangawaren, Kecamatan Karangpucung, Kabupaten Cilacap.
       </p>
@@ -30,7 +30,7 @@ export function KeteranganUmumPrintTemplate({ submission }: { submission: Letter
       <p className="mt-4 text-justify leading-relaxed">
         Surat keterangan ini diberikan kepada yang bersangkutan untuk dipergunakan sebagaimana mestinya, yaitu untuk keperluan : <strong>{formData.purpose}</strong>.
       </p>
-      
+
       <p className="mt-6 text-justify leading-relaxed">
         Demikian surat keterangan ini dibuat dengan sebenarnya untuk dapat dipergunakan sebagaimana mestinya.
       </p>

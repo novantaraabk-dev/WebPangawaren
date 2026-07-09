@@ -14,28 +14,28 @@ export function IjinKeramaianPrintTemplate({ submission }: { submission: LetterS
       <div className="flex justify-between text-center items-start text-sm">
         <div className="w-1/3">
           <p className="font-bold">CAMAT</p>
-          <p>Pangawaren</p>
+          <p>Karangpucung</p>
           <div className="h-20"></div>
           <p>__________________________</p>
         </div>
         <div className="w-1/3">
           <p className="font-bold">DAN RAMIL 10</p>
-          <p>Pangawaren</p>
+          <p>Karangpucung</p>
           <div className="h-20"></div>
           <p>__________________________</p>
         </div>
         <div className="w-1/3">
           <p className="font-bold">KAPOLSEK</p>
-          <p>Pangawaren</p>
+          <p>Karangpucung</p>
           <div className="h-20"></div>
           <p>__________________________</p>
         </div>
       </div>
     </div>
   );
-  
+
   return (
-    <PrintLayout 
+    <PrintLayout
       submission={submission}
       additionalFooter={additionalFooter}
     >
@@ -45,11 +45,11 @@ export function IjinKeramaianPrintTemplate({ submission }: { submission: LetterS
 
       <table className="mt-4 border-collapse w-full">
         <tbody>
-            <DataRow label="Nama" value={formData.name} />
-            <DataRow label="NIK" value={formData.nik} />
-            <DataRow label="Tempat / Tgl Lahir" value={formatTTL(formData.birthPlace, formData.birthDate)} />
-            <DataRow label="Pekerjaan" value={formData.job} />
-            <DataRow label="Alamat" value={formData.address} />
+          <DataRow label="Nama" value={formData.name} />
+          <DataRow label="NIK" value={formData.nik} />
+          <DataRow label="Tempat / Tgl Lahir" value={formatTTL(formData.birthPlace, formData.birthDate)} />
+          <DataRow label="Pekerjaan" value={formData.job} />
+          <DataRow label="Alamat" value={formData.address} />
         </tbody>
       </table>
 
@@ -61,17 +61,17 @@ export function IjinKeramaianPrintTemplate({ submission }: { submission: LetterS
         Adapun Surat keterangan ini untuk dipergunakan sebagai persyaratan ijin keramaian pada:
       </p>
 
-       <table className="mt-4 border-collapse w-full">
+      <table className="mt-4 border-collapse w-full">
         <tbody>
-            <DataRow label="Tanggal Acara" value={formatFullDate(formData.eventDate)} />
-            <DataRow label="Sampai dengan Tanggal" value={formatFullDate(formData.eventEndDate)} />
-            <DataRow label="Jumlah Undangan" value={formData.guestCount} />
-            <DataRow label="Acara" value={formData.eventName} />
-            <DataRow label="Hiburan" value={formData.eventEntertainment} />
-            <DataRow label="Tempat" value={formData.eventLocation} />
+          <DataRow label="Tanggal Acara" value={formatFullDate(formData.eventDate)} />
+          <DataRow label="Sampai dengan Tanggal" value={formatFullDate(formData.eventEndDate)} />
+          <DataRow label="Jumlah Undangan" value={formData.guestCount} />
+          <DataRow label="Acara" value={formData.eventName} />
+          <DataRow label="Hiburan" value={formData.eventEntertainment} />
+          <DataRow label="Tempat" value={formData.eventLocation} />
         </tbody>
       </table>
-      
+
       <p className="mt-6 text-justify leading-relaxed">
         Demikian surat keterangan ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya.
       </p>

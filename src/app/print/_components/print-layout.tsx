@@ -64,9 +64,22 @@ const parseDateInput = (dateInput: any): Date | null => {
   return null;
 };
 
+export const toProperCase = (str: string): string => {
+  if (!str) return '';
+  let cleaned = str.replace(/`/g, '');
+  
+  return cleaned.replace(/\b[a-zA-Z]+\b/g, (word) => {
+    const upperWord = word.toUpperCase();
+    if (['RT', 'RW', 'WNI', 'KK', 'NIK', 'HP', 'WA', 'BPJS', 'SKCK', 'SKTM', 'KUR', 'UMKM'].includes(upperWord)) {
+      return upperWord;
+    }
+    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+  });
+};
+
 export const formatTTL = (place: string, dateInput: any) => {
   const dateObj = parseDateInput(dateInput);
-  const city = place ? place.toUpperCase() : '';
+  const city = place ? toProperCase(place) : '';
 
   if (!dateObj) return city || '-';
 
@@ -336,7 +349,20 @@ export function PrintLayout({
 }
 
 export const DataRow = ({ label, value }: { label: string; value: any }) => {
-  const displayValue = value || '-';
+  let displayValue = value || '-';
+  if (typeof displayValue === 'string') {
+    const lowerLabel = label.toLowerCase();
+    if (
+      lowerLabel.includes('nama') || 
+      lowerLabel.includes('alamat') || 
+      lowerLabel.includes('tempat') || 
+      lowerLabel.includes('tgl lahir') || 
+      lowerLabel.includes('tanggal lahir') ||
+      lowerLabel.includes('pekerjaan')
+    ) {
+      displayValue = toProperCase(displayValue);
+    }
+  }
   return (
     <tr>
       <td className="w-[30%] py-1 align-top">{label}</td>
