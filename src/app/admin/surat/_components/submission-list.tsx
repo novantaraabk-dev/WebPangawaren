@@ -73,7 +73,7 @@ export function SubmissionList() {
     if (!isAdmin) {
       return firestoreQuery(
         getLetterRequestsQuery(firestore),
-        where('requestorAuthUid', '==', user.uid)
+        where('requestorAuthUid', '==', (user as any).uid)
       );
     }
 

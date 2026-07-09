@@ -269,9 +269,9 @@ export default function AdminDesaAntiKorupsi() {
     const base64Data = await convertFileToBase64(file);
     const payload = {
       rootFolderId: targetFolderId,
-      folderName: "DESA ANTI KORUPSI",
-      letterType: "Anti Korupsi",
-      requesterName: "ADMIN",
+      folderName: "",
+      letterType: "",
+      requesterName: "",
       files: [{
         base64Data,
         mimeType: file.type,

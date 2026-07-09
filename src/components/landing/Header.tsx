@@ -26,22 +26,28 @@ const primaryLinks = [
   { href: '/profil-desa', label: 'Profil Desa' },
   { href: '/statistik', label: 'Statistik' },
   { href: '/BeritaDesa', label: 'Berita Desa' },
-  { href: '/layanan-surat', label: 'Layanan' },
-  { href: '/desa-anti-korupsi', label: 'Desa Anti Korupsi' },
 ];
 
 const moreLinks = [
+  { href: '/layanan-surat', label: 'Layanan Surat' },
   { href: '/tata-kelola-desa', label: 'Tata Kelola Desa' },
   { href: '/pengumuman', label: 'Pengumuman' },
   { href: '/pengaduan', label: 'Pengaduan Warga' },
   { href: '/nomor-penting', label: 'Nomor Penting' },
 ];
 
-const allNavLinks = [...primaryLinks, ...moreLinks];
+const potensiSubLinks = [
+  { href: '/potensi-desa?tab=pariwisata-kebudayaan', label: 'Pariwisata & Kebudayaan' },
+  { href: '/potensi-desa?tab=umkm-industri', label: 'UMKM & Industri Kreatif' },
+  { href: '/potensi-desa?tab=bumdes', label: 'BUMDes Pangawaren' },
+  { href: '/potensi-desa?tab=pertanian-perkebunan', label: 'Pertanian & Perkebunan' },
+  { href: '/potensi-desa?tab=sda-lingkungan', label: 'Sumber Daya Alam & Lingkungan' }
+];
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isScrollable, setIsScrollable] = useState(false);
+  const [mobilePotensiOpen, setMobilePotensiOpen] = useState(false);
 
   useEffect(() => {
     const checkScrollable = () => {
@@ -89,7 +95,7 @@ export function Header() {
       )}
     >
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/" className={cn('transition-colors', isScrolled ? 'text-slate-900' : 'text-white')} aria-label="Beranda Portal Desa Pangawaren">
+        <Link href="/" className={cn('transition-colors', isScrolled ? 'text-slate-900' : 'text-white')} aria-label="Beranda Portal Portal Desa Pangawaren">
           <Logo />
         </Link>
 
@@ -110,6 +116,43 @@ export function Header() {
               )} />
             </Link>
           ))}
+
+          {/* Dropdown "Potensi Desa" */}
+          <DropdownMenu>
+            <DropdownMenuTrigger className={cn(
+              'group relative flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.16em] transition-colors duration-300 whitespace-nowrap outline-none',
+              isScrolled ? 'text-slate-600 hover:text-emerald-700' : 'text-white/90 hover:text-white'
+            )}>
+              <span>Potensi Desa</span>
+              <ChevronDown className="h-3 w-3 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+              <span className={cn(
+                'absolute bottom-[-0.4rem] left-0 h-0.5 w-full origin-left scale-x-0 rounded-full transition-transform duration-300 group-hover:scale-x-100',
+                isScrolled ? 'bg-emerald-600' : 'bg-white'
+              )} />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center" className="mt-3 w-60 rounded-xl border border-slate-100 bg-white/95 backdrop-blur-xl p-2 shadow-xl shadow-slate-200/50">
+              {potensiSubLinks.map((link) => (
+                <DropdownMenuItem key={link.href} asChild className="rounded-lg px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-600 transition-colors hover:text-emerald-700 hover:bg-emerald-50 cursor-pointer">
+                  <Link href={link.href}>{link.label}</Link>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Desa Anti Korupsi Link */}
+          <Link
+            href="/desa-anti-korupsi"
+            className={cn(
+              'group relative text-[10px] font-semibold uppercase tracking-[0.16em] transition-colors duration-300 whitespace-nowrap',
+              isScrolled ? 'text-slate-600 hover:text-emerald-700' : 'text-white/90 hover:text-white'
+            )}
+          >
+            <span>Desa Anti Korupsi</span>
+            <span className={cn(
+              'absolute bottom-[-0.4rem] left-0 h-0.5 w-full origin-left scale-x-0 rounded-full transition-transform duration-300 group-hover:scale-x-100',
+              isScrolled ? 'bg-emerald-600' : 'bg-white'
+            )} />
+          </Link>
 
           {/* Dropdown "Lainnya" */}
           <DropdownMenu>
@@ -169,7 +212,42 @@ export function Header() {
                   <Logo />
                 </Link>
                 <div className="space-y-3">
-                  {allNavLinks.map((link) => (
+                  {primaryLinks.map((link) => (
+                    <Link key={link.href} href={link.href} className="block rounded-2xl border border-white/10 px-4 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white/80 transition-colors hover:bg-white/10 hover:text-white">
+                      {link.label}
+                    </Link>
+                  ))}
+                  
+                  {/* Collapsible Potensi Desa on Mobile */}
+                  <div className="rounded-2xl border border-white/10 overflow-hidden">
+                    <button
+                      onClick={() => setMobilePotensiOpen(!mobilePotensiOpen)}
+                      className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+                    >
+                      <span>Potensi Desa</span>
+                      <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", mobilePotensiOpen && "rotate-180")} />
+                    </button>
+                    {mobilePotensiOpen && (
+                      <div className="bg-white/5 border-t border-white/5 p-2 space-y-1">
+                        {potensiSubLinks.map((link) => (
+                          <Link
+                            key={link.href}
+                            href={link.href}
+                            className="block rounded-xl px-4 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-white/60 hover:bg-white/10 hover:text-white transition-colors"
+                          >
+                            {link.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Desa Anti Korupsi on Mobile */}
+                  <Link href="/desa-anti-korupsi" className="block rounded-2xl border border-white/10 px-4 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white/80 transition-colors hover:bg-white/10 hover:text-white">
+                    Desa Anti Korupsi
+                  </Link>
+
+                  {moreLinks.map((link) => (
                     <Link key={link.href} href={link.href} className="block rounded-2xl border border-white/10 px-4 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white/80 transition-colors hover:bg-white/10 hover:text-white">
                       {link.label}
                     </Link>

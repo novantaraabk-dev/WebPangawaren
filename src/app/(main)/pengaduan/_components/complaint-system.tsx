@@ -48,7 +48,7 @@ export function ComplaintSystem() {
   const { toast } = useToast();
   const { firestore, user } = useFirebase();
 
-  const isAdmin = user?.email === 'pangawaren@gmail.id';
+  const isAdmin = !!user;
 
   useEffect(() => {
     if (user && firestore) {
@@ -63,7 +63,7 @@ export function ComplaintSystem() {
     if (!isAdmin) {
       return query(
         baseQuery, 
-        where('submitterAuthUid', '==', user.uid),
+        where('submitterAuthUid', '==', (user as any).uid),
         limit(100)
       );
     }

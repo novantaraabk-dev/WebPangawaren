@@ -3,6 +3,7 @@
 import React from 'react';
 import { Header } from '@/components/landing/Header';
 import { HeroSection } from '@/components/landing/HeroSection';
+import { SambutanSection } from '@/components/landing/SambutanSection';
 import { ServicesSection } from '@/components/landing/ServicesSection';
 import { StatisticsSection } from '@/components/landing/StatisticsSection';
 import { AboutSection } from '@/components/landing/AboutSection';
@@ -20,6 +21,7 @@ export default function LandingPage() {
       <Header />
       <main className="relative">
         <HeroSection />
+        <SambutanSection />
         <ServicesSection />
         <NewsSection />
         <ComplaintSection />

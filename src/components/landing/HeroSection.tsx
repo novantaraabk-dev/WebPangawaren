@@ -9,12 +9,12 @@ import { ArrowRight, BarChart3, Building2, CheckCircle2, ChevronDown, FileText, 
 import { Button } from '@/components/ui/button';
 
 const floatingItems = [
-  { icon: FileText, label: 'Ajukan Surat' },
-  { icon: BarChart3, label: 'Cek Status Permohonan' },
-  { icon: Users, label: 'Statistik Desa' },
-  { icon: Newspaper, label: 'Berita Desa' },
-  { icon: Building2, label: 'Pengumuman' },
-  { icon: Sparkles, label: 'Layanan Online' },
+  { icon: FileText, label: 'Ajukan Surat', href: '/layanan-surat' },
+  { icon: BarChart3, label: 'Cek Status Permohonan', href: '/layanan-surat' },
+  { icon: Users, label: 'Statistik Desa', href: '/statistik' },
+  { icon: Newspaper, label: 'Berita Desa', href: '/BeritaDesa' },
+  { icon: Building2, label: 'Pengumuman', href: '/pengumuman' },
+  { icon: Sparkles, label: 'Layanan Online', href: '/pelayanan-desa' },
 ];
 
 const containerVariants = {
@@ -25,7 +25,7 @@ const containerVariants = {
       staggerChildren: 0.08,
     },
   },
-};
+} as const;
 
 const itemVariants = {
   hidden: { opacity: 0, y: 16 },
@@ -34,7 +34,7 @@ const itemVariants = {
     y: 0,
     transition: { duration: 0.5, ease: 'easeOut' },
   },
-};
+} as const;
 
 export function HeroSection() {
   const firestore = useFirestore();
@@ -128,19 +128,20 @@ export function HeroSection() {
                   {floatingItems.map((item, index) => {
                     const Icon = item.icon;
                     return (
-                      <motion.div
-                        key={item.label}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 + index * 0.04, duration: 0.35 }}
-                        whileHover={{ scale: 1.03, y: -3, backgroundColor: 'rgba(255,255,255,0.14)', borderColor: 'rgba(255,255,255,0.2)' }}
-                        className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/10 p-3 text-sm text-slate-200 cursor-pointer transition-colors duration-200"
-                      >
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/12 text-emerald-300">
-                          <Icon className="h-4 w-4" />
-                        </div>
-                        <span className="font-medium">{item.label}</span>
-                      </motion.div>
+                      <Link key={item.label} href={item.href} className="block">
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.3 + index * 0.04, duration: 0.35 }}
+                          whileHover={{ scale: 1.03, y: -3, backgroundColor: 'rgba(255,255,255,0.14)', borderColor: 'rgba(255,255,255,0.2)' }}
+                          className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/10 p-3 text-sm text-slate-200 cursor-pointer transition-colors duration-200 h-full"
+                        >
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/12 text-emerald-300">
+                            <Icon className="h-4 w-4" />
+                          </div>
+                          <span className="font-medium">{item.label}</span>
+                        </motion.div>
+                      </Link>
                     );
                   })}
                 </div>

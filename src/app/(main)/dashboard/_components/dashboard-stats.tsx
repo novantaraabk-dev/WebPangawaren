@@ -33,7 +33,7 @@ export function DashboardStats() {
     if (!isAdmin) {
       return query(
         baseQuery, 
-        where('requestorAuthUid', '==', user.uid),
+        where('requestorAuthUid', '==', (user as any).uid),
         limit(100)
       );
     }

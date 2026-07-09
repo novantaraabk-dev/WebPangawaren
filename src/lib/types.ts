@@ -201,3 +201,15 @@ export type FooterLogosInfo = {
   logo3Link?: string;
   logo4Link?: string;
 };
+
+export type PotensiDesa = {
+  id: string;
+  category: 'pariwisata-kebudayaan' | 'umkm-industri' | 'bumdes' | 'pertanian-perkebunan' | 'sda-lingkungan';
+  title: string;
+  subtitle: string;
+  narrative: string;
+  imageUrls: string[];
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
+};
+

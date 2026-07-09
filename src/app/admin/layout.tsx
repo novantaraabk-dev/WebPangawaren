@@ -38,6 +38,7 @@ import {
   BookOpen,
   BarChart3,
   ShieldCheck,
+  Landmark,
 } from 'lucide-react';
 
 import Link from 'next/link';
@@ -59,6 +60,7 @@ const adminNavItems = [
   { href: '/admin/pemerintahan', icon: Building2, label: 'Pemerintahan Desa' },
   { href: '/admin/tata-kelola-desa', icon: BarChart3, label: 'Tata Kelola Desa' },
   { href: '/admin/desa-anti-korupsi', icon: ShieldCheck, label: 'Desa Anti Korupsi' },
+  { href: '/admin/potensi-desa', icon: Landmark, label: 'Potensi Desa' },
   { href: '/admin/pengaduan', icon: MessageSquare, label: 'Jawab Pengaduan' },
   { href: '/admin/pengumuman', icon: Megaphone, label: 'Kelola Pengumuman' },
   { href: '/admin/settings', icon: Settings, label: 'Pengaturan' },
@@ -88,10 +90,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { auth, user } = useFirebase();
   
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isSuratOpen, setIsSuratOpen] = useState(pathname.startsWith('/admin/surat'));
   const [isBeritaOpen, setIsBeritaOpen] = useState(pathname.startsWith('/admin/berita'));
 
   useEffect(() => {
+    if (isLoggingOut) return;
     const adminFlag = localStorage.getItem('isAdmin');
     if (adminFlag === 'true' && user) {
       setIsAdmin(true);
@@ -101,15 +105,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       setIsAdmin(false);
       router.replace('/login');
     }
-  }, [router, user]);
+  }, [router, user, isLoggingOut]);
 
   const handleLogout = async () => {
+    setIsLoggingOut(true);
     try {
       localStorage.removeItem('isAdmin');
       if (auth) await signOut(auth);
-      router.replace('/');
+      window.location.href = '/';
     } catch (error) {
       console.error('Gagal logout:', error);
+      setIsLoggingOut(false);
     }
   };
 
@@ -273,16 +279,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         <SidebarFooter className="p-8">
           <div className="bg-white/5 rounded-3xl p-5 border border-white/10 space-y-4">
-            <SidebarMenuItem className="list-none">
-              <SidebarMenuButton
-                onClick={() => router.push('/dashboard')}
-                className="w-full justify-center bg-white/10 text-white rounded-2xl hover:bg-white/20 transition-all font-bold"
-              >
-                <LayoutDashboard className="h-4 w-4 mr-2" />
-                <span>Portal Publik</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-
             <SidebarMenuItem className="list-none">
               <SidebarMenuButton
                 onClick={handleLogout}

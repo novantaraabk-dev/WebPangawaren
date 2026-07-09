@@ -75,15 +75,20 @@ export function Footer() {
           <div className="flex flex-col items-start gap-4 lg:items-end lg:text-right">
             <h3 className="text-sm font-semibold uppercase tracking-[0.25em] text-white">Media Sosial</h3>
             <div className="flex gap-3">
-              <Link href="#" className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-300 transition-colors hover:border-emerald-400 hover:text-white" aria-label="Facebook Desa Pangawaren">
+              <a href="#" target="_blank" rel="noopener noreferrer" className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-300 transition-colors hover:border-emerald-400 hover:text-white" aria-label="Facebook Desa Pangawaren">
                 <Facebook className="h-4 w-4" />
-              </Link>
-              <Link href="#" className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-300 transition-colors hover:border-emerald-400 hover:text-white" aria-label="Instagram Desa Pangawaren">
+              </a>
+              <a href="https://www.instagram.com/pemdespangawaren/" target="_blank" rel="noopener noreferrer" className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-300 transition-colors hover:border-emerald-400 hover:text-white" aria-label="Instagram Desa Pangawaren">
                 <Instagram className="h-4 w-4" />
-              </Link>
-              <Link href="#" className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-300 transition-colors hover:border-emerald-400 hover:text-white" aria-label="YouTube Desa Pangawaren">
+              </a>
+              <a href="https://www.tiktok.com/@pemdes.pangawaren" target="_blank" rel="noopener noreferrer" className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-300 transition-colors hover:border-emerald-400 hover:text-white" aria-label="TikTok Desa Pangawaren">
+                <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.02 1.59 4.23.82.94 1.93 1.63 3.16 2.01v3.74c-1.39-.02-2.77-.42-3.95-1.16-.72-.45-1.36-1.02-1.87-1.7v7.66c0 1.25-.26 2.47-.79 3.6-1.06 2.22-3.15 3.8-5.6 4.21-1.35.23-2.74.15-4.05-.24-2.26-.67-4.14-2.31-5.11-4.47-.6-1.34-.84-2.82-.7-4.29.28-2.9 2.06-5.46 4.81-6.42 1.27-.45 2.64-.5 3.94-.16v3.83c-.8-.28-1.68-.28-2.47.01-1.33.49-2.28 1.77-2.39 3.18-.12 1.63.89 3.16 2.46 3.51.68.15 1.39.11 2.05-.12.98-.35 1.72-1.19 1.92-2.2.06-.31.08-.63.08-.94V0h.02z"/>
+                </svg>
+              </a>
+              <a href="#" target="_blank" rel="noopener noreferrer" className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-300 transition-colors hover:border-emerald-400 hover:text-white" aria-label="YouTube Desa Pangawaren">
                 <Youtube className="h-4 w-4" />
-              </Link>
+              </a>
             </div>
           </div>
         </div>
