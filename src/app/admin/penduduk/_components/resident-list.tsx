@@ -35,14 +35,14 @@ import {
 } from 'lucide-react';
 import { Resident } from '@/lib/types';
 import { useFirestore } from '@/firebase';
-import { 
-  collection, 
-  query, 
-  deleteDoc, 
-  doc, 
-  getDocs, 
-  where, 
-  limit, 
+import {
+  collection,
+  query,
+  deleteDoc,
+  doc,
+  getDocs,
+  where,
+  limit,
   getCountFromServer,
   getDoc,
   writeBatch
@@ -65,7 +65,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { seedResidents, recalculateStatistics } from '@/lib/residents';
 
-export function ResidentList() { console.log('ResidentList render');
+export function ResidentList() {
+  console.log('ResidentList render');
   const [searchTerm, setSearchTerm] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
@@ -73,12 +74,12 @@ export function ResidentList() { console.log('ResidentList render');
   const [isDeletingAll, setIsDeletingAll] = useState(false);
   const [isSeeding, setIsSeeding] = useState(false);
   const [isRecalculating, setIsRecalculating] = useState(false);
-  
+
   const [residents, setResidents] = useState<Resident[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [totalCount, setTotalCount] = useState<number | null>(null);
-  
+
   const firestore = useFirestore();
   const { toast } = useToast();
 
@@ -98,26 +99,26 @@ export function ResidentList() { console.log('ResidentList render');
   const handleSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!firestore) return;
-    
+
     const term = searchTerm.trim();
     if (!term) return;
 
     setIsSearching(true);
     setHasSearched(true);
-    
+
     try {
       const residentsCol = collection(firestore, 'residents');
-      
+
       if (/^\d{16}$/.test(term)) {
         const docRef = doc(firestore, 'residents', term);
         const docSnap = await getDoc(docRef);
-        
+
         if (docSnap.exists()) {
           setResidents([{ id: docSnap.id, ...docSnap.data() } as Resident]);
           setIsSearching(false);
           return;
         }
-        
+
         const qNik = query(residentsCol, where('nik', '==', term), limit(1));
         const snapNik = await getDocs(qNik);
         if (!snapNik.empty) {
@@ -131,8 +132,8 @@ export function ResidentList() { console.log('ResidentList render');
 
       const nameTerm = term.toUpperCase();
       const qName = query(
-        residentsCol, 
-        where('fullName', '>=', nameTerm), 
+        residentsCol,
+        where('fullName', '>=', nameTerm),
         where('fullName', '<=', nameTerm + '\uf8ff'),
         limit(20)
       );
@@ -142,9 +143,9 @@ export function ResidentList() { console.log('ResidentList render');
       querySnapshot.forEach((doc) => {
         results.push({ id: doc.id, ...doc.data() } as Resident);
       });
-      
+
       setResidents(results);
-      
+
       if (results.length === 0) {
         toast({
           title: "Tidak Ditemukan",
@@ -169,10 +170,10 @@ export function ResidentList() { console.log('ResidentList render');
       await deleteDoc(doc(firestore, 'residents', id));
       setResidents(residents.filter(r => r.id !== id));
       if (totalCount !== null) setTotalCount(totalCount - 1);
-      
+
       // Update demographic cache
       await recalculateStatistics(firestore);
-      
+
       toast({ title: "Data Dihapus", description: "Data warga telah dihapus." });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Gagal Menghapus", description: error.message });
@@ -182,11 +183,11 @@ export function ResidentList() { console.log('ResidentList render');
   const handleDeleteAll = async () => {
     if (!firestore) return;
     setIsDeletingAll(true);
-    
+
     try {
       const residentsCol = collection(firestore, 'residents');
       const snapshot = await getDocs(residentsCol);
-      
+
       if (snapshot.empty) {
         toast({ title: "Database Kosong", description: "Tidak ada data yang bisa dihapus." });
         setIsDeletingAll(false);
@@ -294,8 +295,8 @@ export function ResidentList() { console.log('ResidentList render');
 
       <div className="flex flex-col gap-4">
         <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800 flex items-start gap-2">
-            <AlertCircle className="h-5 w-5 shrink-0" />
-            <p>Sistem dioptimalkan untuk mencari berdasarkan <strong>NIK 16 digit</strong> atau <strong>Nama Depan</strong>. Database tidak dimuat semua sekaligus demi kecepatan dan penghematan kuota.</p>
+          <AlertCircle className="h-5 w-5 shrink-0" />
+          <p>Sistem dioptimalkan untuk mencari berdasarkan <strong>NIK 16 digit</strong> atau <strong>Nama Depan</strong>. Database tidak dimuat semua sekaligus demi kecepatan dan penghematan kuota.</p>
         </div>
 
         <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
@@ -314,7 +315,7 @@ export function ResidentList() { console.log('ResidentList render');
             Cari
           </Button>
         </form>
-        
+
         <div className="flex flex-wrap justify-between gap-4">
           <div className="flex gap-2">
             <AlertDialog>
@@ -343,12 +344,12 @@ export function ResidentList() { console.log('ResidentList render');
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-            
+
             <Button variant="outline" size="sm" onClick={handleSeedData} disabled={isSeeding}>
               {isSeeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Database className="mr-2 h-4 w-4" />}
               Generate Data Testing
             </Button>
-            
+
             <Button variant="outline" size="sm" onClick={handleRecalculate} disabled={isRecalculating} className="border-emerald-600 text-emerald-700 hover:bg-emerald-50">
               {isRecalculating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <BarChart3 className="mr-2 h-4 w-4" />}
               Update Statistik Grafik
@@ -401,7 +402,7 @@ export function ResidentList() { console.log('ResidentList render');
                     <TableCell className="text-[10px] font-semibold">{resident.relationshipToHeadOfFamily || '-'}</TableCell>
                     <TableCell className="text-[10px] min-w-[300px]">
                       <p className="leading-tight truncate">
-                        {`${resident.address}, RT ${resident.rt} RW ${resident.rw}, ${resident.kelurahan}, KEC. KARANGPUCUNG, KAB. CILACAP`}
+                        {`${resident.address}, RT ${resident.rt} RW ${resident.rw}, ${resident.kelurahan}Kec. Karangpucung, Kab. Cilacap`}
                       </p>
                     </TableCell>
                     <TableCell className="text-right">

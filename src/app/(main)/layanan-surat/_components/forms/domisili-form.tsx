@@ -69,10 +69,10 @@ function GoogleFileUploader({ label, onFileSelect, fieldName, isRequired, disabl
           fileName && "border-emerald-200 bg-emerald-50/30",
           disabled && "opacity-50 cursor-not-allowed"
         )}>
-          <input 
-            type="file" 
-            onChange={handleFileChange} 
-            disabled={disabled || !!fileName} 
+          <input
+            type="file"
+            onChange={handleFileChange}
+            disabled={disabled || !!fileName}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-10"
             accept="image/jpeg,image/png,application/pdf"
           />
@@ -87,7 +87,7 @@ function GoogleFileUploader({ label, onFileSelect, fieldName, isRequired, disabl
             ) : (
               <>
                 <div className="p-2 bg-white rounded-full shadow-sm">
-                   <UploadCloud className="h-6 w-6 text-slate-400 group-hover:text-primary transition-colors" />
+                  <UploadCloud className="h-6 w-6 text-slate-400 group-hover:text-primary transition-colors" />
                 </div>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] group-hover:text-slate-600 transition-colors">
                   Pilih Berkas
@@ -147,7 +147,7 @@ export function DomisiliForm({ isAdmin = false }: { isAdmin?: boolean }) {
       nationality: 'WNI',
       religion: '',
       originAddress: '',
-      domicileAddress: 'Desa Pangawaren, KEC. KARANGPUCUNG, KAB. CILACAP',
+      domicileAddress: 'Desa PangawarenKec. Karangpucung, Kab. Cilacap',
     },
   });
 
@@ -165,7 +165,7 @@ export function DomisiliForm({ isAdmin = false }: { isAdmin?: boolean }) {
             form.setValue('birthPlace', resident.placeOfBirth);
             form.setValue('birthDate', formatDbDateToForm(resident.dateOfBirth));
             form.setValue('religion', resident.religion);
-            const fullAddress = `${resident.address}, RT ${resident.rt} RW ${resident.rw}, ${resident.kelurahan}, KEC. KARANGPUCUNG, KAB. CILACAP`.toUpperCase();
+            const fullAddress = `${resident.address}, RT ${resident.rt} RW ${resident.rw}, ${resident.kelurahan}Kec. Karangpucung, Kab. Cilacap`.toUpperCase();
             form.setValue('originAddress', fullAddress);
             toast({ title: "Data Ditemukan" });
           }

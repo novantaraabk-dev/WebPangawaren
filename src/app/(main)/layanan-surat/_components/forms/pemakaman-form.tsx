@@ -49,9 +49,9 @@ function GoogleFileUploader({ label, onUploadSuccess, fieldName, isRequired }: G
     setIsUploading(true);
     setFileName(file.name);
 
-    await new Promise(resolve => setTimeout(resolve, 1500)); 
+    await new Promise(resolve => setTimeout(resolve, 1500));
     const mockFileId = `mock_gdrive_${Date.now()}`;
-    
+
     toast({ title: `Unggah ${label} Berhasil`, description: `File ${file.name} telah diunggah.` });
     onUploadSuccess({ fieldName, fileId: mockFileId, fileName: file.name });
     setIsUploading(false);
@@ -66,8 +66,8 @@ function GoogleFileUploader({ label, onUploadSuccess, fieldName, isRequired }: G
         <div className="relative">
           <Input type="file" onChange={handleFileChange} disabled={isUploading || !!fileName} className="pr-10" />
           <div className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4">
-            {isUploading ? <Loader2 className="animate-spin text-primary" /> : 
-             fileName ? <FileCheck className="text-green-600" /> : <Paperclip className="text-muted-foreground"/>}
+            {isUploading ? <Loader2 className="animate-spin text-primary" /> :
+              fileName ? <FileCheck className="text-green-600" /> : <Paperclip className="text-muted-foreground" />}
           </div>
         </div>
       </FormControl>
@@ -80,8 +80,8 @@ function GoogleFileUploader({ label, onUploadSuccess, fieldName, isRequired }: G
 const FormSection = ({ title, icon: Icon, children }: { title: string; icon?: any; children: React.ReactNode }) => (
   <div className="space-y-6 rounded-md border p-4 md:p-6 bg-white shadow-sm">
     <div className="flex items-center gap-2 border-b pb-2">
-      
-{Icon && <Icon className="h-5 w-5 text-primary" />}
+
+      {Icon && <Icon className="h-5 w-5 text-primary" />}
       <h3 className="text-lg font-semibold">{title}</h3>
     </div>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">{children}</div>
@@ -99,7 +99,7 @@ const formSchema = z.object({
   job: z.string().min(1, 'Pekerjaan wajib diisi.'),
   nationality: z.string().min(1, 'Kewarganegaraan wajib diisi.'),
   address: z.string().min(1, 'Alamat wajib diisi.'),
-  
+
   deathDate: z.date({ required_error: 'Tanggal kematian wajib diisi.' }),
   deathTime: z.string().min(1, 'Jam kematian wajib diisi.'),
   deathLocation: z.string().min(1, 'Tempat kematian wajib diisi.'),
@@ -113,27 +113,27 @@ export function PemakamanForm({ isAdmin = false }: { isAdmin?: boolean }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [fileLinks, setFileLinks] = useState<UploadedFile[]>([]);
-  
+
   const { firestore } = useFirebase();
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-        nik: '',
-        name: '',
-        birthPlace: '',
-        birthDate: '',
-        religion: '',
-        gender: '',
-        maritalStatus: '',
-        job: '',
-        nationality: 'WNI',
-        address: '',
-        deathTime: '09.00 WIB',
-        deathLocation: '',
-        deathCause: '',
-        burialLocation: '',
+      nik: '',
+      name: '',
+      birthPlace: '',
+      birthDate: '',
+      religion: '',
+      gender: '',
+      maritalStatus: '',
+      job: '',
+      nationality: 'WNI',
+      address: '',
+      deathTime: '09.00 WIB',
+      deathLocation: '',
+      deathCause: '',
+      burialLocation: '',
     },
   });
 
@@ -153,10 +153,10 @@ export function PemakamanForm({ isAdmin = false }: { isAdmin?: boolean }) {
             form.setValue('religion', resident.religion);
             form.setValue('job', resident.occupation);
             form.setValue('maritalStatus', resident.maritalStatus);
-            
-            const fullAddress = `${resident.address}, RT ${resident.rt} RW ${resident.rw}, ${resident.kelurahan}, KEC. KARANGPUCUNG, KAB. CILACAP`.toUpperCase();
+
+            const fullAddress = `${resident.address}, RT ${resident.rt} RW ${resident.rw}, ${resident.kelurahan}Kec. Karangpucung, Kab. Cilacap`.toUpperCase();
             form.setValue('address', fullAddress);
-            
+
             toast({ title: "Data Almarhum Ditemukan", description: "Data identitas telah diisi otomatis." });
           }
         } catch (error: any) {
@@ -182,12 +182,12 @@ export function PemakamanForm({ isAdmin = false }: { isAdmin?: boolean }) {
 
     if (!isAdmin) {
       if (!fileLinks.some(f => f.fieldName === 'ktp')) {
-          toast({ title: "Berkas Belum Lengkap", description: "Mohon unggah KTP Almarhum.", variant: "destructive" });
-          return;
+        toast({ title: "Berkas Belum Lengkap", description: "Mohon unggah KTP Almarhum.", variant: "destructive" });
+        return;
       }
       if (!fileLinks.some(f => f.fieldName === 'kk')) {
-          toast({ title: "Berkas Belum Lengkap", description: "Mohon unggah Kartu Keluarga.", variant: "destructive" });
-          return;
+        toast({ title: "Berkas Belum Lengkap", description: "Mohon unggah Kartu Keluarga.", variant: "destructive" });
+        return;
       }
     }
 
@@ -244,7 +244,7 @@ export function PemakamanForm({ isAdmin = false }: { isAdmin?: boolean }) {
               <FormMessage />
             </FormItem>
           )} />
-          
+
           <FormField control={form.control} name="name" render={({ field }) => (
             <FormItem>
               <FormLabel>Nama Lengkap</FormLabel>
@@ -252,7 +252,7 @@ export function PemakamanForm({ isAdmin = false }: { isAdmin?: boolean }) {
               <FormMessage />
             </FormItem>
           )} />
-          
+
           <FormField control={form.control} name="gender" render={({ field }) => (
             <FormItem>
               <FormLabel>Jenis Kelamin</FormLabel>
@@ -260,7 +260,7 @@ export function PemakamanForm({ isAdmin = false }: { isAdmin?: boolean }) {
               <FormMessage />
             </FormItem>
           )} />
-          
+
           <div className="grid grid-cols-2 gap-4">
             <FormField control={form.control} name="birthPlace" render={({ field }) => (
               <FormItem>
@@ -277,7 +277,7 @@ export function PemakamanForm({ isAdmin = false }: { isAdmin?: boolean }) {
               </FormItem>
             )} />
           </div>
-          
+
           <FormField control={form.control} name="religion" render={({ field }) => (
             <FormItem>
               <FormLabel>Agama</FormLabel>
@@ -285,7 +285,7 @@ export function PemakamanForm({ isAdmin = false }: { isAdmin?: boolean }) {
               <FormMessage />
             </FormItem>
           )} />
-          
+
           <FormField control={form.control} name="maritalStatus" render={({ field }) => (
             <FormItem>
               <FormLabel>Status Perkawinan</FormLabel>
@@ -293,7 +293,7 @@ export function PemakamanForm({ isAdmin = false }: { isAdmin?: boolean }) {
               <FormMessage />
             </FormItem>
           )} />
-          
+
           <FormField control={form.control} name="nationality" render={({ field }) => (
             <FormItem>
               <FormLabel>Kewarganegaraan</FormLabel>
@@ -301,7 +301,7 @@ export function PemakamanForm({ isAdmin = false }: { isAdmin?: boolean }) {
               <FormMessage />
             </FormItem>
           )} />
-          
+
           <FormField control={form.control} name="job" render={({ field }) => (
             <FormItem>
               <FormLabel>Pekerjaan</FormLabel>
@@ -309,7 +309,7 @@ export function PemakamanForm({ isAdmin = false }: { isAdmin?: boolean }) {
               <FormMessage />
             </FormItem>
           )} />
-          
+
           <FormField control={form.control} name="address" render={({ field }) => (
             <FormItem className="md:col-span-2">
               <FormLabel>Alamat Lengkap</FormLabel>
@@ -339,7 +339,7 @@ export function PemakamanForm({ isAdmin = false }: { isAdmin?: boolean }) {
               <FormMessage />
             </FormItem>
           )} />
-          
+
           <FormField control={form.control} name="deathTime" render={({ field }) => (
             <FormItem>
               <FormLabel>Jam Kematian</FormLabel>
@@ -347,7 +347,7 @@ export function PemakamanForm({ isAdmin = false }: { isAdmin?: boolean }) {
               <FormMessage />
             </FormItem>
           )} />
-          
+
           <FormField control={form.control} name="deathLocation" render={({ field }) => (
             <FormItem>
               <FormLabel>Tempat Kematian</FormLabel>
@@ -355,7 +355,7 @@ export function PemakamanForm({ isAdmin = false }: { isAdmin?: boolean }) {
               <FormMessage />
             </FormItem>
           )} />
-          
+
           <FormField control={form.control} name="deathCause" render={({ field }) => (
             <FormItem>
               <FormLabel>Sebab Kematian</FormLabel>
@@ -363,7 +363,7 @@ export function PemakamanForm({ isAdmin = false }: { isAdmin?: boolean }) {
               <FormMessage />
             </FormItem>
           )} />
-          
+
           <FormField control={form.control} name="burialLocation" render={({ field }) => (
             <FormItem className="md:col-span-2">
               <FormLabel>Dimakamkan di (Lokasi Pemakaman)</FormLabel>
@@ -375,10 +375,10 @@ export function PemakamanForm({ isAdmin = false }: { isAdmin?: boolean }) {
         </FormSection>
 
         <FormSection title="Unggah Berkas">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
-                <GoogleFileUploader label="KTP Almarhum" fieldName="ktp" onUploadSuccess={handleUploadSuccess} isRequired={!isAdmin} />
-                <GoogleFileUploader label="Kartu Keluarga" fieldName="kk" onUploadSuccess={handleUploadSuccess} isRequired={!isAdmin} />
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+            <GoogleFileUploader label="KTP Almarhum" fieldName="ktp" onUploadSuccess={handleUploadSuccess} isRequired={!isAdmin} />
+            <GoogleFileUploader label="Kartu Keluarga" fieldName="kk" onUploadSuccess={handleUploadSuccess} isRequired={!isAdmin} />
+          </div>
         </FormSection>
 
         <Button type="submit" size="lg" disabled={isSubmitting} className="w-full">

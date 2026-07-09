@@ -72,10 +72,10 @@ function GoogleFileUploader({ label, onFileSelect, fieldName, isRequired, disabl
           fileName && "border-emerald-200 bg-emerald-50/30",
           disabled && "opacity-50 cursor-not-allowed"
         )}>
-          <input 
-            type="file" 
-            onChange={handleFileChange} 
-            disabled={disabled || !!fileName} 
+          <input
+            type="file"
+            onChange={handleFileChange}
+            disabled={disabled || !!fileName}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-10"
             accept="image/jpeg,image/png,application/pdf"
           />
@@ -90,7 +90,7 @@ function GoogleFileUploader({ label, onFileSelect, fieldName, isRequired, disabl
             ) : (
               <>
                 <div className="p-2 bg-white rounded-full shadow-sm">
-                   <UploadCloud className="h-6 w-6 text-slate-400 group-hover:text-primary transition-colors" />
+                  <UploadCloud className="h-6 w-6 text-slate-400 group-hover:text-primary transition-colors" />
                 </div>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] group-hover:text-slate-600 transition-colors">
                   Pilih Berkas
@@ -106,14 +106,14 @@ function GoogleFileUploader({ label, onFileSelect, fieldName, isRequired, disabl
 }
 
 const FormSection = ({ title, icon: Icon, children, className }: { title: string; icon: React.ElementType; children: React.ReactNode; className?: string }) => (
-    <div className={cn("space-y-6 rounded-[2rem] border p-6 md:p-10 bg-white shadow-sm", className)}>
-      <div className="flex items-center gap-3 border-b pb-4">
-        <Icon className="h-5 w-5 text-primary" />
-        <h3 className="text-lg font-black uppercase tracking-tight text-slate-800">{title}</h3>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">{children}</div>
+  <div className={cn("space-y-6 rounded-[2rem] border p-6 md:p-10 bg-white shadow-sm", className)}>
+    <div className="flex items-center gap-3 border-b pb-4">
+      <Icon className="h-5 w-5 text-primary" />
+      <h3 className="text-lg font-black uppercase tracking-tight text-slate-800">{title}</h3>
     </div>
-  );
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">{children}</div>
+  </div>
+);
 
 const formSchema = z.object({
   kkNumber: z.string().min(1, 'Nomor KK wajib diisi.'),
@@ -184,53 +184,53 @@ export function KematianForm({ isAdmin = false }: { isAdmin?: boolean }) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-        kkNumber: '',
-        kkHead: '',
-        nik: '',
-        name: '',
-        gender: '',
-        placeOfBirth: '',
-        birthDate: '',
-        age: '',
-        religion: '',
-        occupation: '',
-        address: '',
-        anakKe: '1',
-        deathTime: '09.00',
-        deathCause: '',
-        deathLocation: '',
-        whoExplains: '',
-        fatherNik: '',
-        fatherName: '',
-        fatherPlaceOfBirth: '',
-        fatherBirthDate: '',
-        fatherJob: '',
-        fatherAddress: '',
-        motherNik: '',
-        motherName: '',
-        motherPlaceOfBirth: '',
-        motherBirthDate: '',
-        motherJob: '',
-        motherAddress: '',
-        reporterNik: '',
-        reporterName: '',
-        reporterPlaceOfBirth: '',
-        reporterBirthDate: '',
-        reporterGender: '',
-        reporterJob: '',
-        reporterAddress: '',
-        witness1Nik: '',
-        witness1Name: '',
-        witness1PlaceOfBirth: '',
-        witness1BirthDate: '',
-        witness1Job: '',
-        witness1Address: '',
-        witness2Nik: '',
-        witness2Name: '',
-        witness2PlaceOfBirth: '',
-        witness2BirthDate: '',
-        witness2Job: '',
-        witness2Address: '',
+      kkNumber: '',
+      kkHead: '',
+      nik: '',
+      name: '',
+      gender: '',
+      placeOfBirth: '',
+      birthDate: '',
+      age: '',
+      religion: '',
+      occupation: '',
+      address: '',
+      anakKe: '1',
+      deathTime: '09.00',
+      deathCause: '',
+      deathLocation: '',
+      whoExplains: '',
+      fatherNik: '',
+      fatherName: '',
+      fatherPlaceOfBirth: '',
+      fatherBirthDate: '',
+      fatherJob: '',
+      fatherAddress: '',
+      motherNik: '',
+      motherName: '',
+      motherPlaceOfBirth: '',
+      motherBirthDate: '',
+      motherJob: '',
+      motherAddress: '',
+      reporterNik: '',
+      reporterName: '',
+      reporterPlaceOfBirth: '',
+      reporterBirthDate: '',
+      reporterGender: '',
+      reporterJob: '',
+      reporterAddress: '',
+      witness1Nik: '',
+      witness1Name: '',
+      witness1PlaceOfBirth: '',
+      witness1BirthDate: '',
+      witness1Job: '',
+      witness1Address: '',
+      witness2Nik: '',
+      witness2Name: '',
+      witness2PlaceOfBirth: '',
+      witness2BirthDate: '',
+      witness2Job: '',
+      witness2Address: '',
     },
   });
 
@@ -252,17 +252,17 @@ export function KematianForm({ isAdmin = false }: { isAdmin?: boolean }) {
       const birthDay = parseInt(parts[0], 10);
       const birthMonth = parseInt(parts[1], 10) - 1;
       const birthYear = parseInt(parts[2], 10);
-      
+
       const birthDate = new Date(birthYear, birthMonth, birthDay);
       const today = new Date();
-      
+
       let age = today.getFullYear() - birthDate.getFullYear();
       const monthDiff = today.getMonth() - birthDate.getMonth();
-      
+
       if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
         age--;
       }
-      
+
       return age >= 0 ? age.toString() : '0';
     } catch {
       return '';
@@ -277,7 +277,7 @@ export function KematianForm({ isAdmin = false }: { isAdmin?: boolean }) {
         if (resident) {
           const nameField = prefix === '' ? 'name' : `${prefix}Name`;
           form.setValue(nameField as any, resident.fullName.toUpperCase());
-          
+
           if (prefix === '' || prefix === 'father' || prefix === 'mother' || prefix === 'reporter' || prefix === 'witness1' || prefix === 'witness2') {
             const birthPlaceField = prefix === '' ? 'placeOfBirth' : `${prefix}PlaceOfBirth`;
             const birthDateField = prefix === '' ? 'birthDate' : `${prefix}BirthDate`;
@@ -289,7 +289,7 @@ export function KematianForm({ isAdmin = false }: { isAdmin?: boolean }) {
             const genderField = prefix === '' ? 'gender' : `${prefix}Gender`;
             form.setValue(genderField as any, resident.gender);
           }
-          
+
           if (prefix === '') {
             form.setValue('religion', resident.religion);
             form.setValue('age', calculateAge(resident.dateOfBirth));
@@ -300,9 +300,9 @@ export function KematianForm({ isAdmin = false }: { isAdmin?: boolean }) {
           form.setValue(jobField as any, resident.occupation);
 
           const addressField = prefix === '' ? 'address' : `${prefix}Address`;
-          const fullAddress = `${resident.address}, RT ${resident.rt} RW ${resident.rw}, ${resident.kelurahan}, KEC. KARANGPUCUNG, KAB. CILACAP`.toUpperCase();
+          const fullAddress = `${resident.address}, RT ${resident.rt} RW ${resident.rw}, ${resident.kelurahan}Kec. Karangpucung, Kab. Cilacap`.toUpperCase();
           form.setValue(addressField as any, fullAddress);
-          
+
           toast({ title: `Data Ditemukan`, description: `Data identitas telah diisi otomatis.` });
         }
       } catch (error: any) {
@@ -328,8 +328,8 @@ export function KematianForm({ isAdmin = false }: { isAdmin?: boolean }) {
     if (!firestore) return;
 
     if (!isAdmin && !filesToUpload.some(f => f.fieldName === 'ktpJenazah')) {
-        toast({ title: "Berkas Belum Lengkap", description: "Mohon unggah foto KTP Almarhum/ah.", variant: "destructive" });
-        return;
+      toast({ title: "Berkas Belum Lengkap", description: "Mohon unggah foto KTP Almarhum/ah.", variant: "destructive" });
+      return;
     }
 
     setIsSubmitting(true);
@@ -384,8 +384,8 @@ export function KematianForm({ isAdmin = false }: { isAdmin?: boolean }) {
 
         <FormSection title="Data Jenazah" icon={Skull}>
           <FormField control={form.control} name="nik" render={({ field }) => (
-              <FormItem className="md:col-span-2"><FormLabel className="font-bold text-primary">NIK Almarhum/Almarhumah</FormLabel><FormControl><div className="relative"><Input placeholder="3301xxxxxxxxxxxx" {...field} disabled={isSubmitting} maxLength={16} className="h-12 rounded-xl" />{searchingNik === '' && <Loader2 className="absolute right-4 top-3 h-6 w-6 animate-spin text-primary" />}</div></FormControl><FormDescription>Masukkan NIK untuk auto-fill data diri jenazah.</FormDescription><FormMessage /></FormItem>
-            )} />
+            <FormItem className="md:col-span-2"><FormLabel className="font-bold text-primary">NIK Almarhum/Almarhumah</FormLabel><FormControl><div className="relative"><Input placeholder="3301xxxxxxxxxxxx" {...field} disabled={isSubmitting} maxLength={16} className="h-12 rounded-xl" />{searchingNik === '' && <Loader2 className="absolute right-4 top-3 h-6 w-6 animate-spin text-primary" />}</div></FormControl><FormDescription>Masukkan NIK untuk auto-fill data diri jenazah.</FormDescription><FormMessage /></FormItem>
+          )} />
           <FormField control={form.control} name="name" render={({ field }) => (
             <FormItem><FormLabel>Nama Lengkap</FormLabel><FormControl><Input placeholder="Sesuai KTP" {...field} disabled={isSubmitting} className="uppercase h-12 rounded-xl" /></FormControl><FormMessage /></FormItem>
           )} />
@@ -554,31 +554,31 @@ export function KematianForm({ isAdmin = false }: { isAdmin?: boolean }) {
         </FormSection>
 
         <FormSection title="Unggah Berkas Lampiran" icon={UploadCloud}>
-            <div className="col-span-1 md:col-span-2 space-y-6">
-                 <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">Unggah file format gambar (JPG, PNG) atau PDF. Berkas bertanda * wajib diisi.</p>
-                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 pt-4">
-                    <GoogleFileUploader 
-                        label="KTP Jenazah" 
-                        fieldName="ktpJenazah"
-                        onFileSelect={handleFileSelect} 
-                        isRequired={!isAdmin}
-                        disabled={isSubmitting}
-                    />
-                    <GoogleFileUploader 
-                        label="Kartu Keluarga" 
-                        fieldName="kk"
-                        onFileSelect={handleFileSelect} 
-                        disabled={isSubmitting}
-                    />
-                    <GoogleFileUploader 
-                        label="Surat Pengantar RT/RW" 
-                        fieldName="pengantarRt"
-                        onFileSelect={handleFileSelect} 
-                        isRequired={false}
-                        disabled={isSubmitting}
-                    />
-                </div>
+          <div className="col-span-1 md:col-span-2 space-y-6">
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">Unggah file format gambar (JPG, PNG) atau PDF. Berkas bertanda * wajib diisi.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 pt-4">
+              <GoogleFileUploader
+                label="KTP Jenazah"
+                fieldName="ktpJenazah"
+                onFileSelect={handleFileSelect}
+                isRequired={!isAdmin}
+                disabled={isSubmitting}
+              />
+              <GoogleFileUploader
+                label="Kartu Keluarga"
+                fieldName="kk"
+                onFileSelect={handleFileSelect}
+                disabled={isSubmitting}
+              />
+              <GoogleFileUploader
+                label="Surat Pengantar RT/RW"
+                fieldName="pengantarRt"
+                onFileSelect={handleFileSelect}
+                isRequired={false}
+                disabled={isSubmitting}
+              />
             </div>
+          </div>
         </FormSection>
 
         <Button type="submit" size="lg" disabled={isSubmitting} className="w-full h-16 rounded-2xl bg-primary text-white font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/20 hover:scale-[1.01] transition-all active:scale-95">

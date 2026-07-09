@@ -54,7 +54,7 @@ function GoogleFileUploader({ label, onFileSelect, fieldName, isRequired, disabl
         <div className="relative">
           <Input type="file" onChange={handleFileChange} disabled={disabled || !!fileName} className="pr-10" accept="image/jpeg,image/png,application/pdf" />
           <div className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4">
-            {fileName ? <FileCheck className="text-green-600" /> : <Paperclip className="text-muted-foreground"/>}
+            {fileName ? <FileCheck className="text-green-600" /> : <Paperclip className="text-muted-foreground" />}
           </div>
         </div>
       </FormControl>
@@ -93,14 +93,14 @@ const formSchema = z.object({
 
 const convertFileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-          const result = reader.result as string;
-          const base64Data = result.split(',')[1]; 
-          resolve(base64Data);
-      };
-      reader.onerror = (error) => reject(error);
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      const result = reader.result as string;
+      const base64Data = result.split(',')[1];
+      resolve(base64Data);
+    };
+    reader.onerror = (error) => reject(error);
   });
 };
 
@@ -110,24 +110,24 @@ export function SkuForm({ isAdmin = false }: { isAdmin?: boolean }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [filesToUpload, setFilesToUpload] = useState<Array<{ fieldName: string; file: File }>>([]);
-  
+
   const { firestore } = useFirebase();
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { 
-      nik: '', 
-      purpose: '', 
-      name: '', 
-      birthPlace: '', 
-      birthDate: '', 
-      gender: '', 
-      address: '', 
-      job: '', 
-      businessName: '', 
-      businessType: '', 
-      businessAddress: '', 
+    defaultValues: {
+      nik: '',
+      purpose: '',
+      name: '',
+      birthPlace: '',
+      birthDate: '',
+      gender: '',
+      address: '',
+      job: '',
+      businessName: '',
+      businessType: '',
+      businessAddress: '',
       businessSince: '',
     },
   });
@@ -146,7 +146,7 @@ export function SkuForm({ isAdmin = false }: { isAdmin?: boolean }) {
             form.setValue('birthPlace', res.placeOfBirth);
             form.setValue('birthDate', formatDbDateToForm(res.dateOfBirth));
             form.setValue('job', res.occupation);
-            const fullAddress = `${res.address}, RT ${res.rt} RW ${res.rw}, ${res.kelurahan}, KEC. KARANGPUCUNG, KAB. CILACAP`.toUpperCase();
+            const fullAddress = `${res.address}, RT ${res.rt} RW ${res.rw}, ${res.kelurahan}Kec. Karangpucung, Kab. Cilacap`.toUpperCase();
             form.setValue('address', fullAddress);
             toast({ title: "Data Pemohon Ditemukan" });
           }
@@ -173,8 +173,8 @@ export function SkuForm({ isAdmin = false }: { isAdmin?: boolean }) {
         return;
       }
       if (!filesToUpload.some(f => f.fieldName === 'kk')) {
-          toast({ title: "Berkas Belum Lengkap", description: "Mohon unggah foto KK Anda.", variant: "destructive" });
-          return;
+        toast({ title: "Berkas Belum Lengkap", description: "Mohon unggah foto KK Anda.", variant: "destructive" });
+        return;
       }
       if (!filesToUpload.some(f => f.fieldName === 'businessPhoto')) {
         toast({ title: "Berkas Belum Lengkap", description: "Mohon unggah foto tempat usaha.", variant: "destructive" });
@@ -188,13 +188,13 @@ export function SkuForm({ isAdmin = false }: { isAdmin?: boolean }) {
 
       const filesPayload = await Promise.all(
         filesToUpload.map(async (fileData) => {
-            const base64Data = await convertFileToBase64(fileData.file);
-            return {
-                base64Data,
-                mimeType: fileData.file.type,
-                targetFileName: `${fileData.fieldName}_${values.nik}`,
-                fieldName: fileData.fieldName,
-            };
+          const base64Data = await convertFileToBase64(fileData.file);
+          return {
+            base64Data,
+            mimeType: fileData.file.type,
+            targetFileName: `${fileData.fieldName}_${values.nik}`,
+            fieldName: fileData.fieldName,
+          };
         })
       );
 
@@ -242,18 +242,18 @@ export function SkuForm({ isAdmin = false }: { isAdmin?: boolean }) {
         </FormSection>
 
         <FormSection title="Unggah Berkas" icon={UploadCloud}>
-             <div className="col-span-1 md:col-span-2">
-                <FormDescription>Unggah file dalam format gambar (JPG, PNG) atau PDF, maks 2MB. Berkas dengan tanda * wajib diisi.</FormDescription>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
-                <GoogleFileUploader label="Foto KTP" fieldName="ktp" onFileSelect={handleFileSelect} isRequired={!isAdmin} disabled={isSubmitting} />
-                <GoogleFileUploader label="Foto KK" fieldName="kk" onFileSelect={handleFileSelect} isRequired={!isAdmin} disabled={isSubmitting} />
-                <GoogleFileUploader label="Foto Tempat Usaha" fieldName="businessPhoto" onFileSelect={handleFileSelect} isRequired={!isAdmin} disabled={isSubmitting} />
-            </div>
+          <div className="col-span-1 md:col-span-2">
+            <FormDescription>Unggah file dalam format gambar (JPG, PNG) atau PDF, maks 2MB. Berkas dengan tanda * wajib diisi.</FormDescription>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+            <GoogleFileUploader label="Foto KTP" fieldName="ktp" onFileSelect={handleFileSelect} isRequired={!isAdmin} disabled={isSubmitting} />
+            <GoogleFileUploader label="Foto KK" fieldName="kk" onFileSelect={handleFileSelect} isRequired={!isAdmin} disabled={isSubmitting} />
+            <GoogleFileUploader label="Foto Tempat Usaha" fieldName="businessPhoto" onFileSelect={handleFileSelect} isRequired={!isAdmin} disabled={isSubmitting} />
+          </div>
         </FormSection>
 
         <Button type="submit" size="lg" disabled={isSubmitting} className="w-full">
-            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Ajukan Surat Keterangan Usaha'}
+          {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Ajukan Surat Keterangan Usaha'}
         </Button>
       </form>
     </Form>

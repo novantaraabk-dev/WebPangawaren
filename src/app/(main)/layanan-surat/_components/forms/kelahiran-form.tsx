@@ -69,10 +69,10 @@ function GoogleFileUploader({ label, onFileSelect, fieldName, isRequired, disabl
           fileName && "border-emerald-200 bg-emerald-50/30",
           disabled && "opacity-50 cursor-not-allowed"
         )}>
-          <input 
-            type="file" 
-            onChange={handleFileChange} 
-            disabled={disabled} 
+          <input
+            type="file"
+            onChange={handleFileChange}
+            disabled={disabled}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-10"
             accept="image/jpeg,image/png,application/pdf"
           />
@@ -87,7 +87,7 @@ function GoogleFileUploader({ label, onFileSelect, fieldName, isRequired, disabl
             ) : (
               <>
                 <div className="p-2 bg-white rounded-full shadow-sm">
-                   <UploadCloud className="h-6 w-6 text-slate-400 group-hover:text-primary transition-colors" />
+                  <UploadCloud className="h-6 w-6 text-slate-400 group-hover:text-primary transition-colors" />
                 </div>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] group-hover:text-slate-600 transition-colors">
                   Pilih Berkas
@@ -103,13 +103,13 @@ function GoogleFileUploader({ label, onFileSelect, fieldName, isRequired, disabl
 }
 
 const FormSection = ({ title, icon: Icon, children }: { title: string; icon: React.ElementType; children: React.ReactNode }) => (
-    <div className="space-y-6 rounded-[2rem] border p-6 md:p-10 bg-white shadow-sm">
-      <div className="flex items-center gap-3 border-b pb-4">
-        <Icon className="h-5 w-5 text-primary" />
-        <h3 className="text-lg font-black uppercase tracking-tight text-slate-800">{title}</h3>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">{children}</div>
+  <div className="space-y-6 rounded-[2rem] border p-6 md:p-10 bg-white shadow-sm">
+    <div className="flex items-center gap-3 border-b pb-4">
+      <Icon className="h-5 w-5 text-primary" />
+      <h3 className="text-lg font-black uppercase tracking-tight text-slate-800">{title}</h3>
     </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">{children}</div>
+  </div>
 );
 
 const formSchema = z.object({
@@ -126,7 +126,7 @@ const formSchema = z.object({
   birthAssistant: z.string().min(1, 'Penolong kelahiran wajib diisi.'),
   birthWeight: z.string().min(1, 'Berat bayi wajib diisi.'),
   birthLength: z.string().min(1, 'Panjang bayi wajib diisi.'),
-  
+
   motherName: z.string().min(1, 'Nama ibu wajib diisi.'),
   motherBirthPlace: z.string().min(1, 'Tempat lahir ibu wajib diisi.'),
   motherBirthDate: z.string().min(1, 'Tanggal lahir ibu wajib diisi.'),
@@ -180,7 +180,7 @@ export function KelahiranForm({ isAdmin = false }: { isAdmin?: boolean }) {
       childBirthDate: '',
       childBirthTime: '',
       childBirthLocation: '',
-      childAddress: 'DESA PANGAWAREN, KEC. KARANGPUCUNG, KAB. CILACAP',
+      childAddress: 'DESA PANGAWARENKec. Karangpucung, Kab. Cilacap',
       childOrder: '',
       birthAssistant: '',
       birthWeight: '',
@@ -222,8 +222,8 @@ export function KelahiranForm({ isAdmin = false }: { isAdmin?: boolean }) {
 
   const handleFileSelect = (file: File, fieldName: string) => {
     setFilesToUpload(prev => {
-        const filtered = prev.filter(f => f.fieldName !== fieldName);
-        return [...filtered, { file, fieldName }];
+      const filtered = prev.filter(f => f.fieldName !== fieldName);
+      return [...filtered, { file, fieldName }];
     });
   };
 
@@ -247,16 +247,16 @@ export function KelahiranForm({ isAdmin = false }: { isAdmin?: boolean }) {
         const resident = await getResidentByNik(firestore, nik);
         if (resident) {
           form.setValue(`${prefix}Name` as any, resident.fullName.toUpperCase());
-          
+
           if (prefix === 'mother' || prefix === 'father') {
             form.setValue(`${prefix}BirthPlace` as any, (resident.placeOfBirth || '').toUpperCase());
             form.setValue(`${prefix}BirthDate` as any, formatDbDateToForm(resident.dateOfBirth));
           }
-          
+
           form.setValue(`${prefix}Job` as any, (resident.occupation || '').toUpperCase());
-          const fullAddress = `${resident.address || ''}, RT ${resident.rt || ''} RW ${resident.rw || ''}, ${resident.kelurahan || ''}, KEC. KARANGPUCUNG, KAB. CILACAP`.toUpperCase();
+          const fullAddress = `${resident.address || ''}, RT ${resident.rt || ''} RW ${resident.rw || ''}, ${resident.kelurahan || ''}Kec. Karangpucung, Kab. Cilacap`.toUpperCase();
           form.setValue(`${prefix}Address` as any, fullAddress);
-          
+
           if (prefix === 'reporter' || prefix === 'witness1' || prefix === 'witness2') {
             form.setValue(`${prefix}Age` as any, calculateAge(formatDbDateToForm(resident.dateOfBirth)));
           }
@@ -285,12 +285,12 @@ export function KelahiranForm({ isAdmin = false }: { isAdmin?: boolean }) {
     if (!firestore) return;
 
     if (!isAdmin) {
-        const hasKtp = filesToUpload.some(f => f.fieldName === 'ktpIbu');
-        const hasSuratLahir = filesToUpload.some(f => f.fieldName === 'suratRs');
-        if (!hasKtp || !hasSuratLahir) {
-            toast({ title: "Berkas Belum Lengkap", description: "Mohon unggah foto KTP Ibu dan Surat Lahir.", variant: "destructive" });
-            return;
-        }
+      const hasKtp = filesToUpload.some(f => f.fieldName === 'ktpIbu');
+      const hasSuratLahir = filesToUpload.some(f => f.fieldName === 'suratRs');
+      if (!hasKtp || !hasSuratLahir) {
+        toast({ title: "Berkas Belum Lengkap", description: "Mohon unggah foto KTP Ibu dan Surat Lahir.", variant: "destructive" });
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -336,233 +336,233 @@ export function KelahiranForm({ isAdmin = false }: { isAdmin?: boolean }) {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
         <FormSection title="Data Ibu (Pemohon)" icon={User}>
-            <FormField control={form.control} name="motherNik" render={({ field }) => (
-              <FormItem className="md:col-span-2">
-                <FormLabel className="font-bold">NIK Ibu</FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Input placeholder="3301xxxxxxxxxxxx" {...field} disabled={isSubmitting} maxLength={16} className="h-12 rounded-xl" />
-                    {searchingNik === 'mother' && <Loader2 className="absolute right-4 top-3 h-6 w-6 animate-spin text-primary" />}
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="motherName" render={({ field }) => (
+          <FormField control={form.control} name="motherNik" render={({ field }) => (
+            <FormItem className="md:col-span-2">
+              <FormLabel className="font-bold">NIK Ibu</FormLabel>
+              <FormControl>
+                <div className="relative">
+                  <Input placeholder="3301xxxxxxxxxxxx" {...field} disabled={isSubmitting} maxLength={16} className="h-12 rounded-xl" />
+                  {searchingNik === 'mother' && <Loader2 className="absolute right-4 top-3 h-6 w-6 animate-spin text-primary" />}
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="motherName" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Nama Ibu</FormLabel>
+              <FormControl><Input placeholder="Nama Lengkap" {...field} disabled={isSubmitting} className="uppercase h-12 rounded-xl" /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+          <div className="grid grid-cols-2 gap-4">
+            <FormField control={form.control} name="motherBirthPlace" render={({ field }) => (
               <FormItem>
-                <FormLabel>Nama Ibu</FormLabel>
-                <FormControl><Input placeholder="Nama Lengkap" {...field} disabled={isSubmitting} className="uppercase h-12 rounded-xl" /></FormControl>
+                <FormLabel>Tempat Lahir</FormLabel>
+                <FormControl><Input placeholder="Kota" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
-            <div className="grid grid-cols-2 gap-4">
-                <FormField control={form.control} name="motherBirthPlace" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tempat Lahir</FormLabel>
-                      <FormControl><Input placeholder="Kota" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                )} />
-                <FormField control={form.control} name="motherBirthDate" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tgl Lahir</FormLabel>
-                      <FormControl><Input placeholder="DD-MM-YYYY" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                )} />
-            </div>
-            <FormField control={form.control} name="motherJob" render={({ field }) => (
+            <FormField control={form.control} name="motherBirthDate" render={({ field }) => (
               <FormItem>
-                <FormLabel>Pekerjaan</FormLabel>
-                <FormControl><Input placeholder="Pekerjaan" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
+                <FormLabel>Tgl Lahir</FormLabel>
+                <FormControl><Input placeholder="DD-MM-YYYY" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
-            <FormField control={form.control} name="motherAddress" render={({ field }) => (
-              <FormItem className="md:col-span-2">
-                <FormLabel>Alamat Sesuai KTP</FormLabel>
-                <FormControl><Textarea placeholder="Alamat lengkap" {...field} disabled={isSubmitting} className="uppercase rounded-2xl" /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
+          </div>
+          <FormField control={form.control} name="motherJob" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Pekerjaan</FormLabel>
+              <FormControl><Input placeholder="Pekerjaan" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="motherAddress" render={({ field }) => (
+            <FormItem className="md:col-span-2">
+              <FormLabel>Alamat Sesuai KTP</FormLabel>
+              <FormControl><Textarea placeholder="Alamat lengkap" {...field} disabled={isSubmitting} className="uppercase rounded-2xl" /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
         </FormSection>
 
         <FormSection title="Data Anak" icon={Baby}>
           <FormField control={form.control} name="childName" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Nama Anak</FormLabel>
-                <FormControl><Input placeholder="Nama Lengkap Anak" {...field} disabled={isSubmitting} className="uppercase h-12 rounded-xl" /></FormControl>
-                <FormMessage />
-              </FormItem>
+            <FormItem>
+              <FormLabel>Nama Anak</FormLabel>
+              <FormControl><Input placeholder="Nama Lengkap Anak" {...field} disabled={isSubmitting} className="uppercase h-12 rounded-xl" /></FormControl>
+              <FormMessage />
+            </FormItem>
           )} />
           <FormField control={form.control} name="childGender" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Jenis Kelamin</FormLabel>
-                <FormControl><Input placeholder="Contoh: Laki-Laki" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
-                <FormMessage />
-              </FormItem>
+            <FormItem>
+              <FormLabel>Jenis Kelamin</FormLabel>
+              <FormControl><Input placeholder="Contoh: Laki-Laki" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
+              <FormMessage />
+            </FormItem>
           )} />
           <FormField control={form.control} name="childBirthPlace" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tempat Lahir Anak</FormLabel>
-                <FormControl><Input placeholder="CILACAP" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
-                <FormMessage />
-              </FormItem>
+            <FormItem>
+              <FormLabel>Tempat Lahir Anak</FormLabel>
+              <FormControl><Input placeholder="CILACAP" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
+              <FormMessage />
+            </FormItem>
           )} />
           <FormField control={form.control} name="childBirthDate" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tanggal Lahir Anak</FormLabel>
-                <FormControl><Input placeholder="DD-MM-YYYY" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
-                <FormMessage />
-              </FormItem>
+            <FormItem>
+              <FormLabel>Tanggal Lahir Anak</FormLabel>
+              <FormControl><Input placeholder="DD-MM-YYYY" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
+              <FormMessage />
+            </FormItem>
           )} />
           <FormField control={form.control} name="childBirthTime" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Waktu Lahir</FormLabel>
-                <FormControl><Input placeholder="Pukul 08.00 WIB" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
-                <FormMessage />
-              </FormItem>
+            <FormItem>
+              <FormLabel>Waktu Lahir</FormLabel>
+              <FormControl><Input placeholder="Pukul 08.00 WIB" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
+              <FormMessage />
+            </FormItem>
           )} />
           <FormField control={form.control} name="childBirthLocation" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tempat Dilahirkan</FormLabel>
-                <FormControl><Input placeholder="Contoh: Puskesmas" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
-                <FormMessage />
-              </FormItem>
+            <FormItem>
+              <FormLabel>Tempat Dilahirkan</FormLabel>
+              <FormControl><Input placeholder="Contoh: Puskesmas" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
+              <FormMessage />
+            </FormItem>
           )} />
           <FormField control={form.control} name="childOrder" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Kelahiran Ke-</FormLabel>
-                <FormControl><Input placeholder="1" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
-                <FormMessage />
-              </FormItem>
+            <FormItem>
+              <FormLabel>Kelahiran Ke-</FormLabel>
+              <FormControl><Input placeholder="1" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
+              <FormMessage />
+            </FormItem>
           )} />
           <FormField control={form.control} name="birthAssistant" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Penolong Kelahiran</FormLabel>
-                <FormControl><Input placeholder="Contoh: Bidan" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
-                <FormMessage />
-              </FormItem>
+            <FormItem>
+              <FormLabel>Penolong Kelahiran</FormLabel>
+              <FormControl><Input placeholder="Contoh: Bidan" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
+              <FormMessage />
+            </FormItem>
           )} />
           <div className="grid grid-cols-2 gap-4">
             <FormField control={form.control} name="birthWeight" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Berat Bayi</FormLabel>
-                  <FormControl><Input placeholder="Kg" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
-                  <FormMessage />
-                </FormItem>
+              <FormItem>
+                <FormLabel>Berat Bayi</FormLabel>
+                <FormControl><Input placeholder="Kg" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
+                <FormMessage />
+              </FormItem>
             )} />
             <FormField control={form.control} name="birthLength" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Panjang Bayi</FormLabel>
-                  <FormControl><Input placeholder="Cm" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
-                  <FormMessage />
-                </FormItem>
+              <FormItem>
+                <FormLabel>Panjang Bayi</FormLabel>
+                <FormControl><Input placeholder="Cm" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
+                <FormMessage />
+              </FormItem>
             )} />
           </div>
           <FormField control={form.control} name="childAddress" render={({ field }) => (
-              <FormItem className="md:col-span-2">
-                <FormLabel>Alamat Domisili Anak</FormLabel>
-                <FormControl><Textarea placeholder="Alamat lengkap" {...field} disabled={isSubmitting} className="uppercase rounded-2xl" /></FormControl>
-                <FormMessage />
-              </FormItem>
+            <FormItem className="md:col-span-2">
+              <FormLabel>Alamat Domisili Anak</FormLabel>
+              <FormControl><Textarea placeholder="Alamat lengkap" {...field} disabled={isSubmitting} className="uppercase rounded-2xl" /></FormControl>
+              <FormMessage />
+            </FormItem>
           )} />
         </FormSection>
 
         <FormSection title="Data Ayah" icon={User}>
           <FormField control={form.control} name="fatherNik" render={({ field }) => (
-              <FormItem>
-                <FormLabel className="font-bold">NIK Ayah</FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Input placeholder="3301xxxxxxxxxxxx" {...field} disabled={isSubmitting} maxLength={16} className="h-12 rounded-xl" />
-                    {searchingNik === 'father' && <Loader2 className="absolute right-4 top-3 h-6 w-6 animate-spin text-primary" />}
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+            <FormItem>
+              <FormLabel className="font-bold">NIK Ayah</FormLabel>
+              <FormControl>
+                <div className="relative">
+                  <Input placeholder="3301xxxxxxxxxxxx" {...field} disabled={isSubmitting} maxLength={16} className="h-12 rounded-xl" />
+                  {searchingNik === 'father' && <Loader2 className="absolute right-4 top-3 h-6 w-6 animate-spin text-primary" />}
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )} />
           <FormField control={form.control} name="fatherName" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Nama Ayah</FormLabel>
-                <FormControl><Input placeholder="Nama Lengkap" {...field} disabled={isSubmitting} className="uppercase h-12 rounded-xl" /></FormControl>
-                <FormMessage />
-              </FormItem>
+            <FormItem>
+              <FormLabel>Nama Ayah</FormLabel>
+              <FormControl><Input placeholder="Nama Lengkap" {...field} disabled={isSubmitting} className="uppercase h-12 rounded-xl" /></FormControl>
+              <FormMessage />
+            </FormItem>
           )} />
           <div className="grid grid-cols-2 gap-4">
             <FormField control={form.control} name="fatherBirthPlace" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tempat Lahir</FormLabel>
-                  <FormControl><Input placeholder="Kota" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
-                  <FormMessage />
-                </FormItem>
+              <FormItem>
+                <FormLabel>Tempat Lahir</FormLabel>
+                <FormControl><Input placeholder="Kota" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
+                <FormMessage />
+              </FormItem>
             )} />
             <FormField control={form.control} name="fatherBirthDate" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tanggal Lahir</FormLabel>
-                  <FormControl><Input placeholder="DD-MM-YYYY" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
-                  <FormMessage />
-                </FormItem>
+              <FormItem>
+                <FormLabel>Tanggal Lahir</FormLabel>
+                <FormControl><Input placeholder="DD-MM-YYYY" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
+                <FormMessage />
+              </FormItem>
             )} />
           </div>
-           <FormField control={form.control} name="fatherJob" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Pekerjaan</FormLabel>
-                <FormControl><Input placeholder="Pekerjaan" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
-                <FormMessage />
-              </FormItem>
+          <FormField control={form.control} name="fatherJob" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Pekerjaan</FormLabel>
+              <FormControl><Input placeholder="Pekerjaan" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
+              <FormMessage />
+            </FormItem>
           )} />
-           <FormField control={form.control} name="fatherAddress" render={({ field }) => (
-              <FormItem className="md:col-span-2">
-                <FormLabel>Alamat Sesuai KTP</FormLabel>
-                <FormControl><Textarea placeholder="Alamat lengkap" {...field} disabled={isSubmitting} className="uppercase rounded-2xl" /></FormControl>
-                <FormMessage />
-              </FormItem>
+          <FormField control={form.control} name="fatherAddress" render={({ field }) => (
+            <FormItem className="md:col-span-2">
+              <FormLabel>Alamat Sesuai KTP</FormLabel>
+              <FormControl><Textarea placeholder="Alamat lengkap" {...field} disabled={isSubmitting} className="uppercase rounded-2xl" /></FormControl>
+              <FormMessage />
+            </FormItem>
           )} />
         </FormSection>
 
         <FormSection title="Data Pelapor" icon={User}>
           <FormField control={form.control} name="reporterNik" render={({ field }) => (
-              <FormItem>
-                <FormLabel className="font-bold">NIK Pelapor</FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Input placeholder="3301xxxxxxxxxxxx" {...field} disabled={isSubmitting} maxLength={16} className="h-12 rounded-xl" />
-                    {searchingNik === 'reporter' && <Loader2 className="absolute right-4 top-3 h-6 w-6 animate-spin text-primary" />}
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+            <FormItem>
+              <FormLabel className="font-bold">NIK Pelapor</FormLabel>
+              <FormControl>
+                <div className="relative">
+                  <Input placeholder="3301xxxxxxxxxxxx" {...field} disabled={isSubmitting} maxLength={16} className="h-12 rounded-xl" />
+                  {searchingNik === 'reporter' && <Loader2 className="absolute right-4 top-3 h-6 w-6 animate-spin text-primary" />}
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )} />
           <FormField control={form.control} name="reporterName" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Nama Pelapor</FormLabel>
-                <FormControl><Input placeholder="Nama Pelapor" {...field} disabled={isSubmitting} className="uppercase h-12 rounded-xl" /></FormControl>
-                <FormMessage />
-              </FormItem>
+            <FormItem>
+              <FormLabel>Nama Pelapor</FormLabel>
+              <FormControl><Input placeholder="Nama Pelapor" {...field} disabled={isSubmitting} className="uppercase h-12 rounded-xl" /></FormControl>
+              <FormMessage />
+            </FormItem>
           )} />
           <div className="grid grid-cols-2 gap-4">
             <FormField control={form.control} name="reporterAge" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Umur</FormLabel>
-                  <FormControl><Input placeholder="Umur" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
-                  <FormMessage />
-                </FormItem>
+              <FormItem>
+                <FormLabel>Umur</FormLabel>
+                <FormControl><Input placeholder="Umur" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
+                <FormMessage />
+              </FormItem>
             )} />
             <FormField control={form.control} name="reporterJob" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Pekerjaan</FormLabel>
-                  <FormControl><Input placeholder="Pekerjaan" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
-                  <FormMessage />
-                </FormItem>
+              <FormItem>
+                <FormLabel>Pekerjaan</FormLabel>
+                <FormControl><Input placeholder="Pekerjaan" {...field} disabled={isSubmitting} className="h-12 rounded-xl" /></FormControl>
+                <FormMessage />
+              </FormItem>
             )} />
           </div>
           <FormField control={form.control} name="reporterAddress" render={({ field }) => (
-              <FormItem className="md:col-span-2">
-                <FormLabel>Alamat</FormLabel>
-                <FormControl><Textarea placeholder="Alamat pelapor" {...field} disabled={isSubmitting} className="uppercase rounded-2xl" /></FormControl>
-                <FormMessage />
-              </FormItem>
+            <FormItem className="md:col-span-2">
+              <FormLabel>Alamat</FormLabel>
+              <FormControl><Textarea placeholder="Alamat pelapor" {...field} disabled={isSubmitting} className="uppercase rounded-2xl" /></FormControl>
+              <FormMessage />
+            </FormItem>
           )} />
         </FormSection>
 
@@ -587,7 +587,7 @@ export function KelahiranForm({ isAdmin = false }: { isAdmin?: boolean }) {
                 <FormItem><FormLabel>Nama Lengkap</FormLabel><FormControl><Input {...field} disabled={isSubmitting} className="h-11 bg-white uppercase" /></FormControl><FormMessage /></FormItem>
               )} />
               <div className="grid grid-cols-2 gap-3">
-                 <FormField control={form.control} name="witness1Age" render={({ field }) => (
+                <FormField control={form.control} name="witness1Age" render={({ field }) => (
                   <FormItem><FormLabel>Umur</FormLabel><FormControl><Input {...field} disabled={isSubmitting} className="h-11 bg-white" /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="witness1Job" render={({ field }) => (
@@ -618,7 +618,7 @@ export function KelahiranForm({ isAdmin = false }: { isAdmin?: boolean }) {
                 <FormItem><FormLabel>Nama Lengkap</FormLabel><FormControl><Input {...field} disabled={isSubmitting} className="h-11 bg-white uppercase" /></FormControl><FormMessage /></FormItem>
               )} />
               <div className="grid grid-cols-2 gap-3">
-                 <FormField control={form.control} name="witness2Age" render={({ field }) => (
+                <FormField control={form.control} name="witness2Age" render={({ field }) => (
                   <FormItem><FormLabel>Umur</FormLabel><FormControl><Input {...field} disabled={isSubmitting} className="h-11 bg-white" /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="witness2Job" render={({ field }) => (
