@@ -16,6 +16,7 @@ import {
   PlayCircle,
   MapPin,
   ChevronRight,
+  ChevronDown,
   ShieldCheck,
   Landmark,
   UserCircle2,
@@ -44,6 +45,7 @@ type Official = {
 
 export default function ProfilDesaPage() {
   const [activeTab, setActiveTab] = useState('sambutan');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const firestore = useFirestore();
 
   // Data for Kenali Kami (Tab 2)
@@ -130,7 +132,6 @@ export default function ProfilDesaPage() {
 
     return { perangkat, bpd, rtrwGroups };
   }, [officials]);
-
   const tabs = [
     { id: 'sambutan', label: 'Profil & Sambutan', icon: User },
     { id: 'kenali', label: 'Kenali Kami', icon: Users },
@@ -140,6 +141,8 @@ export default function ProfilDesaPage() {
     { id: 'potensi', label: 'Potensi Unggulan', icon: Zap },
     { id: 'galeri', label: 'Galeri Media', icon: ImageIcon },
   ];
+
+  const activeTabObj = tabs.find(t => t.id === activeTab) || tabs[0];
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 font-sans">
@@ -160,8 +163,9 @@ export default function ProfilDesaPage() {
         <div className="grid lg:grid-cols-12 gap-10 items-start">
 
           {/* SIDEBAR NAVIGATION (Desktop) / TOP SCROLL (Mobile) */}
-          <aside className="lg:col-span-3 sticky lg:top-28 z-40">
-            <div className="bg-white rounded-[2.5rem] p-4 border shadow-sm space-y-2 overflow-x-auto no-scrollbar flex lg:flex-col gap-2">
+          <aside className="lg:col-span-3 lg:sticky lg:top-28 z-40">
+            {/* Desktop Navigation List */}
+            <div className="hidden lg:flex bg-white rounded-[2.5rem] p-4 border shadow-sm flex-col gap-2">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
@@ -170,7 +174,7 @@ export default function ProfilDesaPage() {
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
                   className={cn(
-                    "flex items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-300 whitespace-nowrap lg:w-full group",
+                    "flex items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-300 whitespace-nowrap w-full group text-left",
                     activeTab === tab.id
                       ? "bg-primary text-white shadow-xl shadow-primary/20 scale-[1.02]"
                       : "text-slate-500 hover:bg-slate-50 hover:text-primary"
@@ -180,6 +184,48 @@ export default function ProfilDesaPage() {
                   <span className="font-black uppercase text-[10px] tracking-widest">{tab.label}</span>
                 </button>
               ))}
+            </div>
+
+            {/* Mobile Menu Dropdown Selector */}
+            <div className="block lg:hidden w-full relative mb-6">
+              <button 
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="w-full flex items-center justify-between bg-primary text-white px-5 py-4 rounded-xl shadow-md font-black uppercase text-[10px] tracking-wider"
+              >
+                <div className="flex items-center gap-3">
+                  {React.createElement(activeTabObj.icon, { className: "h-5 w-5 text-secondary" })}
+                  <span>{activeTabObj.label}</span>
+                </div>
+                <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", isMenuOpen && "rotate-180")} />
+              </button>
+              
+              {isMenuOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setIsMenuOpen(false)} />
+                  <div className="absolute left-0 right-0 mt-2 z-50 bg-white border rounded-xl shadow-xl overflow-hidden py-1 divide-y divide-slate-100 animate-in fade-in slide-in-from-top-2 duration-200">
+                    {tabs.map((tab) => {
+                      const isCurrent = activeTab === tab.id;
+                      return (
+                        <button
+                          key={tab.id}
+                          onClick={() => {
+                            setActiveTab(tab.id);
+                            setIsMenuOpen(false);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                          className={cn(
+                            "w-full flex items-center gap-4 px-5 py-3.5 text-left text-xs font-bold transition-colors",
+                            isCurrent ? "bg-slate-50 text-primary" : "text-slate-600 hover:bg-slate-50"
+                          )}
+                        >
+                          <tab.icon className={cn("h-4 w-4 shrink-0", isCurrent ? "text-primary" : "text-slate-400")} />
+                          <span className="uppercase tracking-wider">{tab.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="hidden lg:block mt-8 p-8 bg-slate-900 rounded-[3rem] text-white relative overflow-hidden">
@@ -228,7 +274,7 @@ function SambutanTab({ kadesPhotoUrl }: { kadesPhotoUrl?: string }) {
   return (
     <div className="grid md:grid-cols-12 gap-8 items-stretch">
       <div className="md:col-span-4 lg:col-span-4">
-        <Card className="rounded-[3rem] overflow-hidden border-none shadow-xl bg-white sticky top-28">
+        <Card className="rounded-3xl md:rounded-[3rem] overflow-hidden border-none shadow-xl bg-white sticky top-28">
           <div className="aspect-[3/4] relative bg-slate-100">
             <img
               src={imageUrl}
@@ -238,26 +284,26 @@ function SambutanTab({ kadesPhotoUrl }: { kadesPhotoUrl?: string }) {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent" />
           </div>
-          <div className="p-8 text-center bg-primary text-white">
+          <div className="p-6 md:p-8 text-center bg-primary text-white">
             <h3 className="text-xl font-black uppercase tracking-tight font-display italic">SUHUD</h3>
             <p className="text-[10px] font-bold text-secondary uppercase tracking-[0.3em] mt-1">Kepala Desa Pangawaren</p>
           </div>
         </Card>
       </div>
-      <div className="md:col-span-8 lg:col-span-8 bg-white p-8 md:p-16 rounded-[4rem] border shadow-sm space-y-8">
+      <div className="md:col-span-8 lg:col-span-8 bg-white p-6 md:p-16 rounded-3xl md:rounded-[4rem] border shadow-sm space-y-8">
         <div className="space-y-4">
           <Badge className="bg-emerald-50 text-emerald-700 font-black uppercase text-[10px] tracking-widest px-4 py-1.5 border-none shadow-sm">
             Sambutan Resmi
           </Badge>
-          <h2 className="text-4xl md:text-6xl font-black text-slate-900 leading-tight uppercase font-display italic tracking-tighter">
+          <h2 className="text-2xl sm:text-4xl md:text-6xl font-black text-slate-900 leading-tight uppercase font-display italic tracking-tighter">
             Melayani dengan <span className="text-primary not-italic">Hati</span>, Membangun dengan <span className="text-secondary">Inovasi</span>.
           </h2>
         </div>
         <div className="prose prose-slate max-w-none">
-          <p className="text-lg md:text-xl leading-relaxed text-slate-600 font-medium italic border-l-8 border-secondary pl-8 py-2">
+          <p className="text-sm md:text-lg leading-relaxed text-slate-600 font-medium italic border-l-4 md:border-l-8 border-secondary pl-4 md:pl-8 py-2">
             "Assalamu'alaikum Warahmatullahi Wabarakatuh. Selamat datang di portal resmi digital Desa Pangawaren. Website ini adalah perwujudan dari visi kami untuk menciptakan transparansi dan kemudahan layanan bagi seluruh warga."
           </p>
-          <div className="space-y-6 text-slate-700 text-lg leading-relaxed pt-6">
+          <div className="space-y-6 text-slate-700 text-sm md:text-lg leading-relaxed pt-6">
             <p>
               Di era transformasi digital ini, kami menyadari bahwa kecepatan informasi dan kemudahan akses layanan adalah kunci kemajuan sebuah wilayah. Desa Pangawaren tidak ingin tertinggal. Kami hadirkan sistem layanan mandiri ini agar warga dapat mengurus administrasi dari mana saja, kapan saja.
             </p>
@@ -266,7 +312,7 @@ function SambutanTab({ kadesPhotoUrl }: { kadesPhotoUrl?: string }) {
             </p>
           </div>
         </div>
-        <div className="pt-10 flex flex-wrap gap-4">
+        <div className="pt-6 flex flex-wrap gap-2 sm:gap-4">
           {["Transparansi", "Efisiensi", "Gotong Royong", "Digitalisasi"].map(tag => (
             <div key={tag} className="flex items-center gap-2 px-5 py-2 bg-slate-50 border rounded-full text-[10px] font-black uppercase tracking-widest text-primary">
               <CheckCircle2 className="h-3 w-3 text-secondary" /> {tag}
@@ -291,14 +337,14 @@ function KenaliTab({ data, isLoading }: { data: any, isLoading: boolean }) {
         <section className="space-y-10">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-primary text-white rounded-2xl shadow-lg"><UserCircle2 className="h-6 w-6" /></div>
-            <h3 className="text-2xl font-black uppercase tracking-tight text-slate-800">Perangkat Desa</h3>
+            <h3 className="text-xl md:text-2xl font-black uppercase tracking-tight text-slate-800">Perangkat Desa</h3>
           </div>
           {isLoading ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="aspect-[3/4] rounded-[2.5rem]" />)}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+              {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="aspect-[3/4] rounded-3xl md:rounded-[2.5rem]" />)}
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 md:gap-8">
               {data.perangkat.map((o: Official) => <OfficialCard key={o.id} official={o} />)}
             </div>
           )}
@@ -308,14 +354,14 @@ function KenaliTab({ data, isLoading }: { data: any, isLoading: boolean }) {
         <section className="space-y-10">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-secondary text-primary rounded-2xl shadow-lg"><ShieldCheck className="h-6 w-6" /></div>
-            <h3 className="text-2xl font-black uppercase tracking-tight text-slate-800">BPD Desa</h3>
+            <h3 className="text-xl md:text-2xl font-black uppercase tracking-tight text-slate-800">BPD Desa</h3>
           </div>
           {isLoading ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="aspect-[3/4] rounded-[2.5rem]" />)}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+              {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="aspect-[3/4] rounded-3xl md:rounded-[2.5rem]" />)}
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 md:gap-8">
               {data.bpd.map((o: Official) => <OfficialCard key={o.id} official={o} />)}
             </div>
           )}
@@ -325,19 +371,19 @@ function KenaliTab({ data, isLoading }: { data: any, isLoading: boolean }) {
         <section className="space-y-12">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-slate-900 text-white rounded-2xl shadow-lg"><Landmark className="h-6 w-6" /></div>
-            <h3 className="text-2xl font-black uppercase tracking-tight text-slate-800">Lembaga Kemasyarakatan (RT/RW)</h3>
+            <h3 className="text-xl md:text-2xl font-black uppercase tracking-tight text-slate-800">Lembaga Kemasyarakatan (RT/RW)</h3>
           </div>
-          <div className="space-y-16">
+          <div className="space-y-10 md:space-y-16">
             {data.rtrwGroups.map((group: any, i: number) => (
-              <div key={i} className="space-y-8 p-10 bg-white rounded-[3rem] border border-slate-100 shadow-sm">
+              <div key={i} className="space-y-8 p-6 md:p-10 bg-white rounded-3xl md:rounded-[3rem] border border-slate-100 shadow-sm">
                 <div className="flex items-center gap-4">
                   <div className="h-px flex-1 bg-slate-100" />
-                  <Badge className="bg-slate-100 text-slate-400 font-black uppercase text-[10px] tracking-[0.4em] px-8 py-2 rounded-full border">
+                  <Badge className="bg-slate-100 text-slate-400 font-black uppercase text-[8px] md:text-[10px] tracking-[0.2em] md:tracking-[0.4em] px-4 md:px-8 py-1.5 md:py-2 rounded-full border">
                     {group.rwLabel}
                   </Badge>
                   <div className="h-px flex-1 bg-slate-100" />
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
                   {group.members.map((o: Official) => <OfficialCard key={o.id} official={o} isSmall />)}
                 </div>
               </div>
@@ -382,16 +428,16 @@ function SejarahTab() {
             {/* Content Side */}
             <div className="flex-1 pl-12 md:pl-0">
               <Card className={cn(
-                "rounded-[2.5rem] border-none shadow-sm hover:shadow-2xl transition-all duration-500 bg-white group overflow-hidden",
+                "rounded-3xl md:rounded-[2.5rem] border-none shadow-sm hover:shadow-2xl transition-all duration-500 bg-white group overflow-hidden",
                 i % 2 === 0 ? "md:mr-12" : "md:ml-12"
               )}>
                 <div className={cn("h-2 w-full", i % 2 === 0 ? "bg-primary" : "bg-secondary")} />
-                <CardContent className="p-8 md:p-10 space-y-4">
+                <CardContent className="p-6 md:p-10 space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-black text-primary uppercase tracking-widest">{event.year}</span>
                     <Calendar className="h-4 w-4 text-slate-200" />
                   </div>
-                  <h4 className="text-2xl font-black uppercase text-slate-900 italic tracking-tight">{event.title}</h4>
+                  <h4 className="text-xl md:text-2xl font-black uppercase text-slate-900 italic tracking-tight">{event.title}</h4>
                   <p className="text-slate-500 leading-relaxed font-medium">
                     {event.desc}
                   </p>
@@ -410,20 +456,20 @@ function SejarahTab() {
 
 function PetaTab() {
   return (
-    <div className="grid lg:grid-cols-12 gap-10">
+    <div className="grid lg:grid-cols-12 gap-6 lg:gap-10">
       <div className="lg:col-span-8">
-        <Card className="rounded-[3rem] overflow-hidden border-none shadow-xl h-[500px] md:h-[650px] relative group">
+        <Card className="rounded-3xl md:rounded-[3rem] overflow-hidden border-none shadow-xl h-[350px] sm:h-[500px] md:h-[650px] relative group">
           <VillageMap />
-          <div className="absolute top-8 left-8 pointer-events-none z-10">
-            <Badge className="bg-primary text-white font-black uppercase text-[10px] tracking-widest px-6 py-2 rounded-full border-none shadow-2xl">
+          <div className="absolute top-4 md:top-8 left-4 md:left-8 pointer-events-none z-10">
+            <Badge className="bg-primary text-white font-black uppercase text-[8px] md:text-[10px] tracking-widest px-4 md:px-6 py-1.5 md:py-2 rounded-full border-none shadow-2xl">
               Live Map Interface
             </Badge>
           </div>
         </Card>
       </div>
       <div className="lg:col-span-4 space-y-8">
-        <Card className="rounded-[3rem] border-none bg-primary text-white overflow-hidden shadow-2xl">
-          <CardContent className="p-10 space-y-10">
+        <Card className="rounded-3xl md:rounded-[3rem] border-none bg-primary text-white overflow-hidden shadow-2xl">
+          <CardContent className="p-6 md:p-10 space-y-8 md:space-y-10">
             <div className="space-y-4">
               <p className="text-[10px] font-black uppercase tracking-[0.4em] text-secondary">Geografis</p>
               <h3 className="text-3xl font-display font-semibold italic">Batas Wilayah</h3>
@@ -480,11 +526,11 @@ function WilayahTab() {
         <p className="text-slate-500 font-medium leading-relaxed italic">Distribusi pembagian wilayah administratif Desa Pangawaren yang terdiri dari 4 Dusun utama.</p>
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-8">
+      <div className="grid sm:grid-cols-2 gap-6 md:grid-cols-2 md:gap-8">
         {dusuns.map((dusun, i) => (
-          <Card key={i} className="rounded-[3rem] border-none shadow-sm hover:shadow-2xl transition-all duration-500 bg-white overflow-hidden group">
+          <Card key={i} className="rounded-3xl md:rounded-[3rem] border-none shadow-sm hover:shadow-2xl transition-all duration-500 bg-white overflow-hidden group">
             <div className={cn("h-3 w-full", dusun.color)} />
-            <CardContent className="p-10 space-y-8">
+            <CardContent className="p-6 md:p-10 space-y-6 md:space-y-8">
               <div className="flex justify-between items-center">
                 <h3 className="text-2xl font-black text-slate-800 tracking-tighter">{dusun.name}</h3>
                 <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-primary group-hover:text-white transition-all">
@@ -530,10 +576,10 @@ function PotensiTab() {
         <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.4em]">Aset Ekonomi & Kekayaan Budaya Pangawaren</p>
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {potentials.map((item, i) => (
-          <Card key={i} className="rounded-[2.5rem] border-none shadow-sm hover:shadow-2xl transition-all duration-500 bg-white group flex flex-col h-full">
-            <CardContent className="p-10 flex flex-col h-full space-y-6">
+          <Card key={i} className="rounded-3xl md:rounded-[2.5rem] border-none shadow-sm hover:shadow-2xl transition-all duration-500 bg-white group flex flex-col h-full">
+            <CardContent className="p-6 md:p-10 flex flex-col h-full space-y-6">
               <div className={cn("w-16 h-16 rounded-3xl flex items-center justify-center transition-transform group-hover:rotate-12 group-hover:scale-110", item.bg, item.color)}>
                 <item.icon className="h-8 w-8" />
               </div>
@@ -552,7 +598,7 @@ function PotensiTab() {
   );
 }
 
-function GaleriTab({ youtubeEmbedUrl, newsData, isLoadingNews }: { youtubeEmbedUrl: string | null, newsData?: any[], isLoadingNews?: boolean }) {
+function GaleriTab({ youtubeEmbedUrl, newsData, isLoadingNews }: { youtubeEmbedUrl: string | null, newsData?: any[] | null, isLoadingNews?: boolean }) {
   // Filter news yang memiliki imageUrl untuk dokumentasi kegiatan
   const documentationPhotos = useMemo(() => {
     if (!newsData) return [];
@@ -573,7 +619,7 @@ function GaleriTab({ youtubeEmbedUrl, newsData, isLoadingNews }: { youtubeEmbedU
           <div className="p-3 bg-rose-50 text-rose-600 rounded-2xl"><PlayCircle className="h-6 w-6" /></div>
           <h3 className="text-2xl font-black uppercase tracking-tight text-slate-800">Video Profil Resmi Desa</h3>
         </div>
-        <Card className="rounded-[3rem] overflow-hidden border-none shadow-2xl aspect-video bg-slate-900 group">
+        <Card className="rounded-3xl md:rounded-[3rem] overflow-hidden border-none shadow-2xl aspect-video bg-slate-900 group">
           {youtubeEmbedUrl ? (
             <iframe
               src={youtubeEmbedUrl}
@@ -583,30 +629,30 @@ function GaleriTab({ youtubeEmbedUrl, newsData, isLoadingNews }: { youtubeEmbedU
               allowFullScreen
             />
           ) : (
-            <div className="flex h-full min-h-[320px] items-center justify-center bg-slate-950 text-center text-slate-200">
+            <div className="flex h-full min-h-[240px] md:min-h-[320px] items-center justify-center bg-slate-950 text-center text-slate-200">
               <div className="space-y-3 px-6">
                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-600 text-white">
                   <PlayCircle className="h-6 w-6" />
                 </div>
-                <p className="text-lg font-semibold">Video profil desa belum dikonfigurasi.</p>
-                <p className="text-sm text-slate-300">Silakan atur tautan YouTube di halaman Pengaturan Admin.</p>
+                <p className="text-base md:text-lg font-semibold">Video profil desa belum dikonfigurasi.</p>
+                <p className="text-xs md:text-sm text-slate-300">Silakan atur tautan YouTube di halaman Pengaturan Admin.</p>
               </div>
             </div>
           )}
         </Card>
       </section>
-
+ 
       {/* Photo Gallery Grid - Dokumentasi Kegiatan dari Berita */}
       <section className="space-y-10">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-primary text-white rounded-2xl"><ImageIcon className="h-6 w-6" /></div>
-          <h3 className="text-2xl font-black uppercase tracking-tight text-slate-800">Dokumentasi Kegiatan</h3>
+          <h3 className="text-xl md:text-2xl font-black uppercase tracking-tight text-slate-800">Dokumentasi Kegiatan</h3>
         </div>
-
+ 
         {isLoadingNews ? (
-          <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
+          <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 md:gap-6 space-y-4 md:space-y-6">
             {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-64 rounded-[2rem]" />
+              <Skeleton key={i} className="h-64 rounded-2xl md:rounded-[2rem]" />
             ))}
           </div>
         ) : documentationPhotos.length === 0 ? (
@@ -618,9 +664,9 @@ function GaleriTab({ youtubeEmbedUrl, newsData, isLoadingNews }: { youtubeEmbedU
             <p className="text-slate-400 text-sm">Foto dokumentasi akan muncul ketika berita dengan foto ditambahkan.</p>
           </div>
         ) : (
-          <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
+          <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 md:gap-6 space-y-4 md:space-y-6">
             {documentationPhotos.map((photo, i) => (
-              <div key={i} className="rounded-[2rem] overflow-hidden border-4 border-white shadow-sm hover:shadow-xl transition-all duration-500 cursor-pointer group relative">
+              <div key={i} className="rounded-2xl md:rounded-[2rem] overflow-hidden border-4 border-white shadow-sm hover:shadow-xl transition-all duration-500 cursor-pointer group relative">
                 <img
                   src={photo.url}
                   alt={photo.title}

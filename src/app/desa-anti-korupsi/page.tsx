@@ -234,7 +234,7 @@ export default function DesaAntiKorupsi() {
                                         </DialogHeader>
                                         <div className="relative mt-4 aspect-video w-full overflow-hidden rounded-xl bg-slate-100 border border-slate-200">
                                           <img
-                                            src={getEmbedImageUrl(files.imageUrl)}
+                                            src={getEmbedImageUrl(files.imageUrl || '')}
                                             alt={item.title}
                                             className="h-full w-full object-contain"
                                           />

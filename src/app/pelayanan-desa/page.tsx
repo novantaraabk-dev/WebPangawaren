@@ -21,6 +21,7 @@ import {
   BookMarked,
   Info, 
   ChevronRight,
+  ChevronDown,
   ShieldAlert,
   Activity,
   TrendingUp,
@@ -41,6 +42,7 @@ import { cn } from '@/lib/utils';
 
 export default function PelayananDesaPage() {
   const [activeTab, setActiveTab] = useState('visi-misi');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const firestore = useFirestore();
 
   const tabs = [
@@ -72,6 +74,8 @@ export default function PelayananDesaPage() {
   const handleDownload = (fileId: string) => {
     window.open(`https://drive.google.com/uc?export=download&id=${fileId}`, '_blank');
   };
+  
+  const activeTabObj = tabs.find(t => t.id === activeTab) || tabs[0];
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 font-sans">
@@ -93,12 +97,13 @@ export default function PelayananDesaPage() {
         </div>
       </header>
 
-      <div className="flex-1 container mx-auto px-4 py-8 md:py-12">
-        <div className="grid lg:grid-cols-12 gap-10 items-start">
+      <div className="flex-1 container mx-auto px-4 py-6 md:py-12">
+        <div className="grid lg:grid-cols-12 gap-6 lg:gap-10 items-start">
           
           {/* SIDEBAR NAVIGATION (KONSEP PROFIL DESA) */}
-          <aside className="lg:col-span-3 sticky lg:top-28 z-40">
-            <div className="bg-white rounded-[2.5rem] p-4 border shadow-sm space-y-2 overflow-x-auto no-scrollbar flex lg:flex-col gap-2">
+          <aside className="lg:col-span-3 lg:sticky lg:top-28 z-40">
+            {/* Desktop Navigation List */}
+            <div className="hidden lg:flex bg-white rounded-[2.5rem] p-4 border shadow-sm flex-col gap-2">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
@@ -107,7 +112,7 @@ export default function PelayananDesaPage() {
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
                   className={cn(
-                    "flex items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-300 whitespace-nowrap lg:w-full group text-left",
+                    "flex items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-300 whitespace-nowrap w-full group text-left",
                     activeTab === tab.id 
                       ? "bg-primary text-white shadow-xl shadow-primary/20 scale-[1.02]" 
                       : "text-slate-500 hover:bg-slate-50 hover:text-primary"
@@ -117,6 +122,48 @@ export default function PelayananDesaPage() {
                   <span className="font-black uppercase text-[10px] tracking-widest">{tab.label}</span>
                 </button>
               ))}
+            </div>
+
+            {/* Mobile Menu Dropdown Selector */}
+            <div className="block lg:hidden w-full relative mb-6">
+              <button 
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="w-full flex items-center justify-between bg-primary text-white px-5 py-4 rounded-xl shadow-md font-black uppercase text-[10px] tracking-wider"
+              >
+                <div className="flex items-center gap-3">
+                  {React.createElement(activeTabObj.icon, { className: "h-5 w-5 text-secondary" })}
+                  <span>{activeTabObj.label}</span>
+                </div>
+                <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", isMenuOpen && "rotate-180")} />
+              </button>
+              
+              {isMenuOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setIsMenuOpen(false)} />
+                  <div className="absolute left-0 right-0 mt-2 z-50 bg-white border rounded-xl shadow-xl overflow-hidden py-1 divide-y divide-slate-100 animate-in fade-in slide-in-from-top-2 duration-200">
+                    {tabs.map((tab) => {
+                      const isCurrent = activeTab === tab.id;
+                      return (
+                        <button
+                          key={tab.id}
+                          onClick={() => {
+                            setActiveTab(tab.id);
+                            setIsMenuOpen(false);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                          className={cn(
+                            "w-full flex items-center gap-4 px-5 py-3.5 text-left text-xs font-bold transition-colors",
+                            isCurrent ? "bg-slate-50 text-primary" : "text-slate-600 hover:bg-slate-50"
+                          )}
+                        >
+                          <tab.icon className={cn("h-4 w-4 shrink-0", isCurrent ? "text-primary" : tab.color)} />
+                          <span className="uppercase tracking-wider">{tab.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </div>
             
             <div className="hidden lg:block mt-8 p-8 bg-slate-900 rounded-[3rem] text-white relative overflow-hidden">
@@ -151,18 +198,19 @@ export default function PelayananDesaPage() {
 
             {/* DOCUMENT TABLE SECTION */}
             {!(activeTab === 'visi-misi' || activeTab === 'maklumat' || activeTab === 'pojok-baca') && (
-              <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden bg-white">
-                  <CardHeader className="p-8 border-b bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <Card className="rounded-3xl md:rounded-[2.5rem] border-none shadow-sm overflow-hidden bg-white">
+                  <CardHeader className="p-6 md:p-8 border-b bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
-                      <CardTitle className="text-lg font-black uppercase text-slate-800 flex items-center gap-3">
+                      <CardTitle className="text-base md:text-lg font-black uppercase text-slate-800 flex items-center gap-3">
                       <FileText className="h-5 w-5 text-primary" />
                       Daftar Lampiran {getCategoryLabel(activeTab)}
                       </CardTitle>
-                      <CardDescription className="font-medium text-slate-500">Klik ikon mata untuk pratinjau atau tombol unduh.</CardDescription>
+                      <CardDescription className="font-medium text-xs md:text-sm text-slate-500">Klik pratinjau atau unduh dokumen di bawah.</CardDescription>
                   </div>
                   </CardHeader>
                   <CardContent className="p-0">
-                  <div className="overflow-x-auto">
+                  {/* Desktop Table View */}
+                  <div className="hidden md:block overflow-x-auto">
                       <Table>
                       <TableHeader className="bg-slate-100/50">
                           <TableRow>
@@ -212,6 +260,45 @@ export default function PelayananDesaPage() {
                       </TableBody>
                       </Table>
                   </div>
+
+                  {/* Mobile Card List View */}
+                  <div className="block md:hidden divide-y divide-slate-100">
+                    {isLoading ? (
+                      Array.from({ length: 3 }).map((_, i) => (
+                        <div key={i} className="p-6">
+                          <Skeleton className="h-12 w-full rounded-xl" />
+                        </div>
+                      ))
+                    ) : docs?.length === 0 ? (
+                      <div className="p-8 text-center text-slate-400 font-medium italic text-sm">
+                        Belum ada dokumen lampiran untuk kategori ini.
+                      </div>
+                    ) : (
+                      docs?.map((doc) => (
+                        <div key={doc.id} className="p-5 space-y-4">
+                          <div className="flex items-start gap-3">
+                            <div className="p-2 bg-red-50 text-red-600 rounded-lg shrink-0 mt-0.5">
+                              <FileText className="h-4 w-4" />
+                            </div>
+                            <div className="space-y-1">
+                              <span className="font-bold text-slate-700 uppercase text-xs block leading-relaxed">{doc.title}</span>
+                              <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest border-slate-200 py-0 h-4">PDF File</Badge>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button variant="outline" className="flex-1 h-9 rounded-xl font-bold text-xs gap-2 justify-center" onClick={() => handlePreview(doc.fileId)}>
+                              <Eye className="h-3.5 w-3.5" />
+                              Pratinjau
+                            </Button>
+                            <Button variant="outline" className="flex-1 h-9 rounded-xl font-bold text-xs gap-2 hover:bg-secondary hover:text-primary justify-center" onClick={() => handleDownload(doc.fileId)}>
+                              <Download className="h-3.5 w-3.5" />
+                              Unduh
+                            </Button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
                   </CardContent>
               </Card>
             )}
@@ -230,8 +317,7 @@ export default function PelayananDesaPage() {
     </div>
   );
 }
-
-function CategoryContent({ categoryId, docs, isLoading }: { categoryId: string; docs?: PelayananDoc[]; isLoading: boolean }) {
+function CategoryContent({ categoryId, docs, isLoading }: { categoryId: string; docs: PelayananDoc[] | null | undefined; isLoading: boolean }) {
   const hasDocs = docs && docs.length > 0;
 
   switch (categoryId) {
@@ -240,12 +326,12 @@ function CategoryContent({ categoryId, docs, isLoading }: { categoryId: string; 
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {docs.map((docItem) => (
-              <Card key={docItem.id} className="rounded-[2.5rem] overflow-hidden border shadow-sm bg-white p-6 flex flex-col justify-between">
-                <div className="relative aspect-video w-full bg-slate-50 rounded-[2rem] overflow-hidden mb-4 border">
+              <Card key={docItem.id} className="rounded-3xl md:rounded-[2.5rem] overflow-hidden border shadow-sm bg-white p-4 md:p-6 flex flex-col justify-between">
+                <div className="relative aspect-video w-full bg-slate-50 rounded-2xl md:rounded-[2rem] overflow-hidden mb-4 border">
                   <img src={docItem.fileId} alt={docItem.title} className="w-full h-full object-contain" />
                 </div>
                 <div className="text-center">
-                  <h3 className="text-sm font-black uppercase text-slate-800 tracking-tight leading-tight">{docItem.title}</h3>
+                  <h3 className="text-xs md:text-sm font-black uppercase text-slate-800 tracking-tight leading-tight">{docItem.title}</h3>
                 </div>
               </Card>
             ))}
@@ -255,31 +341,31 @@ function CategoryContent({ categoryId, docs, isLoading }: { categoryId: string; 
       return (
         <div className="space-y-8">
           <div className="grid md:grid-cols-2 gap-8">
-            <Card className="rounded-[2.5rem] border-none shadow-sm bg-primary text-white overflow-hidden">
-              <CardHeader className="p-8 pb-4">
+            <Card className="rounded-3xl md:rounded-[2.5rem] border-none shadow-sm bg-primary text-white overflow-hidden">
+              <CardHeader className="p-6 md:p-8 pb-4">
                 <Star className="h-8 w-8 text-secondary mb-4" />
-                <CardTitle className="text-2xl font-black uppercase italic">Visi Pelayanan</CardTitle>
+                <CardTitle className="text-xl md:text-2xl font-black uppercase italic">Visi Pelayanan</CardTitle>
               </CardHeader>
-              <CardContent className="p-8 pt-0">
-                <p className="text-xl font-medium leading-relaxed italic">
+              <CardContent className="p-6 md:p-8 pt-0">
+                <p className="text-lg md:text-xl font-medium leading-relaxed italic">
                   "Terwujudnya pelayanan desa yang cepat, transparan, dan akuntabel demi kesejahteraan masyarakat Desa Pangawaren."
                 </p>
               </CardContent>
             </Card>
-            <Card className="rounded-[2.5rem] border-none shadow-sm bg-white overflow-hidden border border-slate-100">
-              <CardHeader className="p-8 pb-4">
+            <Card className="rounded-3xl md:rounded-[2.5rem] border-none shadow-sm bg-white overflow-hidden border border-slate-100">
+              <CardHeader className="p-6 md:p-8 pb-4">
                 <ShieldCheck className="h-8 w-8 text-primary mb-4" />
-                <CardTitle className="text-2xl font-black uppercase text-slate-900">Moto Pelayanan</CardTitle>
+                <CardTitle className="text-xl md:text-2xl font-black uppercase text-slate-900">Moto Pelayanan</CardTitle>
               </CardHeader>
-              <CardContent className="p-8 pt-0">
-                <p className="text-xl font-black text-primary uppercase tracking-tight italic">
+              <CardContent className="p-6 md:p-8 pt-0">
+                <p className="text-lg md:text-xl font-black text-primary uppercase tracking-tight italic">
                   "MELAYANI DENGAN PRIMA DAN SEPENUH HATI"
                 </p>
               </CardContent>
             </Card>
           </div>
-          <Card className="rounded-[3rem] border-none shadow-sm bg-white p-10 space-y-6">
-            <h3 className="text-xl font-black uppercase text-slate-800 border-l-4 border-secondary pl-4">6 Misi Utama Kami</h3>
+          <Card className="rounded-3xl md:rounded-[3rem] border-none shadow-sm bg-white p-6 md:p-10 space-y-6">
+            <h3 className="text-lg md:text-xl font-black uppercase text-slate-800 border-l-4 border-secondary pl-4">6 Misi Utama Kami</h3>
             <ul className="grid md:grid-cols-2 gap-4">
               {[
                 "Memberikan pelayanan publik yang ramah dan sopan.",
@@ -303,12 +389,12 @@ function CategoryContent({ categoryId, docs, isLoading }: { categoryId: string; 
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 justify-center">
             {docs.map((docItem) => (
-              <Card key={docItem.id} className="rounded-[2.5rem] overflow-hidden border shadow-sm bg-white p-6 max-w-xl mx-auto flex flex-col justify-between">
-                <div className="relative aspect-video w-full bg-slate-50 rounded-[2rem] overflow-hidden mb-4 border">
+              <Card key={docItem.id} className="rounded-3xl md:rounded-[2.5rem] overflow-hidden border shadow-sm bg-white p-4 md:p-6 max-w-xl mx-auto flex flex-col justify-between">
+                <div className="relative aspect-video w-full bg-slate-50 rounded-2xl md:rounded-[2rem] overflow-hidden mb-4 border">
                   <img src={docItem.fileId} alt={docItem.title} className="w-full h-full object-contain" />
                 </div>
                 <div className="text-center">
-                  <h3 className="text-sm font-black uppercase text-slate-800 tracking-tight leading-tight">{docItem.title}</h3>
+                  <h3 className="text-xs md:text-sm font-black uppercase text-slate-800 tracking-tight leading-tight">{docItem.title}</h3>
                 </div>
               </Card>
             ))}
@@ -316,11 +402,11 @@ function CategoryContent({ categoryId, docs, isLoading }: { categoryId: string; 
         );
       }
       return (
-        <Card className="rounded-[3rem] border-none shadow-sm bg-white overflow-hidden border-t-8 border-primary">
-          <CardContent className="p-12 space-y-8 text-center max-w-3xl mx-auto">
+        <Card className="rounded-3xl md:rounded-[3rem] border-none shadow-sm bg-white overflow-hidden border-t-8 border-primary">
+          <CardContent className="p-6 md:p-12 space-y-8 text-center max-w-3xl mx-auto">
             <ShieldCheck className="h-16 w-16 text-primary mx-auto opacity-20" />
-            <h2 className="text-3xl font-black uppercase tracking-tight text-slate-900 font-display italic">Maklumat Pelayanan</h2>
-            <div className="space-y-6 text-lg font-medium text-slate-700 leading-relaxed italic">
+            <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-slate-900 font-display italic">Maklumat Pelayanan</h2>
+            <div className="space-y-6 text-base md:text-lg font-medium text-slate-700 leading-relaxed italic">
               <p>"Dengan ini, kami menyatakan sanggup menyelenggarakan pelayanan sesuai standar pelayanan yang telah ditetapkan."</p>
               <p>"Apabila tidak menepati janji ini, kami siap menerima sanksi sesuai peraturan perundang-undangan yang berlaku."</p>
             </div>
@@ -333,11 +419,11 @@ function CategoryContent({ categoryId, docs, isLoading }: { categoryId: string; 
     case 'standar':
         return (
           <div className="space-y-8">
-            <div className="p-8 bg-amber-50 border-2 border-dashed border-amber-200 rounded-[2.5rem] flex items-center gap-6">
-               <div className="p-4 bg-white rounded-2xl shadow-sm text-amber-600"><Info className="h-8 w-8" /></div>
+            <div className="p-6 md:p-8 bg-amber-50 border-2 border-dashed border-amber-200 rounded-3xl md:rounded-[2.5rem] flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 sm:gap-6">
+               <div className="p-4 bg-white rounded-2xl shadow-sm text-amber-600 shrink-0"><Info className="h-8 w-8" /></div>
                <div className="space-y-1">
-                  <h3 className="text-xl font-black uppercase text-amber-900">Transparansi Biaya</h3>
-                  <p className="text-sm font-medium text-amber-700">Seluruh pelayanan administrasi di Desa Pangawaren adalah <strong>GRATIS (Rp. 0,-)</strong>.</p>
+                  <h3 className="text-lg md:text-xl font-black uppercase text-amber-900">Transparansi Biaya</h3>
+                  <p className="text-xs md:text-sm font-medium text-amber-700">Seluruh pelayanan administrasi di Desa Pangawaren adalah <strong>GRATIS (Rp. 0,-)</strong>.</p>
                </div>
             </div>
             <div className="grid md:grid-cols-2 gap-8">
@@ -347,9 +433,9 @@ function CategoryContent({ categoryId, docs, isLoading }: { categoryId: string; 
                  { title: "SKTM", time: "Langsung Jadi", req: "KTP, KK, Surat Pengantar RT" },
                  { title: "Pengantar Nikah", time: "1-2 Hari Kerja", req: "KTP, KK, Ijazah, Akta Kelahiran" }
                ].map((item, i) => (
-                 <Card key={i} className="rounded-3xl border-none shadow-sm bg-white p-8 space-y-4 group hover:shadow-lg transition-all">
-                    <h4 className="text-lg font-black uppercase text-primary border-b pb-2 group-hover:text-secondary transition-colors">{item.title}</h4>
-                    <div className="flex justify-between items-center text-sm">
+                 <Card key={i} className="rounded-3xl border-none shadow-sm bg-white p-6 md:p-8 space-y-4 group hover:shadow-lg transition-all">
+                    <h4 className="text-base md:text-lg font-black uppercase text-primary border-b pb-2 group-hover:text-secondary transition-colors">{item.title}</h4>
+                    <div className="flex justify-between items-center text-xs md:text-sm">
                        <span className="text-slate-400 font-bold uppercase text-[9px]">Waktu Layanan</span>
                        <span className="font-black text-slate-700">{item.time}</span>
                     </div>
@@ -365,20 +451,20 @@ function CategoryContent({ categoryId, docs, isLoading }: { categoryId: string; 
     case 'ikm':
       return (
         <div className="grid md:grid-cols-3 gap-8">
-          <Card className="md:col-span-1 rounded-[2.5rem] bg-slate-900 text-white p-8 flex flex-col items-center justify-center text-center space-y-4">
+          <Card className="md:col-span-1 rounded-3xl md:rounded-[2.5rem] bg-slate-900 text-white p-6 md:p-8 flex flex-col items-center justify-center text-center space-y-4">
              <BarChart className="h-10 w-10 text-secondary" />
              <div>
                 <p className="text-[10px] font-black uppercase tracking-widest text-white/50">Nilai Akhir IKM</p>
-                <h3 className="text-6xl font-black text-secondary tracking-tighter">85.5</h3>
+                <h3 className="text-5xl md:text-6xl font-black text-secondary tracking-tighter">85.5</h3>
              </div>
              <Badge className="bg-emerald-500 text-white border-none font-bold px-4 py-1">SANGAT BAIK (A)</Badge>
           </Card>
-          <Card className="md:col-span-2 rounded-[2.5rem] bg-white border p-8 flex flex-col justify-center">
-             <h4 className="font-black uppercase text-sm mb-4 flex items-center gap-2">
+          <Card className="md:col-span-2 rounded-3xl md:rounded-[2.5rem] bg-white border p-6 md:p-8 flex flex-col justify-center">
+             <h4 className="font-black uppercase text-xs md:text-sm mb-4 flex items-center gap-2">
                <Info className="h-4 w-4 text-blue-500" />
                Analisis Kepuasan
              </h4>
-             <p className="text-slate-600 leading-relaxed font-medium">
+             <p className="text-xs md:text-sm text-slate-600 leading-relaxed font-medium">
                Berdasarkan hasil survei periode terakhir, tingkat kepuasan masyarakat Desa Pangawaren menunjukkan tren positif terutama pada aspek kesopanan petugas dan kecepatan waktu penyelesaian dokumen.
              </p>
           </Card>
@@ -386,12 +472,12 @@ function CategoryContent({ categoryId, docs, isLoading }: { categoryId: string; 
       );
     case 'survey':
       return (
-        <Card className="rounded-[3rem] border-none shadow-sm bg-emerald-50 p-10 flex flex-col md:flex-row items-center gap-8 border-2 border-emerald-100">
-          <div className="flex-1 space-y-4">
-            <h3 className="text-2xl font-black uppercase text-emerald-900 font-display italic">Bantu Kami Meningkatkan Layanan</h3>
-            <p className="text-emerald-700/80 font-medium leading-relaxed">Partisipasi Anda dalam mengisi survey kepuasan sangat berarti bagi perbaikan kualitas pelayanan kami di masa depan. Klik tombol di samping untuk mengisi survey melalui Google Form.</p>
+        <Card className="rounded-3xl md:rounded-[3rem] border-none shadow-sm bg-emerald-50 p-6 md:p-10 flex flex-col md:flex-row items-center gap-6 md:gap-8 border-2 border-emerald-100">
+          <div className="flex-1 space-y-4 text-center md:text-left">
+            <h3 className="text-xl md:text-2xl font-black uppercase text-emerald-900 font-display italic">Bantu Kami Meningkatkan Layanan</h3>
+            <p className="text-xs md:text-sm text-emerald-700/80 font-medium leading-relaxed">Partisipasi Anda dalam mengisi survey kepuasan sangat berarti bagi perbaikan kualitas pelayanan kami di masa depan. Klik tombol di samping untuk mengisi survey melalui Google Form.</p>
           </div>
-          <Button size="lg" className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black uppercase px-8 h-14 shadow-lg shadow-emerald-200" asChild>
+          <Button size="lg" className="w-full md:w-auto bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black uppercase px-8 h-14 shadow-lg shadow-emerald-200 justify-center" asChild>
             <a href="https://sisukma.cilacapkab.go.id/Home/pelayanan/4012310" target="_blank" rel="noopener noreferrer">
               Isi Survey Online <ChevronRight className="ml-2 h-4 w-4" />
             </a>
@@ -401,12 +487,12 @@ function CategoryContent({ categoryId, docs, isLoading }: { categoryId: string; 
     case 'sop':
         return (
           <div className="space-y-8">
-             <Card className="rounded-[2.5rem] bg-white border-none shadow-sm p-10 space-y-10">
+             <Card className="rounded-3xl md:rounded-[2.5rem] bg-white border-none shadow-sm p-6 md:p-10 space-y-6 md:space-y-10">
                 <div className="text-center space-y-2">
-                   <h3 className="text-2xl font-black uppercase text-slate-900 italic font-display">Alur Pengurusan Surat</h3>
-                   <p className="text-sm text-slate-500 font-medium">Prosedur standar pengajuan dokumen dari warga hingga tuntas.</p>
-                </div>
-                <div className="grid md:grid-cols-4 gap-4 relative">
+                   <h3 className="text-xl md:text-2xl font-black uppercase text-slate-900 italic font-display">Alur Pengurusan Surat</h3>
+                   <p className="text-xs md:text-sm text-slate-500 font-medium">Prosedur standar pengajuan dokumen dari warga hingga tuntas.</p>
+                 </div>
+                <div className="grid md:grid-cols-4 gap-8 md:gap-4 relative">
                    {[
                      { label: "Pengajuan", desc: "Warga mengajukan lewat portal/datang.", icon: BookOpen },
                      { label: "Verifikasi", desc: "Operator mengecek kelengkapan data.", icon: ShieldCheck },
@@ -432,12 +518,12 @@ function CategoryContent({ categoryId, docs, isLoading }: { categoryId: string; 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
             {docs.map((docItem) => {
               const cardContent = (
-                <Card className="rounded-[2.5rem] overflow-hidden border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 bg-white p-4 cursor-pointer group h-full flex flex-col justify-between">
-                  <div className="relative aspect-[3/4] w-full bg-slate-50 rounded-[2rem] overflow-hidden mb-4 border">
+                <Card className="rounded-3xl md:rounded-[2.5rem] overflow-hidden border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 bg-white p-4 cursor-pointer group h-full flex flex-col justify-between">
+                  <div className="relative aspect-[3/4] w-full bg-slate-50 rounded-2xl md:rounded-[2rem] overflow-hidden mb-4 border">
                     <img src={docItem.fileId} alt={docItem.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                   </div>
-                  <div className="p-4 text-center">
-                    <h3 className="text-base font-black uppercase text-slate-800 tracking-tight leading-tight line-clamp-2">{docItem.title}</h3>
+                  <div className="p-2 md:p-4 text-center">
+                    <h3 className="text-sm md:text-base font-black uppercase text-slate-800 tracking-tight leading-tight line-clamp-2">{docItem.title}</h3>
                     {docItem.link && (
                       <p className="text-xs text-primary font-bold mt-2 flex items-center justify-center gap-1">
                         Buka Tautan <ChevronRight className="h-3 w-3" />
@@ -460,14 +546,14 @@ function CategoryContent({ categoryId, docs, isLoading }: { categoryId: string; 
         );
       }
       return (
-        <div className="bg-white p-10 rounded-[3rem] border border-dashed text-center space-y-4">
+        <div className="bg-white p-6 md:p-10 rounded-3xl md:rounded-[3rem] border border-dashed text-center space-y-4">
            <LibraryBig className="h-12 w-12 text-slate-200 mx-auto" />
            <p className="text-slate-400 font-bold uppercase text-xs tracking-widest">Belum ada konten Pojok Baca yang tersedia.</p>
         </div>
       );
     default:
       return (
-        <div className="bg-white p-10 rounded-[3rem] border border-dashed text-center space-y-4">
+        <div className="bg-white p-6 md:p-10 rounded-3xl md:rounded-[3rem] border border-dashed text-center space-y-4">
            <Info className="h-12 w-12 text-slate-200 mx-auto" />
            <p className="text-slate-400 font-bold uppercase text-xs tracking-widest">Pilih kategori di samping untuk melihat detail informasi.</p>
         </div>
