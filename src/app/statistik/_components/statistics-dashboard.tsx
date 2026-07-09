@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useMemo, useState, useRef } from 'react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, limit } from 'firebase/firestore';
+import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 import { Resident } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { 
@@ -32,84 +32,79 @@ export function StatisticsDashboard() {
   const { toast } = useToast();
   const reportRef = useRef<HTMLDivElement>(null);
 
-  // Ambil data penduduk (limit 5000 untuk performa agregat klien)
-  const residentsQuery = useMemoFirebase(() => {
+  // Ambil data statistik agregat dari dokumen tunggal (1 read, hemat kuota Firestore)
+  const statsRef = useMemoFirebase(() => {
     if (!firestore) return null;
-    return query(collection(firestore, 'residents'), limit(5000));
+    return doc(firestore, 'villageProfile', 'statistics');
   }, [firestore]);
 
-  const { data: residents, isLoading } = useCollection<Resident>(residentsQuery);
+  const { data: statsDoc, isLoading } = useDoc<any>(statsRef);
 
   // LOGIKA AGREGASI DATA
   const stats = useMemo(() => {
-    if (!residents) return null;
+    if (!statsDoc) return null;
 
-    let filtered = residents;
+    let targetStats = statsDoc;
     if (filterDusun !== 'Semua Wilayah') {
-      filtered = residents.filter(r => r.address?.toUpperCase().includes(filterDusun.toUpperCase()));
+      targetStats = statsDoc.dusunData?.[filterDusun] || {
+        total: 0,
+        totalKK: 0,
+        malePercent: 0,
+        femalePercent: 0,
+        ageData: [
+          { name: 'Anak (0-14)', value: 0 },
+          { name: 'Produktif (15-64)', value: 0 },
+          { name: 'Lansia (65+)', value: 0 },
+        ],
+        eduData: [
+          { name: 'SD', value: 0 },
+          { name: 'SMP', value: 0 },
+          { name: 'SMA', value: 0 },
+          { name: 'Diploma/Sarjana', value: 0 },
+          { name: 'Lainnya', value: 0 },
+        ],
+        jobData: [
+          { name: 'Petani', value: 0 },
+          { name: 'Buruh', value: 0 },
+          { name: 'Swasta', value: 0 },
+          { name: 'Pelajar', value: 0 },
+          { name: 'PNS/TNI', value: 0 },
+          { name: 'Lainnya', value: 0 },
+        ],
+        rwData: [],
+        rtData: [],
+      };
     }
 
-    const total = filtered.length;
-    const kkSet = new Set(filtered.map(r => r.noKk).filter(Boolean));
-    const maleCount = filtered.filter(r => r.gender?.toLowerCase().includes('laki')).length;
-    const femaleCount = total - maleCount;
-
-    // Kelompok Umur
-    const ageGroups = [
-      { name: 'Anak (0-14)', value: 0 },
-      { name: 'Produktif (15-64)', value: 0 },
-      { name: 'Lansia (65+)', value: 0 },
-    ];
-
-    // Pendidikan
-    const eduMap: Record<string, number> = { 'SD': 0, 'SMP': 0, 'SMA': 0, 'Diploma/Sarjana': 0, 'Lainnya': 0 };
-    
-    // Pekerjaan
-    const jobMap: Record<string, number> = { 'Petani': 0, 'Buruh': 0, 'Swasta': 0, 'Pelajar': 0, 'PNS/TNI': 0, 'Lainnya': 0 };
-
-    // Sebaran RW
-    const rwMap: Record<string, number> = {};
-
-    filtered.forEach(r => {
-      // Age Logic
-      const age = parseInt(r.age || '0');
-      if (age <= 14) ageGroups[0].value++;
-      else if (age <= 64) ageGroups[1].value++;
-      else ageGroups[2].value++;
-
-      // Education Logic
-      const edu = (r.educationLevel || '').toUpperCase();
-      if (edu.includes('SD')) eduMap['SD']++;
-      else if (edu.includes('SMP')) eduMap['SMP']++;
-      else if (edu.includes('SMA') || edu.includes('SLTA')) eduMap['SMA']++;
-      else if (edu.includes('SARJANA') || edu.includes('DIPLOMA') || edu.includes('S1')) eduMap['Diploma/Sarjana']++;
-      else eduMap['Lainnya']++;
-
-      // Job Logic
-      const job = (r.occupation || '').toUpperCase();
-      if (job.includes('TANI')) jobMap['Petani']++;
-      else if (job.includes('BURUH')) jobMap['Buruh']++;
-      else if (job.includes('SWASTA') || job.includes('KARYAWAN')) jobMap['Swasta']++;
-      else if (job.includes('PELAJAR') || job.includes('MAHASISWA')) jobMap['Pelajar']++;
-      else if (job.includes('PNS') || job.includes('TNI') || job.includes('POLRI')) jobMap['PNS/TNI']++;
-      else jobMap['Lainnya']++;
-
-      // RW Logic
-      const rw = r.rw ? `RW ${r.rw.padStart(2, '0')}` : 'N/A';
-      rwMap[rw] = (rwMap[rw] || 0) + 1;
-    });
-
     return {
-      total,
-      totalKK: kkSet.size,
-      malePercent: total > 0 ? Math.round((maleCount / total) * 100) : 0,
-      femalePercent: total > 0 ? Math.round((femaleCount / total) * 100) : 0,
-      ageData: ageGroups,
-      eduData: Object.entries(eduMap).map(([name, value]) => ({ name, value })),
-      jobData: Object.entries(jobMap).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value),
-      rwData: Object.entries(rwMap).map(([name, value]) => ({ name, value })).sort((a, b) => a.name.localeCompare(b.name)),
+      total: targetStats.total || 0,
+      totalKK: targetStats.totalKK || 0,
+      malePercent: targetStats.malePercent || 0,
+      femalePercent: targetStats.femalePercent || 0,
+      ageData: targetStats.ageData || [
+        { name: 'Anak (0-14)', value: 0 },
+        { name: 'Produktif (15-64)', value: 0 },
+        { name: 'Lansia (65+)', value: 0 },
+      ],
+      eduData: targetStats.eduData || [
+        { name: 'SD', value: 0 },
+        { name: 'SMP', value: 0 },
+        { name: 'SMA', value: 0 },
+        { name: 'Diploma/Sarjana', value: 0 },
+        { name: 'Lainnya', value: 0 },
+      ],
+      jobData: targetStats.jobData || [
+        { name: 'Petani', value: 0 },
+        { name: 'Buruh', value: 0 },
+        { name: 'Swasta', value: 0 },
+        { name: 'Pelajar', value: 0 },
+        { name: 'PNS/TNI', value: 0 },
+        { name: 'Lainnya', value: 0 },
+      ],
+      rwData: targetStats.rwData || [],
+      rtData: targetStats.rtData || [],
       // Mock mutation data for preview
-      mutationData: [
+      mutationData: statsDoc.mutationData || [
         { month: 'Jan', lahir: 12, mati: 5, datang: 8, pindah: 4 },
         { month: 'Feb', lahir: 15, mati: 3, datang: 10, pindah: 6 },
         { month: 'Mar', lahir: 10, mati: 7, datang: 12, pindah: 2 },
@@ -117,7 +112,7 @@ export function StatisticsDashboard() {
         { month: 'Mei', lahir: 14, mati: 2, datang: 15, pindah: 5 },
       ]
     };
-  }, [residents, filterDusun]);
+  }, [statsDoc, filterDusun]);
 
   const handleDownloadExcel = () => {
     if (!stats) return;
@@ -160,6 +155,19 @@ export function StatisticsDashboard() {
           <Skeleton className="h-[400px] rounded-[3rem]" />
           <Skeleton className="h-[400px] rounded-[3rem]" />
         </div>
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 text-center bg-white rounded-[3rem] border border-slate-100 shadow-sm max-w-2xl mx-auto space-y-6 my-12">
+        <BarChart3 className="h-16 w-16 text-emerald-600 animate-pulse" />
+        <h2 className="text-2xl font-black uppercase tracking-tight text-slate-800">Statistik Belum Tersedia</h2>
+        <p className="text-slate-500 leading-relaxed font-medium">
+          Data grafik dan statistik demografi belum dibuat atau sedang diperbarui oleh administrator.
+          Silakan hubungi admin atau perbarui database kependudukan di Dashboard Admin untuk memicu kalkulasi awal.
+        </p>
       </div>
     );
   }

@@ -5,10 +5,16 @@ import { motion } from 'framer-motion';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const COLORS = ['#16a34a', '#0ea5a4', '#f59e0b', '#7c3aed', '#ef4444'];
 
-export function StatisticsCharts({ residents }: { residents?: any[] | null }) {
+interface StatisticsChartsProps {
+  statsDoc?: any;
+  isLoading?: boolean;
+}
+
+export function StatisticsCharts({ statsDoc, isLoading }: StatisticsChartsProps) {
   const firestore = useFirestore();
   const profileRef = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -17,30 +23,24 @@ export function StatisticsCharts({ residents }: { residents?: any[] | null }) {
 
   const { data: profile } = useDoc<Record<string, any>>(profileRef);
 
-  const population = residents?.length ?? 0;
+  const population = statsDoc?.total ?? 0;
   const areaKm = profile?.areaKm || profile?.area || profile?.luas || null;
 
   const genderData = useMemo(() => {
-    const male = residents?.filter(r => (r.gender || '').toLowerCase().startsWith('l')).length ?? 0;
-    const female = residents?.filter(r => (r.gender || '').toLowerCase().startsWith('p') || (r.gender || '').toLowerCase().startsWith('w')).length ?? 0;
-    const other = Math.max(0, population - male - female);
+    const male = statsDoc?.maleCount ?? 0;
+    const female = statsDoc?.femaleCount ?? 0;
+    const other = statsDoc?.otherCount ?? 0;
     return [
       { name: 'Laki-laki', value: male },
       { name: 'Perempuan', value: female },
       ...(other > 0 ? [{ name: 'Lainnya', value: other }] : []),
     ];
-  }, [residents, population]);
+  }, [statsDoc]);
 
   const rtDistribution = useMemo(() => {
-    if (!residents) return [];
-    const counts: Record<string, number> = {};
-    residents.forEach(r => {
-      const rt = (r.rt || '0').toString();
-      counts[rt] = (counts[rt] || 0) + 1;
-    });
-    const arr = Object.keys(counts).map(k => ({ rt: k, count: counts[k] })).sort((a, b) => a.rt.localeCompare(b.rt));
-    return arr.slice(0, 12); // limit to first 12 RT for clarity
-  }, [residents]);
+    if (!statsDoc?.rtData) return [];
+    return statsDoc.rtData.slice(0, 12);
+  }, [statsDoc]);
 
   const renderPieLabel = (props: any) => {
     const { cx, cy, midAngle, outerRadius, percent, index } = props;
@@ -48,7 +48,6 @@ export function StatisticsCharts({ residents }: { residents?: any[] | null }) {
     const labelRadius = outerRadius + 18; // outside the donut
     const x = cx + labelRadius * Math.cos(-midAngle * RADIAN);
     const y = cy + labelRadius * Math.sin(-midAngle * RADIAN);
-    const value = genderData[index]?.value ?? 0;
     const pct = (percent || 0) * 100;
     const label = `${pct >= 1 ? pct.toFixed(1) : pct.toFixed(2)}%`;
     const anchor: 'start' | 'end' = x > cx ? 'start' : 'end';
@@ -58,6 +57,27 @@ export function StatisticsCharts({ residents }: { residents?: any[] | null }) {
       </text>
     );
   };
+
+  if (isLoading) {
+    return (
+      <div className="mt-8 grid gap-6 lg:grid-cols-3">
+        <Skeleton className="h-[240px] rounded-[1.5rem]" />
+        <Skeleton className="h-[240px] rounded-[1.5rem]" />
+        <Skeleton className="h-[240px] rounded-[1.5rem]" />
+      </div>
+    );
+  }
+
+  if (!statsDoc) {
+    return (
+      <div className="mt-8 p-8 text-center bg-white rounded-[1.5rem] border border-emerald-600/20 shadow-sm max-w-lg mx-auto">
+        <p className="text-sm font-semibold text-slate-700">Data Statistik Belum Siap</p>
+        <p className="text-xs text-slate-500 mt-2">
+          Administrator belum membuat rangkuman data kependudukan. Selesaikan langkah ini dengan mengklik tombol &quot;Update Statistik Grafik&quot; di menu Data Penduduk Admin.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="mt-8 grid gap-6 lg:grid-cols-3">

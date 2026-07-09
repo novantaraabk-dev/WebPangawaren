@@ -62,7 +62,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { seedResidents } from '@/lib/residents';
+import { seedResidents, recalculateStatistics } from '@/lib/residents';
 
 export function ResidentList() { console.log('ResidentList render');
   const [searchTerm, setSearchTerm] = useState('');
@@ -71,6 +71,7 @@ export function ResidentList() { console.log('ResidentList render');
   const [editingResident, setEditingResident] = useState<Resident | null>(null);
   const [isDeletingAll, setIsDeletingAll] = useState(false);
   const [isSeeding, setIsSeeding] = useState(false);
+  const [isRecalculating, setIsRecalculating] = useState(false);
   
   const [residents, setResidents] = useState<Resident[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -167,6 +168,10 @@ export function ResidentList() { console.log('ResidentList render');
       await deleteDoc(doc(firestore, 'residents', id));
       setResidents(residents.filter(r => r.id !== id));
       if (totalCount !== null) setTotalCount(totalCount - 1);
+      
+      // Update demographic cache
+      await recalculateStatistics(firestore);
+      
       toast({ title: "Data Dihapus", description: "Data warga telah dihapus." });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Gagal Menghapus", description: error.message });
@@ -201,6 +206,9 @@ export function ResidentList() { console.log('ResidentList render');
         await batch.commit();
       }
 
+      // Update demographic cache
+      await recalculateStatistics(firestore);
+
       setResidents([]);
       setTotalCount(0);
       toast({ title: "Berhasil", description: `${count} data penduduk telah dihapus permanen.` });
@@ -216,6 +224,7 @@ export function ResidentList() { console.log('ResidentList render');
     setIsSeeding(true);
     try {
       await seedResidents(firestore);
+      await recalculateStatistics(firestore);
       await fetchTotalCount();
       toast({
         title: "Data Testing Berhasil",
@@ -229,6 +238,27 @@ export function ResidentList() { console.log('ResidentList render');
       });
     } finally {
       setIsSeeding(false);
+    }
+  };
+
+  const handleRecalculate = async () => {
+    if (!firestore) return;
+    setIsRecalculating(true);
+    try {
+      await recalculateStatistics(firestore);
+      await fetchTotalCount();
+      toast({
+        title: "Statistik Diperbarui",
+        description: "Statistik kependudukan berhasil dihitung ulang dan disimpan.",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Gagal Memperbarui Statistik",
+        description: error.message,
+      });
+    } finally {
+      setIsRecalculating(false);
     }
   };
 
@@ -316,6 +346,11 @@ export function ResidentList() { console.log('ResidentList render');
             <Button variant="outline" size="sm" onClick={handleSeedData} disabled={isSeeding}>
               {isSeeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Database className="mr-2 h-4 w-4" />}
               Generate Data Testing
+            </Button>
+            
+            <Button variant="outline" size="sm" onClick={handleRecalculate} disabled={isRecalculating} className="border-emerald-600 text-emerald-700 hover:bg-emerald-50">
+              {isRecalculating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <BarChart3 className="mr-2 h-4 w-4" />}
+              Update Statistik Grafik
             </Button>
           </div>
 

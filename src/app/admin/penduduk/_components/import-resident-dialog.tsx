@@ -18,6 +18,7 @@ import * as XLSX from 'xlsx';
 import { useFirestore } from '@/firebase';
 import { doc, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { recalculateStatistics } from '@/lib/residents';
 
 interface ImportResidentDialogProps {
   open: boolean;
@@ -124,6 +125,9 @@ export function ImportResidentDialog({ open, onOpenChange }: ImportResidentDialo
             });
             await batch.commit();
         }
+
+        // Recalculate demographics stats document to avoid reading all resident documents on client pages
+        await recalculateStatistics(firestore);
 
         setImportCount(count);
         toast({ title: "Impor Berhasil", description: `${count} data penduduk disimpan.` });

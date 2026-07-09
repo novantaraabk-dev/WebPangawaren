@@ -29,6 +29,7 @@ import { useFirestore } from '@/firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Resident } from '@/lib/types';
+import { recalculateStatistics } from '@/lib/residents';
 
 const formSchema = z.object({
   nik: z.string().length(16, 'NIK harus 16 digit.'),
@@ -173,6 +174,9 @@ export function ResidentForm({ open, onOpenChange, resident }: ResidentFormProps
         updatedAt: serverTimestamp(),
         ...(resident ? {} : { createdAt: serverTimestamp() })
       }, { merge: true });
+
+      // Update cached demographic statistics document
+      await recalculateStatistics(firestore);
 
       toast({ title: resident ? "Data Diperbarui" : "Data Ditambahkan" });
       onOpenChange(false);

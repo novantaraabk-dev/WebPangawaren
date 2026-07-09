@@ -1,8 +1,8 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useMemoFirebase, useCollection, useFirestore, useUser } from '@/firebase';
-import { collection, query, limit, where } from 'firebase/firestore';
+import { useMemoFirebase, useCollection, useDoc, useFirestore, useUser } from '@/firebase';
+import { collection, query, limit, where, doc } from 'firebase/firestore';
 import { ArrowUpRight, Home, Users, FileText, BarChart3, BadgeCheck, MapPin } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatisticsCharts } from './StatisticsCharts';
@@ -19,11 +19,12 @@ const metrics = [
 export function StatisticsSection() {
   const firestore = useFirestore();
 
-  const residentsQuery = useMemoFirebase(() => {
+  const statsRef = useMemoFirebase(() => {
     if (!firestore) return null;
-    // Remove the artificial 5000 limit so the full residents collection is queried
-    return query(collection(firestore, 'residents'));
+    return doc(firestore, 'villageProfile', 'statistics');
   }, [firestore]);
+
+  const { data: statsDoc, isLoading: statsLoading, error: statsError } = useDoc<any>(statsRef);
 
   const { user } = useUser();
 
@@ -37,19 +38,18 @@ export function StatisticsSection() {
     );
   }, [firestore, user]);
 
-  const { data: residents, isLoading: residentsLoading, error: residentsError } = useCollection(residentsQuery);
   const { data: submissions, isLoading: submissionsLoading, error: submissionsError } = useCollection(submissionsQuery);
 
   const values = {
-    residents: residents?.length ?? 0,
-    households: Math.max(1, Math.round((residents?.length ?? 0) / 4)),
+    residents: statsDoc?.total ?? 0,
+    households: statsDoc?.totalKK ?? 0,
     rt: 18,
     rw: 6,
     dusun: 4,
     requests: submissions?.length ?? 0,
   };
 
-  const hasError = Boolean(residentsError || submissionsError);
+  const hasError = Boolean(statsError || submissionsError);
 
   return (
     <section className="py-24 sm:py-28">
@@ -78,7 +78,7 @@ export function StatisticsSection() {
 
 
         <div className="mt-12">
-          <StatisticsCharts residents={residents} />
+          <StatisticsCharts statsDoc={statsDoc} isLoading={statsLoading} />
         </div>
       </div>
     </section>

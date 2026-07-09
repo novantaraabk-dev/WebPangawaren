@@ -34,11 +34,11 @@ import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard Utama' },
-  { href: '/layanan-surat', icon: FileText, label: 'Layanan Surat' },
   { href: '/pelayanan-desa', icon: BookOpen, label: 'Pelayanan Desa' },
   { href: '/statistik', icon: BarChart3, label: 'Statistik Desa' },
   { href: '/profil-desa', icon: Info, label: 'Profil Desa' },
   { href: '/BeritaDesa', icon: Newspaper, label: 'Berita Desa' },
+  { href: '/layanan-surat', icon: FileText, label: 'Layanan Surat' },
   { href: '/pengaduan', icon: MessageSquareWarning, label: 'Pengaduan Warga' },
   { href: '/pengumuman', icon: Megaphone, label: 'Pengumuman' },
 ];

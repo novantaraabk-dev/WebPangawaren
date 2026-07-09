@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/logo';
-import { Menu, ArrowRight } from 'lucide-react';
+import { Menu, ArrowRight, ChevronDown } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -13,17 +13,30 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 
-const navLinks = [
+const primaryLinks = [
   { href: '/pelayanan-desa', label: 'Pelayanan Desa' },
   { href: '/profil-desa', label: 'Profil Desa' },
-  { href: '/tata-kelola-desa', label: 'Tata Kelola Desa' },
   { href: '/statistik', label: 'Statistik' },
   { href: '/BeritaDesa', label: 'Berita Desa' },
   { href: '/layanan-surat', label: 'Layanan' },
-  { href: '/pengumuman', label: 'Pengumuman' },
 ];
+
+const moreLinks = [
+  { href: '/tata-kelola-desa', label: 'Tata Kelola Desa' },
+  { href: '/pengumuman', label: 'Pengumuman' },
+  { href: '/pengaduan', label: 'Pengaduan Warga' },
+  { href: '/nomor-penting', label: 'Nomor Penting' },
+];
+
+const allNavLinks = [...primaryLinks, ...moreLinks];
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -68,7 +81,7 @@ export function Header() {
   return (
     <header
       className={cn(
-        'sticky top-0 z-50 w-full border-b transition-all duration-300',
+        'fixed top-0 left-0 z-50 w-full border-b transition-all duration-300',
         isScrolled
           ? 'border-slate-200/80 bg-white/85 backdrop-blur-xl shadow-[0_8px_30px_rgba(15,23,42,0.06)]'
           : 'border-transparent bg-transparent backdrop-blur-none'
@@ -79,8 +92,8 @@ export function Header() {
           <Logo />
         </Link>
 
-        <nav className="hidden flex-1 items-center justify-center gap-3 xl:gap-5 md:flex">
-          {navLinks.map((link) => (
+        <nav className="hidden flex-1 items-center justify-center gap-4 xl:gap-6 md:flex">
+          {primaryLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
@@ -96,6 +109,28 @@ export function Header() {
               )} />
             </Link>
           ))}
+
+          {/* Dropdown "Lainnya" */}
+          <DropdownMenu>
+            <DropdownMenuTrigger className={cn(
+              'group relative flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.16em] transition-colors duration-300 whitespace-nowrap outline-none',
+              isScrolled ? 'text-slate-600 hover:text-emerald-700' : 'text-white/90 hover:text-white'
+            )}>
+              <span>Lainnya</span>
+              <ChevronDown className="h-3 w-3 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+              <span className={cn(
+                'absolute bottom-[-0.4rem] left-0 h-0.5 w-full origin-left scale-x-0 rounded-full transition-transform duration-300 group-hover:scale-x-100',
+                isScrolled ? 'bg-emerald-600' : 'bg-white'
+              )} />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center" className="mt-3 w-52 rounded-xl border border-slate-100 bg-white/95 backdrop-blur-xl p-2 shadow-xl shadow-slate-200/50">
+              {moreLinks.map((link) => (
+                <DropdownMenuItem key={link.href} asChild className="rounded-lg px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-600 transition-colors hover:text-emerald-700 hover:bg-emerald-50 cursor-pointer">
+                  <Link href={link.href}>{link.label}</Link>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </nav>
 
         <div className="hidden items-center gap-2 lg:flex">
@@ -128,18 +163,18 @@ export function Header() {
                 <SheetTitle>Menu navigasi</SheetTitle>
                 <SheetDescription>Menu cepat layanan desa</SheetDescription>
               </SheetHeader>
-              <div className="mt-10 flex flex-col gap-6">
-                <Link href="/" className="inline-flex">
+              <div className="mt-6 flex flex-col gap-6 h-[calc(100vh-80px)] overflow-y-auto pb-12 pr-2 no-scrollbar">
+                <Link href="/" className="inline-flex shrink-0">
                   <Logo />
                 </Link>
                 <div className="space-y-3">
-                  {navLinks.map((link) => (
+                  {allNavLinks.map((link) => (
                     <Link key={link.href} href={link.href} className="block rounded-2xl border border-white/10 px-4 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white/80 transition-colors hover:bg-white/10 hover:text-white">
                       {link.label}
                     </Link>
                   ))}
                 </div>
-                <Link href="/layanan-surat">
+                <Link href="/layanan-surat" className="shrink-0">
                   <Button className="mt-2 h-12 w-full rounded-full bg-emerald-600 text-white">
                     Ajukan Layanan
                     <ArrowRight className="h-4 w-4" />

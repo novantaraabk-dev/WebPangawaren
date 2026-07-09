@@ -1,6 +1,4 @@
-'use client';
-
-import { Firestore, doc, getDoc, serverTimestamp, writeBatch, collection } from 'firebase/firestore';
+import { Firestore, doc, getDoc, getDocs, setDoc, serverTimestamp, writeBatch, collection } from 'firebase/firestore';
 import { Resident } from './types';
 
 /**
@@ -100,4 +98,134 @@ export const seedResidents = async (db: Firestore) => {
   });
 
   await batch.commit();
+};
+
+/**
+ * MENGHITUNG STATISTIK KELOMPOK
+ */
+export function calculateStatsForGroup(residents: any[]) {
+  const total = residents.length;
+  const kkSet = new Set(residents.map(r => r.noKk).filter(Boolean));
+  
+  const maleCount = residents.filter(r => {
+    const g = (r.gender || '').toLowerCase().trim();
+    return g.startsWith('l') || g.includes('laki');
+  }).length;
+  
+  const femaleCount = residents.filter(r => {
+    const g = (r.gender || '').toLowerCase().trim();
+    return g.startsWith('p') || g.startsWith('w') || g.includes('perempuan') || g.includes('wanita');
+  }).length;
+  
+  const otherCount = Math.max(0, total - maleCount - femaleCount);
+
+  const malePercent = total > 0 ? Math.round((maleCount / total) * 100) : 0;
+  const femalePercent = total > 0 ? Math.round((femaleCount / total) * 100) : 0;
+
+  // Kelompok Umur
+  const ageGroups = [
+    { name: 'Anak (0-14)', value: 0 },
+    { name: 'Produktif (15-64)', value: 0 },
+    { name: 'Lansia (65+)', value: 0 },
+  ];
+
+  // Pendidikan
+  const eduMap: Record<string, number> = { 'SD': 0, 'SMP': 0, 'SMA': 0, 'Diploma/Sarjana': 0, 'Lainnya': 0 };
+  
+  // Pekerjaan
+  const jobMap: Record<string, number> = { 'Petani': 0, 'Buruh': 0, 'Swasta': 0, 'Pelajar': 0, 'PNS/TNI': 0, 'Lainnya': 0 };
+
+  // Sebaran RW
+  const rwMap: Record<string, number> = {};
+
+  // Sebaran RT
+  const rtMap: Record<string, number> = {};
+
+  residents.forEach(r => {
+    // Kelompok Umur
+    const age = parseInt(r.age || '0');
+    if (age <= 14) ageGroups[0].value++;
+    else if (age <= 64) ageGroups[1].value++;
+    else ageGroups[2].value++;
+
+    // Pendidikan
+    const edu = (r.educationLevel || '').toUpperCase();
+    if (edu.includes('SD')) eduMap['SD']++;
+    else if (edu.includes('SMP')) eduMap['SMP']++;
+    else if (edu.includes('SMA') || edu.includes('SLTA')) eduMap['SMA']++;
+    else if (edu.includes('SARJANA') || edu.includes('DIPLOMA') || edu.includes('S1') || edu.includes('S2') || edu.includes('S3')) eduMap['Diploma/Sarjana']++;
+    else eduMap['Lainnya']++;
+
+    // Pekerjaan
+    const job = (r.occupation || '').toUpperCase();
+    if (job.includes('TANI')) jobMap['Petani']++;
+    else if (job.includes('BURUH')) jobMap['Buruh']++;
+    else if (job.includes('SWASTA') || job.includes('KARYAWAN') || job.includes('WIRASWASTA')) jobMap['Swasta']++;
+    else if (job.includes('PELAJAR') || job.includes('MAHASISWA')) jobMap['Pelajar']++;
+    else if (job.includes('PNS') || job.includes('TNI') || job.includes('POLRI') || job.includes('PEGAWAI')) jobMap['PNS/TNI']++;
+    else jobMap['Lainnya']++;
+
+    // RW
+    const rwRaw = String(r.rw || '').trim();
+    const rw = rwRaw ? `RW ${rwRaw.padStart(2, '0')}` : 'N/A';
+    rwMap[rw] = (rwMap[rw] || 0) + 1;
+
+    // RT
+    const rtRaw = String(r.rt || '').trim();
+    const rt = rtRaw ? rtRaw.padStart(3, '0') : 'N/A';
+    rtMap[rt] = (rtMap[rt] || 0) + 1;
+  });
+
+  return {
+    total,
+    totalKK: kkSet.size,
+    malePercent,
+    femalePercent,
+    maleCount,
+    femaleCount,
+    otherCount,
+    ageData: ageGroups,
+    eduData: Object.entries(eduMap).map(([name, value]) => ({ name, value })),
+    jobData: Object.entries(jobMap).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value),
+    rwData: Object.entries(rwMap).map(([name, value]) => ({ name, value })).sort((a, b) => a.name.localeCompare(b.name)),
+    rtData: Object.entries(rtMap).map(([name, value]) => ({ rt: name, count: value })).sort((a, b) => a.rt.localeCompare(b.rt)),
+  };
+}
+
+/**
+ * HITUNG ULANG STATISTIK KEPENDUDUKAN & SIMPAN KE DOCUMENT
+ */
+export const recalculateStatistics = async (db: Firestore): Promise<any> => {
+  try {
+    const residentsCol = collection(db, 'residents');
+    const snapshot = await getDocs(residentsCol);
+    const residents: any[] = [];
+    snapshot.forEach(doc => {
+      residents.push({ id: doc.id, ...doc.data() });
+    });
+
+    const rootStats = calculateStatsForGroup(residents);
+
+    const dusunNames = ["Dusun I", "Dusun II", "Dusun III", "Dusun IV"];
+    const dusunData: Record<string, any> = {};
+
+    dusunNames.forEach(dusun => {
+      const filtered = residents.filter(r => (r.address || '').toUpperCase().includes(dusun.toUpperCase()));
+      dusunData[dusun] = calculateStatsForGroup(filtered);
+    });
+
+    const finalStats = {
+      ...rootStats,
+      dusunData,
+      updatedAt: serverTimestamp(),
+    };
+
+    const docRef = doc(db, 'villageProfile', 'statistics');
+    await setDoc(docRef, finalStats, { merge: true });
+
+    return finalStats;
+  } catch (error) {
+    console.error("Error recalculating statistics:", error);
+    throw error;
+  }
 };
