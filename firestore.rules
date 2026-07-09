@@ -96,6 +96,11 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    match /desaAntiKorupsi/{id} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
     // --- PRIVATE COLLECTIONS ---
     match /complaints/{id} {
       allow create: if true;

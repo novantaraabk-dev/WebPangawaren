@@ -1,9 +1,10 @@
 'use client';
-    
+
 import { useState, useEffect } from 'react';
 import {
   DocumentReference,
   onSnapshot,
+  getDoc,
   DocumentData,
   FirestoreError,
   DocumentSnapshot,
@@ -24,28 +25,40 @@ export interface UseDocResult<T> {
   error: FirestoreError | Error | null; // Error object, or null.
 }
 
+export interface UseDocOptions {
+  realtime?: boolean;
+  cacheTtl?: number; // Cache duration in milliseconds (default: 30 seconds)
+}
+
+interface CacheEntry {
+  data: any;
+  timestamp: number;
+  promise?: Promise<any>;
+}
+
+// Global in-memory cache for document references
+const globalDocCache = new Map<string, CacheEntry>();
+const DEFAULT_TTL_MS = 30000; // 30 seconds
+
 /**
- * React hook to subscribe to a single Firestore document in real-time.
- * Handles nullable references.
+ * React hook to retrieve a single Firestore document.
+ * Fetches once with caching by default to conserve read quota.
+ * Opt-in to real-time sync with `{ realtime: true }`.
  * 
- * IMPORTANT! YOU MUST MEMOIZE the inputted memoizedTargetRefOrQuery or BAD THINGS WILL HAPPEN
- * use useMemo to memoize it per React guidence.  Also make sure that it's dependencies are stable
- * references
- *
- *
- * @template T Optional type for document data. Defaults to any.
- * @param {DocumentReference<DocumentData> | null | undefined} docRef -
- * The Firestore DocumentReference. Waits if null/undefined.
- * @returns {UseDocResult<T>} Object with data, isLoading, error.
+ * IMPORTANT! YOU MUST MEMOIZE the inputted memoizedDocRef using useMemo.
  */
 export function useDoc<T = any>(
   memoizedDocRef: DocumentReference<DocumentData> | null | undefined,
+  options?: UseDocOptions
 ): UseDocResult<T> {
   type StateDataType = WithId<T> | null;
 
   const [data, setData] = useState<StateDataType>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
+
+  const isRealtime = !!options?.realtime;
+  const cacheTtl = options?.cacheTtl ?? DEFAULT_TTL_MS;
 
   useEffect(() => {
     if (!memoizedDocRef) {
@@ -55,39 +68,112 @@ export function useDoc<T = any>(
       return;
     }
 
-    setIsLoading(true);
-    setError(null);
-    // Optional: setData(null); // Clear previous data instantly
+    const docPath = memoizedDocRef.path;
 
-    const unsubscribe = onSnapshot(
-      memoizedDocRef,
-      (snapshot: DocumentSnapshot<DocumentData>) => {
-        if (snapshot.exists()) {
-          setData({ ...(snapshot.data() as T), id: snapshot.id });
-        } else {
-          // Document does not exist
+    if (isRealtime) {
+      // Real-time synchronization mode (onSnapshot)
+      setIsLoading(true);
+      setError(null);
+
+      const unsubscribe = onSnapshot(
+        memoizedDocRef,
+        (snapshot: DocumentSnapshot<DocumentData>) => {
+          if (snapshot.exists()) {
+            setData({ ...(snapshot.data() as T), id: snapshot.id });
+          } else {
+            setData(null);
+          }
+          setError(null);
+          setIsLoading(false);
+        },
+        (err: FirestoreError) => {
+          const contextualError = new FirestorePermissionError({
+            operation: 'get',
+            path: docPath,
+          });
+
+          setError(contextualError);
           setData(null);
+          setIsLoading(false);
+          errorEmitter.emit('permission-error', contextualError);
         }
-        setError(null); // Clear any previous error on successful snapshot (even if doc doesn't exist)
-        setIsLoading(false);
-      },
-      (error: FirestoreError) => {
-        const contextualError = new FirestorePermissionError({
-          operation: 'get',
-          path: memoizedDocRef.path,
-        })
+      );
 
-        setError(contextualError)
-        setData(null)
-        setIsLoading(false)
+      return () => unsubscribe();
+    } else {
+      // One-time cached fetch mode
+      const now = Date.now();
+      const cached = globalDocCache.get(docPath);
 
-        // trigger global error propagation
-        errorEmitter.emit('permission-error', contextualError);
+      // Check if we have a fresh cache entry
+      if (cached && now - cached.timestamp < cacheTtl) {
+        if (cached.promise) {
+          setIsLoading(true);
+          setError(null);
+          cached.promise
+            .then((res) => {
+              setData(res);
+              setIsLoading(false);
+            })
+            .catch((err) => {
+              setError(err);
+              setIsLoading(false);
+            });
+        } else {
+          setData(cached.data);
+          setIsLoading(false);
+          setError(null);
+        }
+        return;
       }
-    );
 
-    return () => unsubscribe();
-  }, [memoizedDocRef]); // Re-run if the memoizedDocRef changes.
+      setIsLoading(true);
+      setError(null);
+
+      // Deduplicate simultaneous requests for the same path
+      const fetchPromise = getDoc(memoizedDocRef)
+        .then((snapshot) => {
+          let result: StateDataType = null;
+          if (snapshot.exists()) {
+            result = { ...(snapshot.data() as T), id: snapshot.id };
+          }
+          // Cache the final resolved data
+          globalDocCache.set(docPath, {
+            data: result,
+            timestamp: Date.now(),
+          });
+          return result;
+        })
+        .catch((err) => {
+          // Invalidate cache immediately on error
+          globalDocCache.delete(docPath);
+          throw err;
+        });
+
+      // Temporarily store the fetch promise in cache to share it with concurrent hook calls
+      globalDocCache.set(docPath, {
+        data: null,
+        timestamp: now,
+        promise: fetchPromise,
+      });
+
+      fetchPromise
+        .then((res) => {
+          setData(res);
+          setIsLoading(false);
+        })
+        .catch((err) => {
+          const contextualError = new FirestorePermissionError({
+            operation: 'get',
+            path: docPath,
+          });
+          setError(contextualError);
+          setData(null);
+          setIsLoading(false);
+          errorEmitter.emit('permission-error', contextualError);
+        });
+    }
+  }, [memoizedDocRef, isRealtime, cacheTtl]);
 
   return { data, isLoading, error };
 }

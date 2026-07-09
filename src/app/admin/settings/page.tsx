@@ -9,6 +9,7 @@ import { DriveSettingsForm } from './_components/drive-settings-form';
 import { VideoProfileSettingsForm } from './_components/video-profile-settings-form';
 import { FooterLogosSettingsForm } from './_components/footer-logos-settings-form';
 import { AccompanyingImageSettingsForm, KadesPhotoSettingsForm } from './_components/cloudinary-images-form';
+import { DesaAntiKorupsiDriveForm } from './_components/desa-anti-korupsi-drive-form';
 
 export default function AdminSettingsPage() {
   return (
@@ -29,6 +30,7 @@ export default function AdminSettingsPage() {
             <LogoSettingsForm />
             <DriveSettingsForm />
         </div>
+        <DesaAntiKorupsiDriveForm />
         <FooterLogosSettingsForm />
         <SettingsForm />
       </div>

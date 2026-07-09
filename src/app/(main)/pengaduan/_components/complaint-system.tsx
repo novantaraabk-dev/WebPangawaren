@@ -71,7 +71,7 @@ export function ComplaintSystem() {
     return query(baseQuery, orderBy('submissionDate', 'desc'), limit(100));
   }, [firestore, user, isAdmin]);
 
-  const { data: rawComplaints, isLoading: isLoadingComplaints } = useCollection<Complaint>(complaintsQuery);
+  const { data: rawComplaints, isLoading: isLoadingComplaints } = useCollection<Complaint>(complaintsQuery, { realtime: true });
 
   const complaints = useMemo(() => {
     if (!rawComplaints) return null;

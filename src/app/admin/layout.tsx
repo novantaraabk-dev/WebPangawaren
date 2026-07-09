@@ -37,6 +37,7 @@ import {
   FileStack,
   BookOpen,
   BarChart3,
+  ShieldCheck,
 } from 'lucide-react';
 
 import Link from 'next/link';
@@ -57,6 +58,7 @@ const adminNavItems = [
   { href: '/admin/penduduk', icon: Users, label: 'Data Penduduk' },
   { href: '/admin/pemerintahan', icon: Building2, label: 'Pemerintahan Desa' },
   { href: '/admin/tata-kelola-desa', icon: BarChart3, label: 'Tata Kelola Desa' },
+  { href: '/admin/desa-anti-korupsi', icon: ShieldCheck, label: 'Desa Anti Korupsi' },
   { href: '/admin/pengaduan', icon: MessageSquare, label: 'Jawab Pengaduan' },
   { href: '/admin/pengumuman', icon: Megaphone, label: 'Kelola Pengumuman' },
   { href: '/admin/settings', icon: Settings, label: 'Pengaturan' },

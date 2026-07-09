@@ -41,7 +41,7 @@ export function DashboardStats() {
     return query(baseQuery, orderBy('createdAt', 'desc'), limit(500));
   }, [firestore, user, isAdmin]);
 
-  const { data: submissionsData, isLoading } = useCollection<LetterSubmission>(statsQuery);
+  const { data: submissionsData, isLoading } = useCollection<LetterSubmission>(statsQuery, { realtime: true });
 
   const stats: Stats = useMemo(() => {
     const initialStats: Stats = {

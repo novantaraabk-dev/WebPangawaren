@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import {
   Query,
   onSnapshot,
+  getDocs,
   DocumentData,
   FirestoreError,
   QuerySnapshot,
@@ -25,34 +26,63 @@ export interface UseCollectionResult<T> {
   error: FirestoreError | Error | null; // Error object, or null.
 }
 
-/* Internal implementation of Query:
-  https://github.com/firebase/firebase-js-sdk/blob/c5f08a9bc5da0d2b0207802c972d53724ccef055/packages/firestore/src/lite-api/reference.ts#L143
-*/
+export interface UseCollectionOptions {
+  realtime?: boolean;
+  cacheTtl?: number; // Cache duration in milliseconds (default: 30 seconds)
+}
+
+/* Internal implementation of Query */
 export interface InternalQuery extends Query<DocumentData> {
   _query: {
     path: {
       canonicalString(): string;
       toString(): string;
-    }
+    };
+    filters?: any[];
+    orders?: any[];
+    limit?: number;
+  };
+}
+
+interface CacheEntry {
+  data: any[];
+  timestamp: number;
+  promise?: Promise<any[]>;
+}
+
+// Global in-memory cache for query results
+const globalCollectionCache = new Map<string, CacheEntry>();
+const DEFAULT_TTL_MS = 30000; // 30 seconds
+
+// Generates a stable unique cache key for collection references and queries
+function getQueryCacheKey(queryObj: any): string {
+  if (!queryObj) return '';
+  
+  if (queryObj.type === 'collection' && 'path' in queryObj) {
+    return `col:${(queryObj as CollectionReference).path}`;
   }
+  
+  if (queryObj._query) {
+    const path = queryObj._query.path?.toString() || '';
+    const filters = JSON.stringify(queryObj._query.filters || []);
+    const orders = JSON.stringify(queryObj._query.orders || []);
+    const limitVal = queryObj._query.limit || '';
+    return `query:${path}:${filters}:${orders}:${limitVal}`;
+  }
+  
+  return String(queryObj);
 }
 
 /**
- * React hook to subscribe to a Firestore collection or query in real-time.
- * Handles nullable references/queries.
+ * React hook to retrieve a Firestore collection or query.
+ * Fetches once with caching by default to conserve read quota.
+ * Opt-in to real-time sync with `{ realtime: true }`.
  * 
- *
- * IMPORTANT! YOU MUST MEMOIZE the inputted memoizedTargetRefOrQuery or BAD THINGS WILL HAPPEN
- * use useMemo to memoize it per React guidence.  Also make sure that it's dependencies are stable
- * references
- *  
- * @template T Optional type for document data. Defaults to any.
- * @param {CollectionReference<DocumentData> | Query<DocumentData> | null | undefined} targetRefOrQuery -
- * The Firestore CollectionReference or Query. Waits if null/undefined.
- * @returns {UseCollectionResult<T>} Object with data, isLoading, error.
+ * IMPORTANT! YOU MUST MEMOIZE the inputted memoizedTargetRefOrQuery using useMemo.
  */
 export function useCollection<T = any>(
-    memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
+  memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean}) | null | undefined,
+  options?: UseCollectionOptions
 ): UseCollectionResult<T> {
   type ResultItemType = WithId<T>;
   type StateDataType = ResultItemType[] | null;
@@ -60,6 +90,9 @@ export function useCollection<T = any>(
   const [data, setData] = useState<StateDataType>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
+
+  const isRealtime = !!options?.realtime;
+  const cacheTtl = options?.cacheTtl ?? DEFAULT_TTL_MS;
 
   useEffect(() => {
     if (!memoizedTargetRefOrQuery) {
@@ -69,53 +102,137 @@ export function useCollection<T = any>(
       return;
     }
 
-    setIsLoading(true);
-    setError(null);
+    const cacheKey = getQueryCacheKey(memoizedTargetRefOrQuery);
 
-    // Directly use memoizedTargetRefOrQuery as it's assumed to be the final query
-    const unsubscribe = onSnapshot(
-      memoizedTargetRefOrQuery,
-      (snapshot: QuerySnapshot<DocumentData>) => {
-        const results: ResultItemType[] = [];
-        for (const doc of snapshot.docs) {
-          results.push({ ...(doc.data() as T), id: doc.id });
+    if (isRealtime) {
+      // Real-time synchronization mode (onSnapshot)
+      setIsLoading(true);
+      setError(null);
+
+      const unsubscribe = onSnapshot(
+        memoizedTargetRefOrQuery,
+        (snapshot: QuerySnapshot<DocumentData>) => {
+          const results: ResultItemType[] = [];
+          for (const doc of snapshot.docs) {
+            results.push({ ...(doc.data() as T), id: doc.id });
+          }
+          setData(results);
+          setError(null);
+          setIsLoading(false);
+        },
+        (err: FirestoreError) => {
+          console.error("Firestore onSnapshot error:", err);
+          if (err.code === 'permission-denied') {
+            const path: string =
+              memoizedTargetRefOrQuery.type === 'collection'
+                ? (memoizedTargetRefOrQuery as CollectionReference).path
+                : (memoizedTargetRefOrQuery as unknown as InternalQuery)._query.path.canonicalString();
+
+            const contextualError = new FirestorePermissionError({
+              operation: 'list',
+              path,
+            });
+
+            setError(contextualError);
+            errorEmitter.emit('permission-error', contextualError);
+          } else {
+            setError(err);
+          }
+          setData(null);
+          setIsLoading(false);
         }
-        setData(results);
-        setError(null);
-        setIsLoading(false);
-      },
-      (err: FirestoreError) => {
-        console.error("Firestore onSnapshot error:", err);
+      );
 
-        // Jika error murni izin (403), gunakan wrapper custom untuk debug LLM
-        if (err.code === 'permission-denied') {
-          const path: string =
-            memoizedTargetRefOrQuery.type === 'collection'
-              ? (memoizedTargetRefOrQuery as CollectionReference).path
-              : (memoizedTargetRefOrQuery as unknown as InternalQuery)._query.path.canonicalString()
+      return () => unsubscribe();
+    } else {
+      // One-time cached fetch mode
+      const now = Date.now();
+      const cached = globalCollectionCache.get(cacheKey);
 
-          const contextualError = new FirestorePermissionError({
-            operation: 'list',
-            path,
-          })
-
-          setError(contextualError)
-          errorEmitter.emit('permission-error', contextualError);
+      // Check if we have a fresh cache entry
+      if (cached && now - cached.timestamp < cacheTtl) {
+        if (cached.promise) {
+          setIsLoading(true);
+          setError(null);
+          cached.promise
+            .then((res) => {
+              setData(res as ResultItemType[]);
+              setIsLoading(false);
+            })
+            .catch((err) => {
+              setError(err);
+              setIsLoading(false);
+            });
         } else {
-          // Jika error lain (seperti Missing Index), biarkan error asli terlihat
-          // agar tautan indeks di console tidak hilang.
-          setError(err);
+          setData(cached.data as ResultItemType[]);
+          setIsLoading(false);
+          setError(null);
         }
-        
-        setData(null)
-        setIsLoading(false)
+        return;
       }
-    );
 
-    return () => unsubscribe();
-  }, [memoizedTargetRefOrQuery]); // Re-run if the target query/reference changes.
-  if(memoizedTargetRefOrQuery && !memoizedTargetRefOrQuery.__memo) {
+      setIsLoading(true);
+      setError(null);
+
+      // Deduplicate simultaneous requests for the same query
+      const fetchPromise = getDocs(memoizedTargetRefOrQuery)
+        .then((snapshot) => {
+          const results: ResultItemType[] = [];
+          for (const doc of snapshot.docs) {
+            results.push({ ...(doc.data() as T), id: doc.id });
+          }
+          // Cache the final resolved data list
+          globalCollectionCache.set(cacheKey, {
+            data: results,
+            timestamp: Date.now(),
+          });
+          return results;
+        })
+        .catch((err) => {
+          // Invalidate cache immediately on error
+          globalCollectionCache.delete(cacheKey);
+          throw err;
+        });
+
+      // Temporarily store the fetch promise in cache to share it with concurrent hook calls
+      globalCollectionCache.set(cacheKey, {
+        data: [],
+        timestamp: now,
+        promise: fetchPromise,
+      });
+
+      fetchPromise
+        .then((res) => {
+          setData(res);
+          setIsLoading(false);
+        })
+        .catch((err) => {
+          console.error("Firestore getDocs error:", err);
+          if (err.code === 'permission-denied') {
+            const path: string =
+              memoizedTargetRefOrQuery.type === 'collection'
+                ? (memoizedTargetRefOrQuery as CollectionReference).path
+                : (memoizedTargetRefOrQuery as unknown as InternalQuery)._query.path.canonicalString();
+
+            const contextualError = new FirestorePermissionError({
+              operation: 'list',
+              path,
+            });
+
+            setError(contextualError);
+            errorEmitter.emit('permission-error', contextualError);
+          } else {
+            setError(err);
+          }
+          setData(null);
+          setIsLoading(false);
+        });
+    }
+  }, [memoizedTargetRefOrQuery, isRealtime, cacheTtl]);
+
+  if (memoizedTargetRefOrQuery && !memoizedTargetRefOrQuery.__memo) {
     throw new Error(memoizedTargetRefOrQuery + ' was not properly memoized using useMemoFirebase');
   }
+
   return { data, isLoading, error };
 }

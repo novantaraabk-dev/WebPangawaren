@@ -80,7 +80,7 @@ export function SubmissionList() {
     return getLetterRequestsQuery(firestore);
   }, [firestore, user, isAdmin]);
 
-  const { data: submissionsData, isLoading } = useCollection<LetterSubmission>(query);
+  const { data: submissionsData, isLoading } = useCollection<LetterSubmission>(query, { realtime: true });
 
   const submissions = useMemo(() => {
     if (!submissionsData) return [];

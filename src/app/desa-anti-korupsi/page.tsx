@@ -1,0 +1,279 @@
+'use client';
+
+import React, { useState, useMemo } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { Header } from '@/components/landing/Header';
+import { Footer } from '@/components/landing/Footer';
+import { BackgroundPattern } from '@/components/landing/BackgroundPattern';
+import { antiKorupsiData, AntiKorupsiMainMenu, AntiKorupsiSubMenu, AntiKorupsiItem } from '@/lib/desa-anti-korupsi-data';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, query } from 'firebase/firestore';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ShieldCheck, FileText, Image as ImageIcon, ExternalLink, Download, AlertCircle } from 'lucide-react';
+
+interface DBItemData {
+  id: string; // matches item.id, e.g. "1.1.1"
+  itemId: string;
+  pdfUrl?: string;
+  imageUrl?: string;
+  updatedAt?: any;
+}
+
+const extractFileIdFromUrl = (url: string): string => {
+  if (!url) return '';
+  const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (match) return match[1];
+  const idMatch = url.match(/id=([a-zA-Z0-9_-]+)/);
+  return idMatch ? idMatch[1] : url;
+};
+
+const getEmbedImageUrl = (url: string): string => {
+  if (!url) return '';
+  if (url.includes('drive.google.com') || url.includes('docs.google.com')) {
+    const fileId = extractFileIdFromUrl(url);
+    return fileId ? `https://lh3.googleusercontent.com/d/${fileId}` : url;
+  }
+  return url;
+};
+
+export default function DesaAntiKorupsi() {
+  const [activeTab, setActiveTab] = useState<string>("1");
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  
+  const firestore = useFirestore();
+
+  // Load uploaded documents from firestore
+  const antiKorupsiQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'desaAntiKorupsi'));
+  }, [firestore]);
+
+  const { data: dbItems, isLoading, error } = useCollection<DBItemData>(antiKorupsiQuery);
+
+  // Map database items by their ID for fast lookup
+  const uploadedFilesMap = useMemo(() => {
+    const map = new Map<string, DBItemData>();
+    if (dbItems) {
+      dbItems.forEach(item => {
+        map.set(item.itemId || item.id, item);
+      });
+    }
+    return map;
+  }, [dbItems]);
+
+  const activePilar = useMemo(() => {
+    return antiKorupsiData.find(p => p.id === activeTab);
+  }, [activeTab]);
+
+  return (
+    <div className="relative flex min-h-screen flex-col bg-slate-50 text-slate-900 overflow-x-hidden">
+      <BackgroundPattern />
+      <Header />
+      
+      <main className="relative flex-1 pt-24 pb-16">
+        {/* Hero Section */}
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-12 pb-8">
+          <div className="text-center max-w-3xl mx-auto space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-bold uppercase tracking-wider">
+              <ShieldCheck className="h-4 w-4 text-emerald-600" />
+              <span>Program Desa Anti Korupsi</span>
+            </div>
+            
+            <h1 className="text-3xl font-extrabold sm:text-4xl text-slate-900 uppercase tracking-tight">
+              Desa <span className="bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">Anti Korupsi</span>
+            </h1>
+            
+            <p className="text-sm leading-relaxed text-slate-500">
+              Wujud nyata transparansi, akuntabilitas, dan integritas Pemerintah Desa Pangawaren. Kami berkomitmen menyediakan akses terbuka bagi seluruh warga terhadap dokumen perencanaan, pengawasan, pelayanan publik, partisipasi masyarakat, dan kearifan lokal.
+            </p>
+          </div>
+        </section>
+
+        {/* Main Content Area */}
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          {/* Navigation Pilar Tabs */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-3 p-1.5 bg-slate-100/80 backdrop-blur rounded-2xl border border-slate-200 mb-8">
+            {antiKorupsiData.map((pilar) => {
+              const isActive = activeTab === pilar.id;
+              return (
+                <button
+                  key={pilar.id}
+                  onClick={() => setActiveTab(pilar.id)}
+                  className={`col-span-1 py-3 px-3 rounded-xl text-center text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all duration-300 ${
+                    isActive
+                      ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/10'
+                      : 'text-slate-600 hover:text-emerald-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="block text-[8px] opacity-60 mb-0.5">PILAR {pilar.id}</span>
+                  <span className="line-clamp-1">{pilar.title}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Active Pilar Detail */}
+          {activePilar && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="border-l-4 border-emerald-600 pl-4 py-1">
+                <h2 className="text-lg font-bold text-slate-800 uppercase tracking-wider">
+                  Pilar {activePilar.id}: {activePilar.title}
+                </h2>
+                <p className="text-xs text-slate-400">
+                  Berikut adalah daftar regulasi, dokumen pendukung, dan bukti implementasi pilar anti-korupsi.
+                </p>
+              </div>
+
+              {isLoading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((n) => (
+                    <Skeleton key={n} className="h-16 w-full rounded-xl" />
+                  ))}
+                </div>
+              ) : error ? (
+                <div className="p-6 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3 text-red-700">
+                  <AlertCircle className="h-5 w-5 shrink-0" />
+                  <p className="text-sm">Gagal memuat dokumen. Silakan coba beberapa saat lagi.</p>
+                </div>
+              ) : (
+                <Accordion type="single" collapsible className="space-y-3 w-full">
+                  {activePilar.subMenus.map((subMenu) => (
+                    <AccordionItem
+                      key={subMenu.id}
+                      value={subMenu.id}
+                      className="border border-slate-200 bg-white rounded-2xl overflow-hidden px-4 md:px-6 transition-all duration-300 hover:shadow-md hover:border-slate-300"
+                    >
+                      <AccordionTrigger className="hover:no-underline py-4 text-left">
+                        <div className="flex items-start gap-3">
+                          <span className="font-mono text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded text-xs shrink-0 mt-0.5">
+                            {subMenu.id}
+                          </span>
+                          <span className="text-xs md:text-sm font-bold text-slate-700 leading-relaxed hover:text-emerald-700">
+                            {subMenu.title}
+                          </span>
+                        </div>
+                      </AccordionTrigger>
+                      
+                      <AccordionContent className="pb-6 pt-2 border-t border-slate-100">
+                        <div className="space-y-3 mt-4">
+                          {subMenu.items.map((item) => {
+                            const files = uploadedFilesMap.get(item.id);
+                            const hasPdf = !!files?.pdfUrl;
+                            const hasImage = !!files?.imageUrl;
+                            
+                            return (
+                              <div
+                                key={item.id}
+                                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition-colors"
+                              >
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-mono text-[10px] text-slate-400 font-bold">
+                                      {item.id}
+                                    </span>
+                                    <h4 className="text-xs md:text-sm font-bold text-slate-800">
+                                      {item.title}
+                                    </h4>
+                                  </div>
+                                </div>
+
+                                <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0 shrink-0">
+                                  {/* PDF Action */}
+                                  {hasPdf ? (
+                                    <a
+                                      href={files.pdfUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                    >
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8 rounded-full border-red-200 bg-red-50/50 text-red-700 hover:bg-red-50 hover:text-red-800 text-[10px] font-bold uppercase tracking-wider"
+                                      >
+                                        <FileText className="h-3.5 w-3.5 mr-1" />
+                                        PDF
+                                      </Button>
+                                    </a>
+                                  ) : (
+                                    <Badge variant="secondary" className="h-8 rounded-full bg-slate-200/50 text-slate-400 border-none font-bold uppercase text-[9px] tracking-wider px-3">
+                                      PDF Belum Ada
+                                    </Badge>
+                                  )}
+
+                                  {/* Image Action */}
+                                  {hasImage ? (
+                                    <Dialog>
+                                      <DialogTrigger asChild>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => setSelectedImage(files.imageUrl || null)}
+                                          className="h-8 rounded-full border-blue-200 bg-blue-50/50 text-blue-700 hover:bg-blue-50 hover:text-blue-800 text-[10px] font-bold uppercase tracking-wider"
+                                        >
+                                          <ImageIcon className="h-3.5 w-3.5 mr-1" />
+                                          Foto Dukung
+                                        </Button>
+                                      </DialogTrigger>
+                                      <DialogContent className="max-w-2xl bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200 p-6 shadow-2xl">
+                                        <DialogHeader>
+                                          <DialogTitle className="text-slate-800 text-sm font-bold flex items-center gap-2">
+                                            <ShieldCheck className="h-5 w-5 text-emerald-600" />
+                                            <span>Dokumentasi: {item.title}</span>
+                                          </DialogTitle>
+                                        </DialogHeader>
+                                        <div className="relative mt-4 aspect-video w-full overflow-hidden rounded-xl bg-slate-100 border border-slate-200">
+                                          <img
+                                            src={getEmbedImageUrl(files.imageUrl)}
+                                            alt={item.title}
+                                            className="h-full w-full object-contain"
+                                          />
+                                        </div>
+                                        <div className="flex justify-end gap-2 mt-4">
+                                          <a
+                                            href={files.imageUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                          >
+                                            <Button size="sm" className="h-9 rounded-full bg-slate-800 text-white text-[10px] font-bold uppercase tracking-wider">
+                                              <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                                              Buka Asli
+                                            </Button>
+                                          </a>
+                                        </div>
+                                      </DialogContent>
+                                    </Dialog>
+                                  ) : (
+                                    <Badge variant="secondary" className="h-8 rounded-full bg-slate-200/50 text-slate-400 border-none font-bold uppercase text-[9px] tracking-wider px-3">
+                                      Foto Belum Ada
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              )}
+            </div>
+          )}
+        </section>
+      </main>
+
+      <Footer />
+    </div>
+  );
+}

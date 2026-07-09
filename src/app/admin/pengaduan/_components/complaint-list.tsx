@@ -86,7 +86,7 @@ export function ComplaintList() {
     return query(collection(firestore, 'complaints'), orderBy('submissionDate', 'desc'), limit(100));
   }, [firestore, user]);
 
-  const { data: complaints, isLoading: isLoadingComplaints } = useCollection<Complaint>(complaintsQuery);
+  const { data: complaints, isLoading: isLoadingComplaints } = useCollection<Complaint>(complaintsQuery, { realtime: true });
   
   const handleDelete = async (complaintId: string) => {
     if (!firestore) return;

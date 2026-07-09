@@ -27,6 +27,7 @@ const primaryLinks = [
   { href: '/statistik', label: 'Statistik' },
   { href: '/BeritaDesa', label: 'Berita Desa' },
   { href: '/layanan-surat', label: 'Layanan' },
+  { href: '/desa-anti-korupsi', label: 'Desa Anti Korupsi' },
 ];
 
 const moreLinks = [

@@ -58,6 +58,7 @@ export function Footer() {
               <li><Link href="/profil-desa" className="transition-colors hover:text-white">Profil Desa</Link></li>
               <li><Link href="/pelayanan-desa" className="transition-colors hover:text-white">Pelayanan Desa</Link></li>
               <li><Link href="/statistik" className="transition-colors hover:text-white">Statistik</Link></li>
+              <li><Link href="/desa-anti-korupsi" className="transition-colors hover:text-white">Desa Anti Korupsi</Link></li>
             </ul>
           </div>
 
