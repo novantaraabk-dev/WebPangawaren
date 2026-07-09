@@ -62,7 +62,7 @@ export default function TataKelolaDesa() {
     return Array.from(years).sort((a, b) => b - a);
   }, [allApbdes, allRealisasi, allProdukHukum]);
 
-  // Process chart data untuk APBDes
+  // Process chart data untuk APBDes (per Bidang)
   const apbdesChartData = useMemo(() => {
     if (!currentApbdes?.items) return [];
     const bidangData: Record<string, any> = {};
@@ -75,7 +75,21 @@ export default function TataKelolaDesa() {
     return Object.values(bidangData);
   }, [currentApbdes]);
 
-  // Process chart data untuk Realisasi
+  // Process chart data untuk APBDes (per Sumber Anggaran)
+  const apbdesSumberChartData = useMemo(() => {
+    if (!currentApbdes?.items) return [];
+    const sumberData: Record<string, any> = {};
+    currentApbdes.items.forEach(item => {
+      const src = item.sumberAnggaran || 'Lainnya';
+      if (!sumberData[src]) {
+        sumberData[src] = { name: src, nominal: 0 };
+      }
+      sumberData[src].nominal += item.nominal;
+    });
+    return Object.values(sumberData);
+  }, [currentApbdes]);
+
+  // Process chart data untuk Realisasi (per Bidang)
   const realisasiChartData = useMemo(() => {
     if (!currentRealisasi?.items) return [];
     const bidangData: Record<string, any> = {};
@@ -87,6 +101,67 @@ export default function TataKelolaDesa() {
     });
     return Object.values(bidangData);
   }, [currentRealisasi]);
+
+  // Process chart data untuk Realisasi (per Sumber Anggaran)
+  const realisasiSumberChartData = useMemo(() => {
+    if (!currentRealisasi?.items) return [];
+    const sumberData: Record<string, any> = {};
+    currentRealisasi.items.forEach(item => {
+      const src = item.sumberAnggaran || 'Lainnya';
+      if (!sumberData[src]) {
+        sumberData[src] = { name: src, nominal: 0 };
+      }
+      sumberData[src].nominal += item.nominal;
+    });
+    return Object.values(sumberData);
+  }, [currentRealisasi]);
+
+  // Persentase Penyerapan Anggaran (Realisasi vs APBDes Budget)
+  const absorptionStats = useMemo(() => {
+    if (!currentApbdes || !currentRealisasi || currentApbdes.totalAnggaran === 0) {
+      return { percentage: 0, formatted: '0.0%' };
+    }
+    const pct = (currentRealisasi.totalRealisasi / currentApbdes.totalAnggaran) * 100;
+    return {
+      percentage: pct,
+      formatted: pct.toFixed(1) + '%'
+    };
+  }, [currentApbdes, currentRealisasi]);
+
+  // Persentase Capaian Output (Rata-rata % realisasi per item kegiatan yang direncanakan)
+  const outputAchievementStats = useMemo(() => {
+    if (!currentApbdes?.items || !currentRealisasi?.items) {
+      return { percentage: 0, formatted: '0.0%' };
+    }
+    
+    let totalItems = 0;
+    let totalAchievementSum = 0;
+    
+    currentRealisasi.items.forEach(realisasiItem => {
+      // Cocokkan berdasarkan nama kegiatan terlebih dahulu agar lebih spesifik (karena kodeRekening bisa duplikat untuk sub-kegiatan berbeda)
+      const apbdesItem = currentApbdes.items.find(
+        a => a.kegiatan.trim().toLowerCase() === realisasiItem.kegiatan.trim().toLowerCase()
+      ) || currentApbdes.items.find(
+        a => a.kodeRekening.trim() === realisasiItem.kodeRekening.trim() &&
+             a.bidang.trim().toLowerCase() === realisasiItem.bidang.trim().toLowerCase()
+      );
+
+      if (apbdesItem && apbdesItem.nominal > 0) {
+        const achievement = Math.min(100, (realisasiItem.nominal / apbdesItem.nominal) * 100);
+        totalAchievementSum += achievement;
+        totalItems++;
+      } else if (realisasiItem.nominal > 0) {
+        totalAchievementSum += 100;
+        totalItems++;
+      }
+    });
+    
+    const pct = totalItems > 0 ? totalAchievementSum / totalItems : 0;
+    return {
+      percentage: pct,
+      formatted: pct.toFixed(1) + '%'
+    };
+  }, [currentApbdes, currentRealisasi]);
 
   const tabs = [
     { id: 'apbdes', label: 'APBDes', icon: BarChart3 },
@@ -161,57 +236,115 @@ export default function TataKelolaDesa() {
           <div className="space-y-8">
             {isLoadingApbdes ? (
               <Skeleton className="h-96 rounded-3xl" />
-            ) : currentApbdes ? (
+                        ) : currentApbdes ? (
               <>
-                <Card className="rounded-[2.5rem] border-none shadow-xl">
-                  <CardContent className="p-8 space-y-6">
-                    <div>
-                      <h3 className="text-2xl font-black text-slate-900 mb-2">APBDes Tahun {selectedYear}</h3>
-                      <p className="text-slate-600">Total Anggaran: <span className="font-black text-primary">Rp {currentApbdes.totalAnggaran.toLocaleString('id-ID')}</span></p>
+                {/* APBDes Overview Card */}
+                <Card className="rounded-[2.5rem] border-none shadow-xl bg-gradient-to-br from-blue-50 to-indigo-50/50">
+                  <CardContent className="p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div className="space-y-2">
+                      <span className="text-xs font-black bg-blue-100 text-blue-800 px-3 py-1 rounded-full uppercase tracking-wider">Anggaran Pendapatan & Belanja Desa</span>
+                      <h3 className="text-3xl font-black text-slate-900">APBDes Tahun {selectedYear}</h3>
+                      <p className="text-slate-500 font-medium">Rekapitulasi rencana anggaran belanja desa Pangawaren.</p>
                     </div>
-                    
-                    {apbdesChartData.length > 0 && (
-                      <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={apbdesChartData}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="name" />
-                          <YAxis />
-                          <Tooltip formatter={(value: any) => `Rp ${value.toLocaleString('id-ID')}`} />
-                          <Bar dataKey="nominal" fill="#3b82f6" />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    )}
+                    <div className="p-6 bg-white rounded-3xl shadow-sm border border-slate-100/80 min-w-[280px]">
+                      <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Total Rencana Anggaran</span>
+                      <div className="text-3xl font-black text-blue-600 mt-1 font-display">
+                        Rp {currentApbdes.totalAnggaran.toLocaleString('id-ID')}
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
 
-                {/* Table Detail */}
-                <Card className="rounded-[2.5rem] border-none shadow-xl overflow-hidden">
-                  <CardContent className="p-8">
-                    <h4 className="text-xl font-black mb-6 text-slate-900">Detail Per Bidang</h4>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead className="bg-slate-100">
-                          <tr>
-                            <th className="px-4 py-3 text-left font-bold text-slate-700">Bidang</th>
-                            <th className="px-4 py-3 text-left font-bold text-slate-700">Kegiatan</th>
-                            <th className="px-4 py-3 text-right font-bold text-slate-700">Nominal</th>
-                            <th className="px-4 py-3 text-left font-bold text-slate-700">Sumber Anggaran</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {currentApbdes.items.map((item, i) => (
-                            <tr key={i} className="border-b hover:bg-slate-50">
-                              <td className="px-4 py-3 font-semibold text-slate-700">{item.bidang}</td>
-                              <td className="px-4 py-3 text-slate-600">{item.kegiatan}</td>
-                              <td className="px-4 py-3 text-right text-primary font-bold">Rp {item.nominal.toLocaleString('id-ID')}</td>
-                              <td className="px-4 py-3"><Badge variant="outline">{item.sumberAnggaran}</Badge></td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </CardContent>
-                </Card>
+                {/* Charts Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {/* Chart 1: Per Bidang */}
+                  <Card className="rounded-[2.5rem] border-none shadow-xl">
+                    <CardContent className="p-8 space-y-6">
+                      <div>
+                        <h4 className="text-xl font-black text-slate-900 font-display">Perbandingan Total per Bidang</h4>
+                        <p className="text-sm text-slate-500 font-medium">Rincian alokasi anggaran belanja untuk setiap bidang pembangunan.</p>
+                      </div>
+                      
+                      {apbdesChartData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={320}>
+                          <BarChart data={apbdesChartData} margin={{ top: 20, right: 10, left: 10, bottom: 20 }}>
+                            <defs>
+                              <linearGradient id="apbdesColorBidang" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.9}/>
+                                <stop offset="95%" stopColor="#1d4ed8" stopOpacity={0.4}/>
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                            <XAxis 
+                              dataKey="name" 
+                              tick={{ fill: '#64748b', fontSize: 10, fontWeight: 'bold' }} 
+                              axisLine={false} 
+                              tickLine={false}
+                              interval={0}
+                              tickFormatter={(value) => value.length > 15 ? `${value.substring(0, 15)}...` : value}
+                            />
+                            <YAxis 
+                              tick={{ fill: '#64748b', fontSize: 10 }} 
+                              axisLine={false} 
+                              tickLine={false}
+                              tickFormatter={(val) => `Rp ${(val/1e6)}jt`} 
+                            />
+                            <Tooltip 
+                              contentStyle={{ backgroundColor: '#ffffff', borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)' }}
+                              formatter={(value: any) => [`Rp ${value.toLocaleString('id-ID')}`, 'Rencana Anggaran']}
+                            />
+                            <Bar dataKey="nominal" fill="url(#apbdesColorBidang)" radius={[8, 8, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="text-center py-12 text-slate-400 font-bold">Data Bidang Kosong</div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Chart 2: Per Sumber Anggaran */}
+                  <Card className="rounded-[2.5rem] border-none shadow-xl">
+                    <CardContent className="p-8 space-y-6">
+                      <div>
+                        <h4 className="text-xl font-black text-slate-900 font-display">Perbandingan Total per Sumber Anggaran</h4>
+                        <p className="text-sm text-slate-500 font-medium">Asal/sumber dana anggaran pendapatan dan belanja desa.</p>
+                      </div>
+                      
+                      {apbdesSumberChartData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={320}>
+                          <BarChart data={apbdesSumberChartData} margin={{ top: 20, right: 10, left: 10, bottom: 20 }}>
+                            <defs>
+                              <linearGradient id="apbdesColorSumber" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.9}/>
+                                <stop offset="95%" stopColor="#6d28d9" stopOpacity={0.4}/>
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                            <XAxis 
+                              dataKey="name" 
+                              tick={{ fill: '#64748b', fontSize: 10, fontWeight: 'bold' }} 
+                              axisLine={false} 
+                              tickLine={false}
+                            />
+                            <YAxis 
+                              tick={{ fill: '#64748b', fontSize: 10 }} 
+                              axisLine={false} 
+                              tickLine={false}
+                              tickFormatter={(val) => `Rp ${(val/1e6)}jt`} 
+                            />
+                            <Tooltip 
+                              contentStyle={{ backgroundColor: '#ffffff', borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)' }}
+                              formatter={(value: any) => [`Rp ${value.toLocaleString('id-ID')}`, 'Rencana Anggaran']}
+                            />
+                            <Bar dataKey="nominal" fill="url(#apbdesColorSumber)" radius={[8, 8, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="text-center py-12 text-slate-400 font-bold">Data Sumber Anggaran Kosong</div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
               </>
             ) : (
               <div className="text-center py-16 px-6">
@@ -227,57 +360,156 @@ export default function TataKelolaDesa() {
           <div className="space-y-8">
             {isLoadingRealisasi ? (
               <Skeleton className="h-96 rounded-3xl" />
-            ) : currentRealisasi ? (
+                        ) : currentRealisasi ? (
               <>
-                <Card className="rounded-[2.5rem] border-none shadow-xl">
-                  <CardContent className="p-8 space-y-6">
-                    <div>
-                      <h3 className="text-2xl font-black text-slate-900 mb-2">Realisasi APBDes Tahun {selectedYear}</h3>
-                      <p className="text-slate-600">Total Realisasi: <span className="font-black text-primary">Rp {currentRealisasi.totalRealisasi.toLocaleString('id-ID')}</span></p>
+                {/* Realisasi Overview and Big Metrics */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  {/* Total Card */}
+                  <Card className="rounded-[2.5rem] border-none shadow-xl bg-gradient-to-br from-emerald-50 to-teal-50/50 flex flex-col justify-between p-8 min-h-[220px]">
+                    <div className="space-y-2">
+                      <span className="text-xs font-black bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full uppercase tracking-wider">Realisasi Anggaran Belanja</span>
+                      <h3 className="text-2xl font-black text-slate-900 font-display">Realisasi {selectedYear}</h3>
                     </div>
-                    
-                    {realisasiChartData.length > 0 && (
-                      <ResponsiveContainer width="100%" height={300}>
-                        <LineChart data={realisasiChartData}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="name" />
-                          <YAxis />
-                          <Tooltip formatter={(value: any) => `Rp ${value.toLocaleString('id-ID')}`} />
-                          <Line type="monotone" dataKey="nominal" stroke="#10b981" strokeWidth={2} />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    )}
-                  </CardContent>
-                </Card>
+                    <div className="space-y-3 mt-4">
+                      <div>
+                        <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Total Realisasi Belanja</span>
+                        <div className="text-3xl font-black text-emerald-600 mt-1 font-display">
+                          Rp {currentRealisasi.totalRealisasi.toLocaleString('id-ID')}
+                        </div>
+                      </div>
+                      {currentApbdes && (
+                        <div className="text-xs text-slate-500 font-bold">
+                          Dari Rencana Anggaran: Rp {currentApbdes.totalAnggaran.toLocaleString('id-ID')}
+                        </div>
+                      )}
+                    </div>
+                  </Card>
 
-                {/* Table Detail */}
-                <Card className="rounded-[2.5rem] border-none shadow-xl overflow-hidden">
-                  <CardContent className="p-8">
-                    <h4 className="text-xl font-black mb-6 text-slate-900">Detail Per Bidang</h4>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead className="bg-slate-100">
-                          <tr>
-                            <th className="px-4 py-3 text-left font-bold text-slate-700">Bidang</th>
-                            <th className="px-4 py-3 text-left font-bold text-slate-700">Kegiatan</th>
-                            <th className="px-4 py-3 text-right font-bold text-slate-700">Realisasi</th>
-                            <th className="px-4 py-3 text-left font-bold text-slate-700">Sumber Anggaran</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {currentRealisasi.items.map((item, i) => (
-                            <tr key={i} className="border-b hover:bg-slate-50">
-                              <td className="px-4 py-3 font-semibold text-slate-700">{item.bidang}</td>
-                              <td className="px-4 py-3 text-slate-600">{item.kegiatan}</td>
-                              <td className="px-4 py-3 text-right text-emerald-600 font-bold">Rp {item.nominal.toLocaleString('id-ID')}</td>
-                              <td className="px-4 py-3"><Badge variant="outline">{item.sumberAnggaran}</Badge></td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                  {/* Metric 1: Penyerapan Anggaran */}
+                  <Card className="rounded-[2.5rem] border-none shadow-xl p-8 flex flex-col justify-between min-h-[220px]">
+                    <div className="space-y-1">
+                      <h4 className="text-lg font-black text-slate-900 font-display">Penyerapan Anggaran</h4>
+                      <p className="text-xs text-slate-500 font-medium">Persentase rencana anggaran yang telah direalisasikan.</p>
                     </div>
-                  </CardContent>
-                </Card>
+                    <div className="my-4">
+                      <div className="text-5xl md:text-6xl font-black text-emerald-600 font-display italic">
+                        {absorptionStats.formatted}
+                      </div>
+                      <div className="w-full bg-slate-100 rounded-full h-3 mt-3 overflow-hidden">
+                        <div className="bg-emerald-500 h-full rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, absorptionStats.percentage)}%` }} />
+                      </div>
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Anggaran Terserap</span>
+                  </Card>
+
+                  {/* Metric 2: Capaian Output */}
+                  <Card className="rounded-[2.5rem] border-none shadow-xl p-8 flex flex-col justify-between min-h-[220px]">
+                    <div className="space-y-1">
+                      <h4 className="text-lg font-black text-slate-900 font-display">Capaian Output</h4>
+                      <p className="text-xs text-slate-500 font-medium">Rata-rata persentase realisasi kegiatan pembangunan desa.</p>
+                    </div>
+                    <div className="my-4">
+                      <div className="text-5xl md:text-6xl font-black text-blue-600 font-display italic">
+                        {outputAchievementStats.formatted}
+                      </div>
+                      <div className="w-full bg-slate-100 rounded-full h-3 mt-3 overflow-hidden">
+                        <div className="bg-blue-500 h-full rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, outputAchievementStats.percentage)}%` }} />
+                      </div>
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Kegiatan Terealisasi</span>
+                  </Card>
+                </div>
+
+                {/* Charts Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {/* Chart 1: Per Bidang */}
+                  <Card className="rounded-[2.5rem] border-none shadow-xl">
+                    <CardContent className="p-8 space-y-6">
+                      <div>
+                        <h4 className="text-xl font-black text-slate-900 font-display">Perbandingan Total per Bidang</h4>
+                        <p className="text-sm text-slate-500 font-medium">Jumlah realisasi belanja untuk masing-masing bidang pembangunan.</p>
+                      </div>
+                      
+                      {realisasiChartData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={320}>
+                          <BarChart data={realisasiChartData} margin={{ top: 20, right: 10, left: 10, bottom: 20 }}>
+                            <defs>
+                              <linearGradient id="realisasiColorBidang" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.9}/>
+                                <stop offset="95%" stopColor="#047857" stopOpacity={0.4}/>
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                            <XAxis 
+                              dataKey="name" 
+                              tick={{ fill: '#64748b', fontSize: 10, fontWeight: 'bold' }} 
+                              axisLine={false} 
+                              tickLine={false}
+                              interval={0}
+                              tickFormatter={(value) => value.length > 15 ? `${value.substring(0, 15)}...` : value}
+                            />
+                            <YAxis 
+                              tick={{ fill: '#64748b', fontSize: 10 }} 
+                              axisLine={false} 
+                              tickLine={false}
+                              tickFormatter={(val) => `Rp ${(val/1e6)}jt`} 
+                            />
+                            <Tooltip 
+                              contentStyle={{ backgroundColor: '#ffffff', borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)' }}
+                              formatter={(value: any) => [`Rp ${value.toLocaleString('id-ID')}`, 'Realisasi Anggaran']}
+                            />
+                            <Bar dataKey="nominal" fill="url(#realisasiColorBidang)" radius={[8, 8, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="text-center py-12 text-slate-400 font-bold">Data Bidang Kosong</div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Chart 2: Per Sumber Anggaran */}
+                  <Card className="rounded-[2.5rem] border-none shadow-xl">
+                    <CardContent className="p-8 space-y-6">
+                      <div>
+                        <h4 className="text-xl font-black text-slate-900 font-display">Perbandingan Total per Sumber Anggaran</h4>
+                        <p className="text-sm text-slate-500 font-medium">Realisasi belanja dikelompokkan berdasarkan asal/sumber anggaran.</p>
+                      </div>
+                      
+                      {realisasiSumberChartData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={320}>
+                          <BarChart data={realisasiSumberChartData} margin={{ top: 20, right: 10, left: 10, bottom: 20 }}>
+                            <defs>
+                              <linearGradient id="realisasiColorSumber" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.9}/>
+                                <stop offset="95%" stopColor="#0891b2" stopOpacity={0.4}/>
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                            <XAxis 
+                              dataKey="name" 
+                              tick={{ fill: '#64748b', fontSize: 10, fontWeight: 'bold' }} 
+                              axisLine={false} 
+                              tickLine={false}
+                            />
+                            <YAxis 
+                              tick={{ fill: '#64748b', fontSize: 10 }} 
+                              axisLine={false} 
+                              tickLine={false}
+                              tickFormatter={(val) => `Rp ${(val/1e6)}jt`} 
+                            />
+                            <Tooltip 
+                              contentStyle={{ backgroundColor: '#ffffff', borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)' }}
+                              formatter={(value: any) => [`Rp ${value.toLocaleString('id-ID')}`, 'Realisasi Anggaran']}
+                            />
+                            <Bar dataKey="nominal" fill="url(#realisasiColorSumber)" radius={[8, 8, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="text-center py-12 text-slate-400 font-bold">Data Sumber Anggaran Kosong</div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
               </>
             ) : (
               <div className="text-center py-16 px-6">

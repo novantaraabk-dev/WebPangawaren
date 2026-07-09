@@ -28,6 +28,45 @@ const PRODUK_HUKUM_TYPES = [
   { value: 'lkpd', label: 'Laporan Keuangan Pemerintah Desa (LKPD)' },
 ];
 
+// Helper to robustly parse nominal values from Excel rows (numeric or string)
+const parseNominal = (val: any): number => {
+  if (typeof val === 'number') return val;
+  if (!val) return 0;
+  
+  let str = String(val).trim();
+  str = str.replace(/Rp\s*/i, '');
+  
+  const hasComma = str.includes(',');
+  const hasDot = str.includes('.');
+  
+  if (hasComma && hasDot) {
+    if (str.indexOf(',') < str.indexOf('.')) {
+      // US style: 1,500,000.50
+      str = str.replace(/,/g, '');
+    } else {
+      // ID style: 1.500.000,50
+      str = str.replace(/\./g, '').replace(',', '.');
+    }
+  } else if (hasComma) {
+    // Only comma. Could be 1,500,000 (US thousand) or 12,5 (ID decimal).
+    const parts = str.split(',');
+    if (parts.length > 1 && parts[parts.length - 1].length === 3) {
+      str = str.replace(/,/g, '');
+    } else {
+      str = str.replace(',', '.');
+    }
+  } else if (hasDot) {
+    // Only dot. Could be 1.500.000 (ID thousand) or 12.5 (US decimal).
+    const parts = str.split('.');
+    if (parts.length > 1 && parts[parts.length - 1].length === 3) {
+      str = str.replace(/\./g, '');
+    }
+  }
+  
+  const parsed = parseFloat(str);
+  return isNaN(parsed) ? 0 : parsed;
+};
+
 export default function AdminTataKelolaDesa() {
   const [activeTab, setActiveTab] = useState('apbdes');
   const [selectedYear, setSelectedYear] = useState<number>(2026);
@@ -71,12 +110,12 @@ export default function AdminTataKelolaDesa() {
       const rows = XLSX.utils.sheet_to_json(worksheet) as any[];
 
       const items: ApbdesItem[] = rows.map(row => ({
-        bidang: row['Bidang'] || '',
-        kodeRekening: row['Kode Rekening'] || '',
-        kegiatan: row['Kegiatan'] || '',
-        volume: row['Volume'] || 0,
-        nominal: row['Nominal'] || 0,
-        sumberAnggaran: row['Sumber Anggaran'] || '',
+        bidang: row['Bidang'] || row['bidang'] || '',
+        kodeRekening: row['Kode Rekening'] || row['kode rekening'] || row['KodeRekening'] || row['koderekening'] || '',
+        kegiatan: row['Kegiatan'] || row['kegiatan'] || '',
+        volume: row['Volume'] !== undefined ? row['Volume'] : (row['volume'] !== undefined ? row['volume'] : 0),
+        nominal: parseNominal(row['Nominal'] !== undefined ? row['Nominal'] : row['nominal']),
+        sumberAnggaran: row['Sumber'] || row['Sumber Anggaran'] || row['sumber'] || row['sumber anggaran'] || '',
       }));
 
       const totalAnggaran = items.reduce((sum, item) => sum + item.nominal, 0);
@@ -114,12 +153,12 @@ export default function AdminTataKelolaDesa() {
       const rows = XLSX.utils.sheet_to_json(worksheet) as any[];
 
       const items: ApbdesItem[] = rows.map(row => ({
-        bidang: row['Bidang'] || '',
-        kodeRekening: row['Kode Rekening'] || '',
-        kegiatan: row['Kegiatan'] || '',
-        volume: row['Volume'] || 0,
-        nominal: row['Nominal'] || 0,
-        sumberAnggaran: row['Sumber Anggaran'] || '',
+        bidang: row['Bidang'] || row['bidang'] || '',
+        kodeRekening: row['Kode Rekening'] || row['kode rekening'] || row['KodeRekening'] || row['koderekening'] || '',
+        kegiatan: row['Kegiatan'] || row['kegiatan'] || '',
+        volume: row['Volume'] !== undefined ? row['Volume'] : (row['volume'] !== undefined ? row['volume'] : 0),
+        nominal: parseNominal(row['Nominal'] !== undefined ? row['Nominal'] : row['nominal']),
+        sumberAnggaran: row['Sumber'] || row['Sumber Anggaran'] || row['sumber'] || row['sumber anggaran'] || '',
       }));
 
       const totalRealisasi = items.reduce((sum, item) => sum + item.nominal, 0);

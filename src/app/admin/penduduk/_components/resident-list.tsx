@@ -31,6 +31,7 @@ import {
   AlertCircle,
   ShieldAlert,
   Database,
+  BarChart3,
 } from 'lucide-react';
 import { Resident } from '@/lib/types';
 import { useFirestore } from '@/firebase';
