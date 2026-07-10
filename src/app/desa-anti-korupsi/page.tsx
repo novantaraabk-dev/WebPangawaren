@@ -26,7 +26,11 @@ interface DBItemData {
   id: string; // matches item.id, e.g. "1.1.1"
   itemId: string;
   pdfUrl?: string;
+  pdfName?: string;
   imageUrl?: string;
+  imageName?: string;
+  pdfs?: Array<{ url: string; name: string }>;
+  images?: Array<{ url: string; name: string }>;
   updatedAt?: any;
 }
 
@@ -49,7 +53,8 @@ const getEmbedImageUrl = (url: string): string => {
 
 export default function DesaAntiKorupsi() {
   const [activeTab, setActiveTab] = useState<string>("1");
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedImages, setSelectedImages] = useState<Array<{ url: string; name: string }> | null>(null);
+  const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
   
   const firestore = useFirestore();
 
@@ -169,8 +174,10 @@ export default function DesaAntiKorupsi() {
                         <div className="space-y-3 mt-4">
                           {subMenu.items.map((item) => {
                             const files = uploadedFilesMap.get(item.id);
-                            const hasPdf = !!files?.pdfUrl;
-                            const hasImage = !!files?.imageUrl;
+                            const pdfList = files?.pdfs || (files?.pdfUrl ? [{ url: files.pdfUrl, name: files.pdfName || 'Dokumen PDF' }] : []);
+                            const imageList = files?.images || (files?.imageUrl ? [{ url: files.imageUrl, name: files.imageName || 'Foto Dukung' }] : []);
+                            const hasPdf = pdfList.length > 0;
+                            const hasImage = imageList.length > 0;
                             
                             return (
                               <div
@@ -191,20 +198,26 @@ export default function DesaAntiKorupsi() {
                                 <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0 shrink-0">
                                   {/* PDF Action */}
                                   {hasPdf ? (
-                                    <a
-                                      href={files.pdfUrl}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                    >
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-8 rounded-full border-red-200 bg-red-50/50 text-red-700 hover:bg-red-50 hover:text-red-800 text-[10px] font-bold uppercase tracking-wider"
-                                      >
-                                        <FileText className="h-3.5 w-3.5 mr-1" />
-                                        PDF
-                                      </Button>
-                                    </a>
+                                    <div className="flex flex-wrap gap-2">
+                                      {pdfList.map((pdf, idx) => (
+                                        <a
+                                          key={idx}
+                                          href={pdf.url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          title={pdf.name}
+                                        >
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-8 rounded-full border-red-200 bg-red-50/50 text-red-700 hover:bg-red-50 hover:text-red-800 text-[10px] font-bold uppercase tracking-wider"
+                                          >
+                                            <FileText className="h-3.5 w-3.5 mr-1" />
+                                            {pdfList.length === 1 ? 'PDF' : `PDF ${idx + 1}`}
+                                          </Button>
+                                        </a>
+                                      ))}
+                                    </div>
                                   ) : (
                                     <Badge variant="secondary" className="h-8 rounded-full bg-slate-200/50 text-slate-400 border-none font-bold uppercase text-[9px] tracking-wider px-3">
                                       PDF Belum Ada
@@ -218,11 +231,14 @@ export default function DesaAntiKorupsi() {
                                         <Button
                                           variant="outline"
                                           size="sm"
-                                          onClick={() => setSelectedImage(files.imageUrl || null)}
+                                          onClick={() => {
+                                            setSelectedImages(imageList);
+                                            setActiveImageIndex(0);
+                                          }}
                                           className="h-8 rounded-full border-blue-200 bg-blue-50/50 text-blue-700 hover:bg-blue-50 hover:text-blue-800 text-[10px] font-bold uppercase tracking-wider"
                                         >
                                           <ImageIcon className="h-3.5 w-3.5 mr-1" />
-                                          Foto Dukung
+                                          {imageList.length === 1 ? 'Foto Dukung' : `Foto Dukung (${imageList.length})`}
                                         </Button>
                                       </DialogTrigger>
                                       <DialogContent className="max-w-2xl bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200 p-6 shadow-2xl">
@@ -232,24 +248,89 @@ export default function DesaAntiKorupsi() {
                                             <span>Dokumentasi: {item.title}</span>
                                           </DialogTitle>
                                         </DialogHeader>
-                                        <div className="relative mt-4 aspect-video w-full overflow-hidden rounded-xl bg-slate-100 border border-slate-200">
-                                          <img
-                                            src={getEmbedImageUrl(files.imageUrl || '')}
-                                            alt={item.title}
-                                            className="h-full w-full object-contain"
-                                          />
-                                        </div>
-                                        <div className="flex justify-end gap-2 mt-4">
-                                          <a
-                                            href={files.imageUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                          >
-                                            <Button size="sm" className="h-9 rounded-full bg-slate-800 text-white text-[10px] font-bold uppercase tracking-wider">
-                                              <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-                                              Buka Asli
-                                            </Button>
-                                          </a>
+
+                                        {selectedImages && selectedImages.length > 0 && (
+                                          <div className="space-y-4 mt-4">
+                                            {/* Main image preview */}
+                                            <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center">
+                                              <img
+                                                src={getEmbedImageUrl(selectedImages[activeImageIndex]?.url || '')}
+                                                alt={selectedImages[activeImageIndex]?.name || ''}
+                                                className="h-full w-full object-contain"
+                                              />
+
+                                              {/* Left / Right navigation buttons */}
+                                              {selectedImages.length > 1 && (
+                                                <>
+                                                  <button
+                                                    onClick={() => setActiveImageIndex((prev) => (prev > 0 ? prev - 1 : selectedImages.length - 1))}
+                                                    className="absolute left-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/60 hover:bg-black/85 text-white flex items-center justify-center transition-colors shadow-md text-xs font-bold"
+                                                  >
+                                                    &#10094;
+                                                  </button>
+                                                  <button
+                                                    onClick={() => setActiveImageIndex((prev) => (prev < selectedImages.length - 1 ? prev + 1 : 0))}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/60 hover:bg-black/85 text-white flex items-center justify-center transition-colors shadow-md text-xs font-bold"
+                                                  >
+                                                    &#10095;
+                                                  </button>
+                                                </>
+                                              )}
+                                            </div>
+
+                                            {/* Caption */}
+                                            <p className="text-center text-[11px] font-bold text-slate-505 uppercase tracking-wider">
+                                              {selectedImages[activeImageIndex]?.name || `Foto ${activeImageIndex + 1}`}
+                                            </p>
+
+                                            {/* Thumbnail Row */}
+                                            {selectedImages.length > 1 && (
+                                              <div className="flex gap-2 justify-center overflow-x-auto py-1.5 border-t border-slate-100 max-w-full">
+                                                {selectedImages.map((img, idx) => {
+                                                  const isActive = idx === activeImageIndex;
+                                                  const fileId = extractFileIdFromUrl(img.url);
+                                                  const thumbUrl = fileId ? `https://lh3.googleusercontent.com/d/${fileId}` : img.url;
+                                                  return (
+                                                    <button
+                                                      key={idx}
+                                                      onClick={() => setActiveImageIndex(idx)}
+                                                      className={`relative h-10 w-14 overflow-hidden rounded-lg border-2 transition-all shrink-0 ${
+                                                        isActive ? 'border-emerald-600 ring-2 ring-emerald-500/20 scale-105' : 'border-slate-200 hover:border-slate-400'
+                                                      }`}
+                                                    >
+                                                      <img
+                                                        src={thumbUrl}
+                                                        alt={`Thumb ${idx + 1}`}
+                                                        className="h-full w-full object-cover"
+                                                      />
+                                                    </button>
+                                                  );
+                                                })}
+                                              </div>
+                                            )}
+                                          </div>
+                                        )}
+
+                                        <div className="flex justify-between items-center mt-4 border-t border-slate-100 pt-3">
+                                          {selectedImages && selectedImages.length > 1 && (
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                              Foto {activeImageIndex + 1} dari {selectedImages.length}
+                                            </span>
+                                          )}
+                                          <div className="flex justify-end gap-2 ml-auto">
+                                            {selectedImages && selectedImages[activeImageIndex] && (
+                                              <a
+                                                href={selectedImages[activeImageIndex].url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                              >
+                                                <Button size="sm" className="h-9 rounded-full bg-slate-800 hover:bg-slate-900 text-white text-[10px] font-bold uppercase tracking-wider">
+                                                  <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                                                  Buka Asli
+                                                </Button>
+                                              </a>
+                                            )}
+                                          </div>
                                         </div>
                                       </DialogContent>
                                     </Dialog>

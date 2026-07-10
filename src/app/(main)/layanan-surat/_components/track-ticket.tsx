@@ -38,24 +38,18 @@ export function TrackTicket() {
       switch (status) {
           case 'approved':
               return {
-                  title: 'Disetujui',
+                  title: 'Telah Diproses',
                   variant: 'default',
                   icon: <CheckCircle className="h-4 w-4 text-green-500" />,
-                  description: 'Surat pengajuan anda dapat di ambil ke balai desa pangawaren pada pukul 07.00 WIB s.d 16.00 WIB, sabtu minggu dan tanggal merah libur. Terima Kasih.'
+                  description: 'Surat pengajuan Anda telah selesai diproses dan sudah bisa diambil ke Pelayanan Desa Pangawaren pada pukul 07.00 WIB s.d 16.00 WIB (Senin s.d Jumat). Terima Kasih.'
               };
           case 'pending':
+          case 'processing':
               return {
-                  title: 'Menunggu Persetujuan',
+                  title: 'Sedang Diproses',
                   variant: 'default',
                   icon: <Loader2 className="h-4 w-4 text-yellow-500 animate-spin" />,
-                  description: 'Pengajuan Anda sedang dalam proses peninjauan oleh administrasi desa. Silakan cek kembali nanti.'
-              };
-            case 'processing':
-              return {
-                title: 'Sedang Diproses',
-                variant: 'default',
-                icon: <Loader2 className="h-4 w-4 text-yellow-500 animate-spin" />,
-                description: 'Pengajuan Anda sedang diproses oleh petugas administrasi.'
+                  description: 'Pengajuan Anda sedang dalam proses peninjauan oleh administrasi desa. Silakan cek kembali secara berkala.'
               };
           case 'rejected':
               return {

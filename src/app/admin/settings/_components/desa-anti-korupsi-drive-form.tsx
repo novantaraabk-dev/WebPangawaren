@@ -123,23 +123,37 @@ export function DesaAntiKorupsiDriveForm() {
                     <span>{pilar.title}</span>
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="pb-6 pt-2 border-t border-slate-200/60 bg-white -mx-6 px-6 space-y-4">
+                <AccordionContent className="pb-6 pt-2 border-t border-slate-200/60 bg-white -mx-6 px-6 space-y-5">
                   {pilar.subMenus.map((subMenu) => (
-                    <div key={subMenu.id} className="space-y-2 pt-2 first:pt-0">
-                      <Label htmlFor={`folder-${subMenu.id}`} className="text-xs font-bold text-slate-700 leading-relaxed block">
-                        <span className="font-mono text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded text-[10px] mr-1.5">
+                    <div key={subMenu.id} className="space-y-3 p-4 rounded-2xl border border-slate-200/50 bg-slate-50/50">
+                      <div className="flex items-start gap-2 border-b border-slate-200/80 pb-2">
+                        <span className="font-mono text-emerald-600 font-bold bg-emerald-100/80 px-1.5 py-0.5 rounded text-[10px] shrink-0 mt-0.5">
                           {subMenu.id}
                         </span>
-                        {subMenu.title}
-                      </Label>
-                      <Input
-                        id={`folder-${subMenu.id}`}
-                        placeholder="Tempelkan link folder Google Drive di sini..."
-                        value={folderMappings[subMenu.id] || ''}
-                        onChange={(e) => handleInputChange(subMenu.id, e.target.value)}
-                        disabled={isSaving}
-                        className="rounded-xl border-slate-200 focus-visible:ring-emerald-500 text-xs"
-                      />
+                        <h4 className="text-xs font-bold text-slate-800 leading-relaxed">
+                          {subMenu.title}
+                        </h4>
+                      </div>
+                      <div className="space-y-3.5 pl-1.5 pt-1">
+                        {subMenu.items.map((item) => (
+                          <div key={item.id} className="space-y-1.5">
+                            <Label htmlFor={`folder-${item.id}`} className="text-[11px] font-bold text-slate-700 leading-relaxed block">
+                              <span className="font-mono text-slate-500 bg-slate-200/60 px-1.5 py-0.5 rounded text-[9px] mr-1.5">
+                                {item.id}
+                              </span>
+                              {item.title}
+                            </Label>
+                            <Input
+                              id={`folder-${item.id}`}
+                              placeholder="Tempelkan link folder Google Drive untuk rincian ini..."
+                              value={folderMappings[item.id] || ''}
+                              onChange={(e) => handleInputChange(item.id, e.target.value)}
+                              disabled={isSaving}
+                              className="rounded-xl border-slate-200 bg-white focus-visible:ring-emerald-500 text-xs h-9"
+                            />
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   ))}
                 </AccordionContent>

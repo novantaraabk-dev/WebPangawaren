@@ -39,6 +39,8 @@ interface DBItemData {
   pdfName?: string;
   imageUrl?: string;
   imageName?: string;
+  pdfs?: Array<{ url: string; name: string }>;
+  images?: Array<{ url: string; name: string }>;
   updatedAt?: any;
 }
 
@@ -96,6 +98,19 @@ export default function AdminDesaAntiKorupsi() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isImageUploading, setIsImageUploading] = useState(false);
 
+  // Manual Link States
+  const [manualPdfUrl, setManualPdfUrl] = useState('');
+  const [manualPdfName, setManualPdfName] = useState('');
+  const [isManualPdfSaving, setIsManualPdfSaving] = useState(false);
+
+  const [manualImageUrl, setManualImageUrl] = useState('');
+  const [manualImageName, setManualImageName] = useState('');
+  const [isManualImageSaving, setIsManualImageSaving] = useState(false);
+
+  // Input Mode Toggle States
+  const [pdfInputMode, setPdfInputMode] = useState<'upload' | 'link'>('upload');
+  const [imageInputMode, setImageInputMode] = useState<'upload' | 'link'>('upload');
+
   // Drive configurations
   const [driveConfig, setDriveConfig] = useState<DriveSettingsInfo | null>(null);
   const [subFolderMappings, setSubFolderMappings] = useState<Record<string, string>>({});
@@ -139,6 +154,17 @@ export default function AdminDesaAntiKorupsi() {
       fetchItemData(item.id);
     }
   }, [selectedItemId, currentSubMenu, firestore]);
+
+  // Pre-fill manual link document names when currentItem changes
+  useEffect(() => {
+    if (currentItem) {
+      setManualPdfName(currentItem.title);
+      setManualImageName(currentItem.title);
+    } else {
+      setManualPdfName('');
+      setManualImageName('');
+    }
+  }, [currentItem]);
 
   // Fetch Drive settings from firestore
   useEffect(() => {
@@ -260,7 +286,7 @@ export default function AdminDesaAntiKorupsi() {
 
     const appsScriptUrl = (driveConfig?.appsScriptUrl || '').trim();
     // Retrieve custom sub folder ID, fallback to root folder ID
-    const targetFolderId = subFolderMappings[selectedSubMenuId] || extractFolderId(driveConfig?.rootFolderId || '');
+    const targetFolderId = subFolderMappings[selectedItemId] || subFolderMappings[selectedSubMenuId] || extractFolderId(driveConfig?.rootFolderId || '');
 
     if (!appsScriptUrl || !targetFolderId) {
       throw new Error('URL Apps Script atau Folder ID Google Drive belum terkonfigurasi di Pengaturan.');
@@ -313,12 +339,16 @@ export default function AdminDesaAntiKorupsi() {
     try {
       const uploadResult = await uploadToDrive(pdfFile, 'PDF');
 
+      const currentPdfs = dbData?.pdfs || (dbData?.pdfUrl ? [{ url: dbData.pdfUrl, name: dbData.pdfName || 'Dokumen PDF' }] : []);
+      const newPdfs = [...currentPdfs, { url: uploadResult.url, name: uploadResult.name }];
+
       // Save to Firestore
       const docRef = doc(firestore, 'desaAntiKorupsi', currentItem.id);
       await setDoc(docRef, {
         itemId: currentItem.id,
-        pdfUrl: uploadResult.url,
-        pdfName: uploadResult.name,
+        pdfs: newPdfs,
+        pdfUrl: newPdfs[0].url,
+        pdfName: newPdfs[0].name,
         updatedAt: serverTimestamp()
       }, { merge: true });
 
@@ -351,12 +381,16 @@ export default function AdminDesaAntiKorupsi() {
       const compressedFile = await compressImage(imageFile);
       const uploadResult = await uploadToDrive(compressedFile, 'IMG');
 
+      const currentImages = dbData?.images || (dbData?.imageUrl ? [{ url: dbData.imageUrl, name: dbData.imageName || 'Gambar Dukung' }] : []);
+      const newImages = [...currentImages, { url: uploadResult.url, name: uploadResult.name }];
+
       // Save to Firestore
       const docRef = doc(firestore, 'desaAntiKorupsi', currentItem.id);
       await setDoc(docRef, {
         itemId: currentItem.id,
-        imageUrl: uploadResult.url,
-        imageName: uploadResult.name,
+        images: newImages,
+        imageUrl: newImages[0].url,
+        imageName: newImages[0].name,
         updatedAt: serverTimestamp()
       }, { merge: true });
 
@@ -379,68 +413,166 @@ export default function AdminDesaAntiKorupsi() {
     }
   };
 
-  // Delete PDF
-  const handleDeletePdf = async () => {
-    if (!currentItem || !firestore) return;
-    if (!confirm('Apakah Anda yakin ingin menghapus PDF ini dari sistem?')) return;
+  // Delete a specific PDF from multiple list
+  const handleDeletePdfItem = async (indexToDelete: number) => {
+    if (!currentItem || !firestore || !dbData) return;
+    if (!confirm('Apakah Anda yakin ingin menghapus PDF ini?')) return;
 
     try {
+      const currentPdfs = dbData.pdfs || (dbData.pdfUrl ? [{ url: dbData.pdfUrl, name: dbData.pdfName || 'Dokumen PDF' }] : []);
+      const newPdfs = currentPdfs.filter((_, idx) => idx !== indexToDelete);
+
       const docRef = doc(firestore, 'desaAntiKorupsi', currentItem.id);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        if (!data.imageUrl) {
-          await deleteDoc(docRef);
-        } else {
-          await setDoc(docRef, {
-            itemId: currentItem.id,
-            imageUrl: data.imageUrl,
-            imageName: data.imageName || ''
-          });
-        }
+      const currentImages = dbData.images || (dbData.imageUrl ? [{ url: dbData.imageUrl, name: dbData.imageName || 'Gambar Dukung' }] : []);
+      
+      if (newPdfs.length === 0 && currentImages.length === 0) {
+        await deleteDoc(docRef);
+      } else {
+        await setDoc(docRef, {
+          itemId: currentItem.id,
+          pdfs: newPdfs,
+          pdfUrl: newPdfs.length > 0 ? newPdfs[0].url : null,
+          pdfName: newPdfs.length > 0 ? newPdfs[0].name : null,
+          images: currentImages,
+          imageUrl: currentImages.length > 0 ? currentImages[0].url : (dbData.imageUrl || null),
+          imageName: currentImages.length > 0 ? currentImages[0].name : (dbData.imageName || null),
+          updatedAt: serverTimestamp()
+        });
       }
 
-      toast({ title: 'Berhasil Dihapus', description: 'Tautan dokumen PDF dihapus.' });
+      toast({ title: 'Berhasil Dihapus', description: 'Dokumen PDF telah dihapus.' });
       fetchItemData(currentItem.id);
     } catch (error: any) {
       toast({ title: 'Gagal Menghapus', description: error.message, variant: 'destructive' });
     }
   };
 
-  // Delete Image
-  const handleDeleteImage = async () => {
-    if (!currentItem || !firestore) return;
-    if (!confirm('Apakah Anda yakin ingin menghapus foto dukung ini dari sistem?')) return;
+  // Delete a specific Image from multiple list
+  const handleDeleteImageItem = async (indexToDelete: number) => {
+    if (!currentItem || !firestore || !dbData) return;
+    if (!confirm('Apakah Anda yakin ingin menghapus foto dukung ini?')) return;
 
     try {
+      const currentImages = dbData.images || (dbData.imageUrl ? [{ url: dbData.imageUrl, name: dbData.imageName || 'Gambar Dukung' }] : []);
+      const newImages = currentImages.filter((_, idx) => idx !== indexToDelete);
+
       const docRef = doc(firestore, 'desaAntiKorupsi', currentItem.id);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        if (!data.pdfUrl) {
-          await deleteDoc(docRef);
-        } else {
-          await setDoc(docRef, {
-            itemId: currentItem.id,
-            pdfUrl: data.pdfUrl,
-            pdfName: data.pdfName || ''
-          });
-        }
+      const currentPdfs = dbData.pdfs || (dbData.pdfUrl ? [{ url: dbData.pdfUrl, name: dbData.pdfName || 'Dokumen PDF' }] : []);
+
+      if (newImages.length === 0 && currentPdfs.length === 0) {
+        await deleteDoc(docRef);
+      } else {
+        await setDoc(docRef, {
+          itemId: currentItem.id,
+          images: newImages,
+          imageUrl: newImages.length > 0 ? newImages[0].url : null,
+          imageName: newImages.length > 0 ? newImages[0].name : null,
+          pdfs: currentPdfs,
+          pdfUrl: currentPdfs.length > 0 ? currentPdfs[0].url : (dbData.pdfUrl || null),
+          pdfName: currentPdfs.length > 0 ? currentPdfs[0].name : (dbData.pdfName || null),
+          updatedAt: serverTimestamp()
+        });
       }
 
-      toast({ title: 'Berhasil Dihapus', description: 'Tautan foto dukung dihapus.' });
+      toast({ title: 'Berhasil Dihapus', description: 'Foto dukung telah dihapus.' });
       fetchItemData(currentItem.id);
     } catch (error: any) {
       toast({ title: 'Gagal Menghapus', description: error.message, variant: 'destructive' });
     }
   };
 
-  // Preview Image direct URL
-  const embeddedImageUrl = useMemo(() => {
-    if (!dbData?.imageUrl) return '';
-    const fileId = extractFileIdFromUrl(dbData.imageUrl);
-    return fileId ? `https://lh3.googleusercontent.com/d/${fileId}` : dbData.imageUrl;
-  }, [dbData?.imageUrl]);
+  // Save manual PDF document link
+  const handleAddManualPdf = async () => {
+    if (!manualPdfUrl.trim() || !currentItem || !firestore) return;
+    setIsManualPdfSaving(true);
+    try {
+      const url = manualPdfUrl.trim();
+      const name = manualPdfName.trim() || currentItem.title;
+
+      const currentPdfs = dbData?.pdfs || (dbData?.pdfUrl ? [{ url: dbData.pdfUrl, name: dbData.pdfName || 'Dokumen PDF' }] : []);
+      const newPdfs = [...currentPdfs, { url, name }];
+
+      // Save to Firestore
+      const docRef = doc(firestore, 'desaAntiKorupsi', currentItem.id);
+      await setDoc(docRef, {
+        itemId: currentItem.id,
+        pdfs: newPdfs,
+        pdfUrl: newPdfs[0].url,
+        pdfName: newPdfs[0].name,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+
+      toast({
+        title: 'Tautan PDF Berhasil Disimpan',
+        description: 'Tautan dokumen PDF manual telah ditambahkan ke daftar.',
+      });
+
+      setManualPdfUrl('');
+      setManualPdfName(currentItem.title);
+      fetchItemData(currentItem.id);
+    } catch (error: any) {
+      console.error('Gagal menyimpan tautan PDF manual:', error);
+      toast({
+        title: 'Gagal Menyimpan Tautan',
+        description: error.message || 'Terjadi kesalahan sistem.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsManualPdfSaving(false);
+    }
+  };
+
+  // Save manual Image document link
+  const handleAddManualImage = async () => {
+    if (!manualImageUrl.trim() || !currentItem || !firestore) return;
+    setIsManualImageSaving(true);
+    try {
+      const url = manualImageUrl.trim();
+      const name = manualImageName.trim() || currentItem.title;
+
+      const currentImages = dbData?.images || (dbData?.imageUrl ? [{ url: dbData.imageUrl, name: dbData.imageName || 'Gambar Dukung' }] : []);
+      const newImages = [...currentImages, { url, name }];
+
+      // Save to Firestore
+      const docRef = doc(firestore, 'desaAntiKorupsi', currentItem.id);
+      await setDoc(docRef, {
+        itemId: currentItem.id,
+        images: newImages,
+        imageUrl: newImages[0].url,
+        imageName: newImages[0].name,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+
+      toast({
+        title: 'Tautan Gambar Berhasil Disimpan',
+        description: 'Tautan foto dukung manual telah ditambahkan ke daftar.',
+      });
+
+      setManualImageUrl('');
+      setManualImageName(currentItem.title);
+      fetchItemData(currentItem.id);
+    } catch (error: any) {
+      console.error('Gagal menyimpan tautan gambar manual:', error);
+      toast({
+        title: 'Gagal Menyimpan Tautan',
+        description: error.message || 'Terjadi kesalahan sistem.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsManualImageSaving(false);
+    }
+  };
+
+  // Helper lists for multiple files view
+  const pdfList = useMemo(() => {
+    if (!dbData) return [];
+    return dbData.pdfs || (dbData.pdfUrl ? [{ url: dbData.pdfUrl, name: dbData.pdfName || 'Dokumen PDF' }] : []);
+  }, [dbData]);
+
+  const imageList = useMemo(() => {
+    if (!dbData) return [];
+    return dbData.images || (dbData.imageUrl ? [{ url: dbData.imageUrl, name: dbData.imageName || 'Gambar Dukung' }] : []);
+  }, [dbData]);
 
   return (
     <div className="space-y-6">
@@ -553,9 +685,13 @@ export default function AdminDesaAntiKorupsi() {
               
               {/* Target Folder ID Info Badge */}
               <div className="shrink-0">
-                {subFolderMappings[selectedSubMenuId] ? (
+                {subFolderMappings[selectedItemId] ? (
                   <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border border-emerald-200 rounded-full text-[9px] uppercase font-bold py-1 px-3">
-                    Folder Drive Terpetakan: {subFolderMappings[selectedSubMenuId].substring(0, 8)}...
+                    Folder Drive Terpetakan (Rincian): {subFolderMappings[selectedItemId].substring(0, 8)}...
+                  </Badge>
+                ) : subFolderMappings[selectedSubMenuId] ? (
+                  <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border border-emerald-200 rounded-full text-[9px] uppercase font-bold py-1 px-3">
+                    Folder Drive Terpetakan (Sub-Menu): {subFolderMappings[selectedSubMenuId].substring(0, 8)}...
                   </Badge>
                 ) : (
                   <Badge variant="outline" className="text-[9px] text-slate-400 border-slate-200 uppercase font-bold py-1 px-3">
@@ -580,206 +716,335 @@ export default function AdminDesaAntiKorupsi() {
                       <FileText className="h-4 w-4 text-red-500" />
                       <span>Berkas PDF (Google Drive)</span>
                     </h3>
-                    {dbData?.pdfUrl ? (
-                      <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border border-emerald-200 rounded-full text-[9px] uppercase font-bold px-2">
-                        Terunggah
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary" className="text-[9px] uppercase font-bold px-2">
-                        Belum Ada
-                      </Badge>
-                    )}
+                    <Badge variant={pdfList.length > 0 ? "default" : "secondary"} className={`text-[9px] uppercase font-bold px-2 ${pdfList.length > 0 ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border border-emerald-200" : ""}`}>
+                      {pdfList.length > 0 ? `${pdfList.length} Berkas` : "Belum Ada"}
+                    </Badge>
                   </div>
 
-                  {dbData?.pdfUrl ? (
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 bg-red-100 text-red-600 flex items-center justify-center rounded-lg shrink-0">
-                          <FileText className="h-5 w-5" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs font-bold text-slate-750 truncate">
-                            {dbData.pdfName || 'Dokumen PDF Desa Anti Korupsi'}
-                          </p>
-                          <a 
-                            href={dbData.pdfUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-[10px] text-emerald-600 font-bold hover:underline inline-flex items-center mt-1"
-                          >
-                            <span>Buka di Google Drive</span>
-                            <ExternalLink className="h-3 w-3 ml-1" />
-                          </a>
-                        </div>
+                  {pdfList.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Daftar Dokumen PDF Terunggah:</p>
+                      <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
+                        {pdfList.map((pdf, idx) => (
+                          <div key={idx} className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                              <div className="h-8 w-8 bg-red-100 text-red-600 flex items-center justify-center rounded-lg shrink-0">
+                                <FileText className="h-4.5 w-4.5" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-bold text-slate-750 truncate">
+                                  {pdf.name || `Dokumen PDF ${idx + 1}`}
+                                </p>
+                                <a 
+                                  href={pdf.url} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-[10px] text-emerald-600 font-bold hover:underline inline-flex items-center mt-0.5"
+                                >
+                                  <span>Buka di Google Drive</span>
+                                  <ExternalLink className="h-2.5 w-2.5 ml-1" />
+                                </a>
+                              </div>
+                            </div>
+                            <Button 
+                              onClick={() => handleDeletePdfItem(idx)} 
+                              variant="ghost" 
+                              size="icon"
+                              className="h-8 w-8 rounded-full text-red-500 hover:text-red-750 hover:bg-red-50 shrink-0"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
                       </div>
-                      <div className="flex justify-end pt-1">
-                        <Button 
-                          onClick={handleDeletePdf} 
-                          variant="destructive" 
-                          size="sm"
-                          className="h-8 rounded-full text-[10px] font-bold uppercase tracking-wider"
-                        >
-                          <Trash2 className="h-3.5 w-3.5 mr-1" />
-                          Hapus Tautan
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="border border-dashed border-slate-200 hover:border-emerald-300 rounded-xl p-6 transition-colors flex flex-col items-center justify-center bg-slate-50/50">
-                        <UploadCloud className="h-8 w-8 text-slate-400 mb-2" />
-                        <p className="text-[10px] font-bold text-slate-500 text-center uppercase tracking-wider">
-                          Pilih File PDF untuk Diunggah
-                        </p>
-                        <Input
-                          type="file"
-                          accept=".pdf"
-                          onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
-                          className="hidden"
-                          id="pdf-file-selector"
-                        />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => document.getElementById('pdf-file-selector')?.click()}
-                          className="h-8 rounded-full border-slate-200 bg-white hover:bg-slate-50 text-[10px] font-bold uppercase tracking-wider mt-3"
-                        >
-                          Pilih File
-                        </Button>
-                        {pdfFile && (
-                          <p className="text-[10px] text-emerald-700 font-bold mt-3 text-center truncate max-w-full">
-                            Terpilih: {pdfFile.name} ({(pdfFile.size / 1024 / 1024).toFixed(2)} MB)
-                          </p>
-                        )}
-                      </div>
-
-                      <Button
-                        onClick={handlePdfUpload}
-                        disabled={!pdfFile || isPdfUploading}
-                        className="w-full h-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-wider"
-                      >
-                        {isPdfUploading ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                            Mengunggah ke Drive...
-                          </>
-                        ) : (
-                          <>
-                            <UploadCloud className="h-4 w-4 mr-2" />
-                            Unggah ke Google Drive
-                          </>
-                        )}
-                      </Button>
                     </div>
                   )}
+
+                  <div className="space-y-4 pt-2 border-t border-slate-100">
+                    {/* Toggle Selector */}
+                    <div className="grid grid-cols-2 gap-1 p-1 bg-slate-100/80 rounded-xl border border-slate-200/50">
+                      <button
+                        type="button"
+                        onClick={() => setPdfInputMode('upload')}
+                        className={`h-8 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
+                          pdfInputMode === 'upload'
+                            ? 'bg-white text-slate-800 shadow-sm'
+                            : 'text-slate-500 hover:text-slate-700'
+                        }`}
+                      >
+                        Unggah Berkas
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPdfInputMode('link')}
+                        className={`h-8 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
+                          pdfInputMode === 'link'
+                            ? 'bg-white text-slate-800 shadow-sm'
+                            : 'text-slate-500 hover:text-slate-700'
+                        }`}
+                      >
+                        Tautan Manual
+                      </button>
+                    </div>
+
+                    {pdfInputMode === 'upload' ? (
+                      <div className="space-y-4">
+                        <div className="border border-dashed border-slate-200 hover:border-emerald-300 rounded-xl p-6 transition-colors flex flex-col items-center justify-center bg-slate-50/50">
+                          <UploadCloud className="h-8 w-8 text-slate-400 mb-2" />
+                          <p className="text-[10px] font-bold text-slate-500 text-center uppercase tracking-wider">
+                            Pilih File PDF Baru untuk Ditambahkan
+                          </p>
+                          <Input
+                            type="file"
+                            accept=".pdf"
+                            onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
+                            className="hidden"
+                            id="pdf-file-selector"
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => document.getElementById('pdf-file-selector')?.click()}
+                            className="h-8 rounded-full border-slate-200 bg-white hover:bg-slate-50 text-[10px] font-bold uppercase tracking-wider mt-3"
+                          >
+                            Pilih File
+                          </Button>
+                          {pdfFile && (
+                            <p className="text-[10px] text-emerald-700 font-bold mt-3 text-center truncate max-w-full">
+                              Terpilih: {pdfFile.name} ({(pdfFile.size / 1024 / 1024).toFixed(2)} MB)
+                            </p>
+                          )}
+                        </div>
+
+                        <Button
+                          onClick={handlePdfUpload}
+                          disabled={!pdfFile || isPdfUploading}
+                          className="w-full h-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-wider"
+                        >
+                          {isPdfUploading ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                              Mengunggah ke Drive...
+                            </>
+                          ) : (
+                            <>
+                              <UploadCloud className="h-4 w-4 mr-2" />
+                              Unggah PDF Baru
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3 bg-slate-50/50 p-4 rounded-xl border border-slate-200/60">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="manual-pdf-name" className="text-[10px] font-bold text-slate-550 uppercase block">Nama Dokumen PDF</Label>
+                          <Input
+                            id="manual-pdf-name"
+                            placeholder="Contoh: Dokumen RPJM Desa 2026"
+                            value={manualPdfName}
+                            onChange={(e) => setManualPdfName(e.target.value)}
+                            disabled={isManualPdfSaving}
+                            className="h-9 rounded-xl border-slate-200 bg-white text-xs focus-visible:ring-emerald-500"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="manual-pdf-url" className="text-[10px] font-bold text-slate-550 uppercase block">Tautan URL Dokumen</Label>
+                          <Input
+                            id="manual-pdf-url"
+                            placeholder="Tempelkan link URL dokumen di sini..."
+                            value={manualPdfUrl}
+                            onChange={(e) => setManualPdfUrl(e.target.value)}
+                            disabled={isManualPdfSaving}
+                            className="h-9 rounded-xl border-slate-200 bg-white text-xs focus-visible:ring-emerald-500"
+                          />
+                        </div>
+                        <Button
+                          onClick={handleAddManualPdf}
+                          disabled={!manualPdfUrl.trim() || isManualPdfSaving}
+                          className="w-full h-9 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-[11px] font-bold uppercase tracking-wider"
+                        >
+                          {isManualPdfSaving ? (
+                            <>
+                              <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                              Menyimpan...
+                          </>
+                        ) : (
+                          "Simpan Tautan PDF"
+                        )}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* 2. Photo Section (Google Drive - Instead of Cloudinary) */}
+                {/* 2. Photo Section (Google Drive) */}
                 <div className="border border-slate-150 rounded-2xl p-5 space-y-4">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                     <h3 className="text-xs font-black uppercase text-slate-700 tracking-wider flex items-center gap-1.5">
                       <ImageIcon className="h-4 w-4 text-blue-500" />
                       <span>Dokumentasi Gambar (Google Drive)</span>
                     </h3>
-                    {dbData?.imageUrl ? (
-                      <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border border-emerald-200 rounded-full text-[9px] uppercase font-bold px-2">
-                        Terunggah
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary" className="text-[9px] uppercase font-bold px-2">
-                        Belum Ada
-                      </Badge>
-                    )}
+                    <Badge variant={imageList.length > 0 ? "default" : "secondary"} className={`text-[9px] uppercase font-bold px-2 ${imageList.length > 0 ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border border-emerald-200" : ""}`}>
+                      {imageList.length > 0 ? `${imageList.length} Foto` : "Belum Ada"}
+                    </Badge>
                   </div>
 
-                  {dbData?.imageUrl ? (
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
-                      {embeddedImageUrl && (
-                        <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-slate-100 border border-slate-200">
-                          <img 
-                            src={embeddedImageUrl} 
-                            alt="Dokumentasi" 
-                            className="h-full w-full object-contain"
-                          />
-                        </div>
-                      )}
-                      <div className="min-w-0 py-1">
-                        <p className="text-[10px] font-bold text-slate-500 truncate">
-                          Nama File: {dbData.imageName || 'Gambar Dukung'}
-                        </p>
+                  {imageList.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Daftar Foto Dukung Terunggah:</p>
+                      <div className="grid grid-cols-2 gap-3 max-h-60 overflow-y-auto pr-1">
+                        {imageList.map((img, idx) => {
+                          const fileId = extractFileIdFromUrl(img.url);
+                          const embedUrl = fileId ? `https://lh3.googleusercontent.com/d/${fileId}` : img.url;
+                          return (
+                            <div key={idx} className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 relative overflow-hidden flex flex-col justify-between">
+                              {embedUrl && (
+                                <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-slate-100 border border-slate-200/60 mb-2">
+                                  <img 
+                                    src={embedUrl} 
+                                    alt={`Dokumentasi ${idx + 1}`} 
+                                    className="h-full w-full object-contain"
+                                  />
+                                </div>
+                              )}
+                              <div className="min-w-0 flex items-center justify-between gap-2">
+                                <span className="text-[9px] font-bold text-slate-500 truncate block text-[9px] truncate">
+                                  {img.name || `Foto ${idx + 1}`}
+                                </span>
+                                <Button 
+                                  onClick={() => handleDeleteImageItem(idx)} 
+                                  variant="ghost" 
+                                  size="icon"
+                                  className="h-6 w-6 rounded-full text-red-500 hover:text-red-750 hover:bg-red-50 shrink-0"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
-                      <div className="flex justify-between items-center pt-1 border-t border-slate-100">
-                        <a 
-                          href={dbData.imageUrl} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-[10px] text-emerald-600 font-bold hover:underline inline-flex items-center"
-                        >
-                          <span>Buka di Google Drive</span>
-                          <ExternalLink className="h-3 w-3 ml-1" />
-                        </a>
-                        <Button 
-                          onClick={handleDeleteImage} 
-                          variant="destructive" 
-                          size="sm"
-                          className="h-8 rounded-full text-[10px] font-bold uppercase tracking-wider"
-                        >
-                          <Trash2 className="h-3.5 w-3.5 mr-1" />
-                          Hapus Gambar
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="border border-dashed border-slate-200 hover:border-emerald-300 rounded-xl p-6 transition-colors flex flex-col items-center justify-center bg-slate-50/50">
-                        <ImageIcon className="h-8 w-8 text-slate-400 mb-2" />
-                        <p className="text-[10px] font-bold text-slate-500 text-center uppercase tracking-wider">
-                          Pilih Gambar (JPG, JPEG, PNG)
-                        </p>
-                        <Input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-                          className="hidden"
-                          id="image-file-selector"
-                        />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => document.getElementById('image-file-selector')?.click()}
-                          className="h-8 rounded-full border-slate-200 bg-white hover:bg-slate-50 text-[10px] font-bold uppercase tracking-wider mt-3"
-                        >
-                          Pilih Gambar
-                        </Button>
-                        <p className="text-[9px] text-slate-400 mt-2 text-center">
-                          Gambar otomatis dikompresi sebelum diunggah ke Google Drive
-                        </p>
-                        {imageFile && (
-                          <p className="text-[10px] text-emerald-700 font-bold mt-2 text-center truncate max-w-full">
-                            Terpilih: {imageFile.name} ({(imageFile.size / 1024 / 1024).toFixed(2)} MB)
-                          </p>
-                        )}
-                      </div>
-
-                      <Button
-                        onClick={handleImageUpload}
-                        disabled={!imageFile || isImageUploading}
-                        className="w-full h-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-wider"
-                      >
-                        {isImageUploading ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                            Mengompresi & Mengunggah...
-                          </>
-                        ) : (
-                          <>
-                            <UploadCloud className="h-4 w-4 mr-2" />
-                            Unggah ke Google Drive
-                          </>
-                        )}
-                      </Button>
                     </div>
                   )}
+
+                  <div className="space-y-4 pt-2 border-t border-slate-100">
+                    {/* Toggle Selector */}
+                    <div className="grid grid-cols-2 gap-1 p-1 bg-slate-100/80 rounded-xl border border-slate-200/50">
+                      <button
+                        type="button"
+                        onClick={() => setImageInputMode('upload')}
+                        className={`h-8 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
+                          imageInputMode === 'upload'
+                            ? 'bg-white text-slate-800 shadow-sm'
+                            : 'text-slate-500 hover:text-slate-700'
+                        }`}
+                      >
+                        Unggah Berkas
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setImageInputMode('link')}
+                        className={`h-8 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
+                          imageInputMode === 'link'
+                            ? 'bg-white text-slate-800 shadow-sm'
+                            : 'text-slate-500 hover:text-slate-700'
+                        }`}
+                      >
+                        Tautan Manual
+                      </button>
+                    </div>
+
+                    {imageInputMode === 'upload' ? (
+                      <div className="space-y-4">
+                        <div className="border border-dashed border-slate-200 hover:border-emerald-300 rounded-xl p-6 transition-colors flex flex-col items-center justify-center bg-slate-50/50">
+                          <ImageIcon className="h-8 w-8 text-slate-400 mb-2" />
+                          <p className="text-[10px] font-bold text-slate-500 text-center uppercase tracking-wider">
+                            Pilih Gambar Baru (JPG, JPEG, PNG)
+                          </p>
+                          <Input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                            className="hidden"
+                            id="image-file-selector"
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => document.getElementById('image-file-selector')?.click()}
+                            className="h-8 rounded-full border-slate-200 bg-white hover:bg-slate-50 text-[10px] font-bold uppercase tracking-wider mt-3"
+                          >
+                            Pilih Gambar
+                          </Button>
+                          <p className="text-[9px] text-slate-400 mt-2 text-center">
+                            Gambar otomatis dikompresi sebelum diunggah ke Google Drive
+                          </p>
+                          {imageFile && (
+                            <p className="text-[10px] text-emerald-700 font-bold mt-2 text-center truncate max-w-full">
+                              Terpilih: {imageFile.name} ({(imageFile.size / 1024 / 1024).toFixed(2)} MB)
+                            </p>
+                          )}
+                        </div>
+
+                        <Button
+                          onClick={handleImageUpload}
+                          disabled={!imageFile || isImageUploading}
+                          className="w-full h-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-wider"
+                        >
+                          {isImageUploading ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                              Mengompresi & Mengunggah...
+                            </>
+                          ) : (
+                            <>
+                              <UploadCloud className="h-4 w-4 mr-2" />
+                              Unggah Foto Baru
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3 bg-slate-50/50 p-4 rounded-xl border border-slate-200/60">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="manual-image-name" className="text-[10px] font-bold text-slate-550 uppercase block">Nama Foto / Gambar</Label>
+                          <Input
+                            id="manual-image-name"
+                            placeholder="Contoh: Foto Kegiatan Sosialisasi"
+                            value={manualImageName}
+                            onChange={(e) => setManualImageName(e.target.value)}
+                            disabled={isManualImageSaving}
+                            className="h-9 rounded-xl border-slate-200 bg-white text-xs focus-visible:ring-emerald-500"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="manual-image-url" className="text-[10px] font-bold text-slate-550 uppercase block">Tautan URL Gambar</Label>
+                          <Input
+                            id="manual-image-url"
+                            placeholder="Tempelkan link URL gambar di sini..."
+                            value={manualImageUrl}
+                            onChange={(e) => setManualImageUrl(e.target.value)}
+                            disabled={isManualImageSaving}
+                            className="h-9 rounded-xl border-slate-200 bg-white text-xs focus-visible:ring-emerald-500"
+                          />
+                        </div>
+                        <Button
+                          onClick={handleAddManualImage}
+                          disabled={!manualImageUrl.trim() || isManualImageSaving}
+                          className="w-full h-9 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-[11px] font-bold uppercase tracking-wider"
+                        >
+                          {isManualImageSaving ? (
+                            <>
+                              <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                              Menyimpan...
+                            </>
+                          ) : (
+                            "Simpan Tautan Gambar"
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}

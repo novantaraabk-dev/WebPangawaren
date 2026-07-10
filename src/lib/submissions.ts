@@ -13,6 +13,8 @@ import {
   orderBy,
   limit,
   DocumentReference,
+  where,
+  getDocs,
 } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { LetterSubmission, UploadedFile, DriveSettingsInfo } from './types';
@@ -61,10 +63,25 @@ export const getSubmissionById = async (
     if (!id || !db) return null;
     
     try {
-        const docRef = doc(db, 'letterRequests', id.trim());
-        const docSnap = await getDoc(docRef);
+        const trimmedId = id.trim();
+        let docSnap = null;
 
-        if (docSnap.exists()) {
+        // 1. Try to fetch by Firestore Document ID
+        const docRef = doc(db, 'letterRequests', trimmedId);
+        const directSnap = await getDoc(docRef);
+
+        if (directSnap.exists()) {
+            docSnap = directSnap;
+        } else {
+            // 2. Try to query by ticketNumber field
+            const q = query(getLetterRequestsCollection(db), where('ticketNumber', '==', trimmedId));
+            const querySnap = await getDocs(q);
+            if (!querySnap.empty) {
+                docSnap = querySnap.docs[0];
+            }
+        }
+
+        if (docSnap && docSnap.exists()) {
             const data = docSnap.data();
             
             // Robust parsing for legacy submissionData
@@ -73,7 +90,7 @@ export const getSubmissionById = async (
                 try {
                     mainData = JSON.parse(data.submissionData);
                 } catch (e) {
-                    console.warn("Failed to parse legacy submissionData for ID:", id, e);
+                    console.warn("Failed to parse legacy submissionData for ID:", docSnap.id, e);
                 }
             }
 
