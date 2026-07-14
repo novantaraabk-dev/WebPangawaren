@@ -28,6 +28,7 @@ export interface UseDocResult<T> {
 export interface UseDocOptions {
   realtime?: boolean;
   cacheTtl?: number; // Cache duration in milliseconds (default: 30 seconds)
+  suppressGlobalError?: boolean;
 }
 
 interface CacheEntry {
@@ -95,7 +96,9 @@ export function useDoc<T = any>(
           setError(contextualError);
           setData(null);
           setIsLoading(false);
-          errorEmitter.emit('permission-error', contextualError);
+          if (!options?.suppressGlobalError) {
+            errorEmitter.emit('permission-error', contextualError);
+          }
         }
       );
 
@@ -170,7 +173,9 @@ export function useDoc<T = any>(
           setError(contextualError);
           setData(null);
           setIsLoading(false);
-          errorEmitter.emit('permission-error', contextualError);
+          if (!options?.suppressGlobalError) {
+            errorEmitter.emit('permission-error', contextualError);
+          }
         });
     }
   }, [memoizedDocRef, isRealtime, cacheTtl]);

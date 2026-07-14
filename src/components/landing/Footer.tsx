@@ -17,7 +17,7 @@ export function Footer() {
     return doc(firestore, 'footerLogos', 'default');
   }, [firestore]);
 
-  const { data: footerLogosData } = useDoc<FooterLogosInfo>(footerLogosRef);
+  const { data: footerLogosData } = useDoc<FooterLogosInfo>(footerLogosRef, { suppressGlobalError: true });
 
   const activeLogo = useMemo(() => {
     if (!footerLogosData) return [];
