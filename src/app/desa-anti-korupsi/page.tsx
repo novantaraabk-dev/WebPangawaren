@@ -184,80 +184,67 @@ export default function DesaAntiKorupsi() {
                             return (
                               <div
                                 key={item.id}
-                                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition-colors"
+                                className="flex flex-col md:flex-row md:items-start justify-between gap-4 p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition-colors min-w-0"
                               >
-                                <div className="space-y-1">
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-mono text-[10px] text-slate-400 font-bold">
+                                <div className="space-y-1 md:w-1/3 shrink-0">
+                                  <div className="flex items-start gap-2">
+                                    <span className="font-mono text-[10px] text-slate-400 font-bold mt-0.5 shrink-0">
                                       {item.id}
                                     </span>
-                                    <h4 className="text-xs md:text-sm font-bold text-slate-800">
+                                    <h4 className="text-xs md:text-sm font-bold text-slate-800 leading-snug">
                                       {item.title}
                                     </h4>
                                   </div>
                                 </div>
 
-                                <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0 shrink-0">
-                                  {/* PDF Action */}
-                                  {hasPdf ? (
-                                    <div className="flex flex-wrap gap-2">
-                                      {pdfList.map((pdf, idx) => (
-                                        <a
-                                          key={idx}
-                                          href={pdf.url}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          title={pdf.name}
-                                        >
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="h-8 rounded-full border-red-200 bg-red-50/50 text-red-700 hover:bg-red-50 hover:text-red-800 text-[10px] font-bold uppercase tracking-wider"
-                                          >
-                                            <FileText className="h-3.5 w-3.5 mr-1 shrink-0" />
-                                            <span className="max-w-[120px] sm:max-w-[180px] truncate">
-                                              {pdf.name}
-                                            </span>
-                                          </Button>
-                                        </a>
-                                      ))}
-                                    </div>
-                                  ) : (
-                                    <Badge variant="secondary" className="h-8 rounded-full bg-slate-200/50 text-slate-400 border-none font-bold uppercase text-[9px] tracking-wider px-3">
-                                      PDF Belum Ada
-                                    </Badge>
-                                  )}
-
-                                  {/* Image Action */}
-                                  {hasImage ? (
-                                    <div className="flex flex-wrap gap-2">
-                                      {imageList.map((img, idx) => (
+                                {(hasPdf || hasImage) && (
+                                  <div className="flex flex-wrap items-center gap-2 md:justify-end flex-1 min-w-0">
+                                    {/* PDF List */}
+                                    {hasPdf && pdfList.map((pdf, idx) => (
+                                      <a
+                                        key={`pdf-${idx}`}
+                                        href={pdf.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        title={pdf.name}
+                                        className="inline-block"
+                                      >
                                         <Button
-                                          key={idx}
                                           variant="outline"
                                           size="sm"
-                                          onClick={() => {
-                                            setSelectedImages(imageList);
-                                            setActiveImageIndex(idx);
-                                            setActiveItemTitle(item.title);
-                                            setIsDialogOpen(true);
-                                          }}
-                                          title={img.name}
-                                          className="h-8 rounded-full border-blue-200 bg-blue-50/50 text-blue-700 hover:bg-blue-50 hover:text-blue-800 text-[10px] font-bold uppercase tracking-wider"
+                                          className="h-8 rounded-full border-red-200 bg-red-50/50 text-red-700 hover:bg-red-50 hover:text-red-800 text-[10px] font-bold uppercase tracking-wider max-w-full"
                                         >
-                                          <ImageIcon className="h-3.5 w-3.5 mr-1 shrink-0" />
-                                          <span className="max-w-[120px] sm:max-w-[180px] truncate">
-                                            {img.name}
+                                          <FileText className="h-3.5 w-3.5 mr-1 shrink-0" />
+                                          <span className="max-w-[140px] sm:max-w-[200px] truncate">
+                                            {pdf.name}
                                           </span>
                                         </Button>
-                                      ))}
-                                    </div>
-                                  ) : (
-                                    <Badge variant="secondary" className="h-8 rounded-full bg-slate-200/50 text-slate-400 border-none font-bold uppercase text-[9px] tracking-wider px-3">
-                                      Foto Belum Ada
-                                    </Badge>
-                                  )}
-                                </div>
+                                      </a>
+                                    ))}
+
+                                    {/* Image List */}
+                                    {hasImage && imageList.map((img, idx) => (
+                                      <Button
+                                        key={`img-${idx}`}
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                          setSelectedImages(imageList);
+                                          setActiveImageIndex(idx);
+                                          setActiveItemTitle(item.title);
+                                          setIsDialogOpen(true);
+                                        }}
+                                        title={img.name}
+                                        className="h-8 rounded-full border-blue-200 bg-blue-50/50 text-blue-700 hover:bg-blue-50 hover:text-blue-800 text-[10px] font-bold uppercase tracking-wider max-w-full"
+                                      >
+                                        <ImageIcon className="h-3.5 w-3.5 mr-1 shrink-0" />
+                                        <span className="max-w-[140px] sm:max-w-[200px] truncate">
+                                          {img.name}
+                                        </span>
+                                      </Button>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
                             );
                           })}
