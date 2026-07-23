@@ -26,6 +26,7 @@ export type News = {
   subtitle: string;
   content?: string;
   imageUrl?: string;
+  imageUrls?: string[];
   videoUrl?: string;
   mediaType?: 'photo' | 'video';
   date: string;

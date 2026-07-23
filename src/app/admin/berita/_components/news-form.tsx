@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, Image as ImageIcon, Sparkles, Star, Video } from 'lucide-react';
+import { Loader2, Save, Image as ImageIcon, Sparkles, Star, Trash2, ArrowLeft, ArrowRight, Plus } from 'lucide-react';
 import { doc, setDoc, addDoc, collection, serverTimestamp, writeBatch, query, where, getDocs } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { News } from '@/lib/types';
@@ -16,13 +16,14 @@ import { useRouter } from 'next/navigation';
 import { Checkbox } from '@/components/ui/checkbox';
 import { generateVillageNewsDraft } from '@/ai/flows/generate-village-news-flow';
 import { getVideoEmbedUrl } from '@/lib/video-utils';
+import { NewsImageGrid } from '@/components/news-image-grid';
 
 interface NewsFormProps {
   initialData?: News | null;
 }
 
 const CLOUD_NAME = 'dgsxujjb1';
-const UPLOAD_PRESET = 'webdesa'; 
+const UPLOAD_PRESET = 'webdesa';
 
 export function NewsForm({ initialData }: NewsFormProps) {
   const [formData, setFormData] = useState({
@@ -31,7 +32,8 @@ export function NewsForm({ initialData }: NewsFormProps) {
     date: '',
     content: '',
     author: '',
-    imageUrl: '', // Cloudinary URL for photo news
+    imageUrl: '', // Cloudinary URL for primary photo
+    imageUrls: [] as string[], // Cloudinary URLs array
     videoUrl: '',
     mediaType: 'photo' as 'photo' | 'video',
     isHeadline: false,
@@ -45,13 +47,18 @@ export function NewsForm({ initialData }: NewsFormProps) {
 
   useEffect(() => {
     if (initialData) {
+      const urls = initialData.imageUrls && initialData.imageUrls.length > 0
+        ? initialData.imageUrls
+        : (initialData.imageUrl ? [initialData.imageUrl] : []);
+
       setFormData({
         title: initialData.title ?? '',
         subtitle: initialData.subtitle ?? '',
         date: initialData.date ?? '',
         content: initialData.content ?? '',
         author: initialData.author ?? '',
-        imageUrl: initialData.imageUrl ?? '',
+        imageUrl: urls[0] || initialData.imageUrl || '',
+        imageUrls: urls,
         videoUrl: initialData.videoUrl ?? '',
         mediaType: initialData.mediaType ?? (initialData.videoUrl ? 'video' : 'photo'),
         isHeadline: initialData.isHeadline ?? false,
@@ -131,34 +138,49 @@ export function NewsForm({ initialData }: NewsFormProps) {
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
     setIsUploading(true);
-    const uploadFormData = new FormData();
+    const newUrls: string[] = [];
 
     try {
-      const processingFile = await compressImage(file);
-      uploadFormData.append('file', processingFile);
-      uploadFormData.append('upload_preset', UPLOAD_PRESET);
+      for (const file of files) {
+        const uploadFormData = new FormData();
+        const processingFile = await compressImage(file);
+        uploadFormData.append('file', processingFile);
+        uploadFormData.append('upload_preset', UPLOAD_PRESET);
 
-      const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-        method: 'POST',
-        body: uploadFormData,
-      });
+        const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+          method: 'POST',
+          body: uploadFormData,
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error.message || 'Gagal mengunggah ke Cloudinary');
+        if (!response.ok) {
+          throw new Error(data.error?.message || 'Gagal mengunggah ke Cloudinary');
+        }
+        newUrls.push(data.secure_url);
       }
 
-      setFormData(prev => ({ ...prev, imageUrl: data.secure_url }));
-      toast({ title: 'Unggah Berhasil', description: 'Gambar berhasil dikompresi dan diunggah ke Cloudinary.' });
+      setFormData(prev => {
+        const updatedUrls = [...prev.imageUrls, ...newUrls];
+        return {
+          ...prev,
+          imageUrls: updatedUrls,
+          imageUrl: updatedUrls[0] || prev.imageUrl,
+        };
+      });
+
+      toast({
+        title: 'Unggah Berhasil',
+        description: `${newUrls.length} gambar berhasil dikompresi dan diunggah ke Cloudinary.`,
+      });
     } catch (error: any) {
       let description = error.message;
       if (error instanceof SyntaxError) {
-        description = 'Respons dari server tidak valid. Ini bisa terjadi karena kesalahan konfigurasi pada Cloudinary (misal: nama preset salah atau preset tidak diatur ke unsigned). Periksa kembali pengaturan Anda.';
+        description = 'Respons dari server tidak valid. Periksa konfigurasi Cloudinary Anda.';
       }
 
       toast({
@@ -168,10 +190,34 @@ export function NewsForm({ initialData }: NewsFormProps) {
       });
     } finally {
       setIsUploading(false);
+      e.target.value = '';
     }
   };
 
-  const isVideoNews = formData.mediaType === 'video';
+  const handleRemovePhoto = (index: number) => {
+    setFormData(prev => {
+      const updated = prev.imageUrls.filter((_, i) => i !== index);
+      return {
+        ...prev,
+        imageUrls: updated,
+        imageUrl: updated[0] || '',
+      };
+    });
+  };
+
+  const handleMovePhoto = (fromIndex: number, toIndex: number) => {
+    setFormData(prev => {
+      if (toIndex < 0 || toIndex >= prev.imageUrls.length) return prev;
+      const updated = [...prev.imageUrls];
+      const [movedItem] = updated.splice(fromIndex, 1);
+      updated.splice(toIndex, 0, movedItem);
+      return {
+        ...prev,
+        imageUrls: updated,
+        imageUrl: updated[0] || '',
+      };
+    });
+  };
 
   const handleGenerateWithAI = async () => {
     if (!formData.title.trim() && !formData.subtitle.trim()) {
@@ -212,7 +258,7 @@ export function NewsForm({ initialData }: NewsFormProps) {
     e.preventDefault();
     if (!firestore) return;
 
-    if (formData.imageUrl && !formData.imageUrl.includes('res.cloudinary.com')) {
+    if (formData.imageUrls.some(url => !url.includes('res.cloudinary.com'))) {
       toast({
         title: 'URL Gambar tidak valid',
         description: 'Harap unggah ulang gambar untuk mendapatkan URL Cloudinary yang benar.',
@@ -232,6 +278,7 @@ export function NewsForm({ initialData }: NewsFormProps) {
 
     setIsSubmitting(true);
     try {
+      const primaryUrl = formData.imageUrls[0] || formData.imageUrl || '';
       const dataToSave = {
         title: formData.title,
         subtitle: formData.subtitle,
@@ -239,7 +286,8 @@ export function NewsForm({ initialData }: NewsFormProps) {
         author: formData.author,
         isHeadline: formData.isHeadline,
         mediaType: formData.mediaType,
-        imageUrl: formData.imageUrl,
+        imageUrl: primaryUrl,
+        imageUrls: formData.imageUrls,
         videoUrl: formData.mediaType === 'video' ? formData.videoUrl : '',
         content: formData.content ? formatNewsContent(formData.content) : '',
       };
@@ -301,17 +349,11 @@ export function NewsForm({ initialData }: NewsFormProps) {
       .join('\n\n');
   };
 
-  const getOptimizedImageUrl = (url: string) => {
-      if (!url.includes('res.cloudinary.com')) return url;
-      const transformation = 'w_800,q_auto,f_auto';
-      return url.replace('/image/upload/', `/image/upload/${transformation}/`);
-  };
-
   return (
     <Card className="max-w-4xl mx-auto">
       <CardHeader>
         <CardTitle>{initialData ? 'Edit Berita' : 'Buat Berita Baru'}</CardTitle>
-        <CardDescription>Lengkapi informasi berita kegiatan desa di bawah ini.</CardDescription>
+        <CardDescription>Lengkapi informasi berita kegiatan desa di bawah ini. Anda dapat mengunggah beberapa foto sekaligus.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -331,70 +373,153 @@ export function NewsForm({ initialData }: NewsFormProps) {
               <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
                 <p className="text-sm font-semibold text-slate-900">
                   {formData.mediaType === 'photo'
-                    ? 'Pilih tab Foto untuk unggah gambar berita.'
+                    ? 'Pilih tab Foto untuk unggah satu atau beberapa gambar berita.'
                     : 'Pilih tab Video untuk masukkan tautan video berita.'}
                 </p>
                 <p className="mt-2 text-xs text-slate-500">
                   {formData.mediaType === 'photo'
-                    ? 'Foto akan ditampilkan sebagai media utama berita.'
+                    ? 'Foto akan ditampilkan dalam layout grid modern (1, 2, 3, atau 4+ foto).'
                     : 'Video akan diputar langsung di halaman berita.'}
                 </p>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>{formData.mediaType === 'photo' ? 'Gambar Kegiatan' : 'Preview Gambar Video'}</Label>
-              <div className="flex flex-col gap-4">
-                {formData.mediaType === 'photo' ? (
-                  <>
-                    {formData.imageUrl && (
-                      <div className="relative aspect-video w-full max-w-md overflow-hidden rounded-lg border bg-muted">
-                        <img src={getOptimizedImageUrl(formData.imageUrl)} alt="Preview" className="h-full w-full object-cover" />
+            <div className="space-y-4">
+              <Label>
+                {formData.mediaType === 'photo'
+                  ? `Foto Kegiatan (${formData.imageUrls.length} foto diunggah)`
+                  : 'Preview & Video Link'}
+              </Label>
+
+              {formData.mediaType === 'photo' ? (
+                <div className="space-y-4">
+                  {/* UPLOAD BUTTON */}
+                  <div className="flex flex-wrap items-center gap-4">
+                    <Label
+                      htmlFor="multi-photo-upload"
+                      className="cursor-pointer inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 font-medium text-sm transition-colors"
+                    >
+                      {isUploading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Plus className="h-4 w-4" />
+                      )}
+                      <span>{formData.imageUrls.length > 0 ? 'Tambah Foto Lain' : 'Unggah Foto'}</span>
+                    </Label>
+                    <Input
+                      id="multi-photo-upload"
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleFileChange}
+                      disabled={isUploading || isSubmitting}
+                      className="hidden"
+                    />
+                    <span className="text-[10px] text-muted-foreground uppercase font-bold">
+                      Format JPG/PNG. Anda dapat memilih lebih dari satu foto.
+                    </span>
+                  </div>
+
+                  {/* THUMBNAILS LIST & REORDER */}
+                  {formData.imageUrls.length > 0 && (
+                    <div className="space-y-3 rounded-2xl border p-4 bg-slate-50">
+                      <p className="text-xs font-semibold text-slate-700">Daftar Foto (Foto 1 = Utama / Cover):</p>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {formData.imageUrls.map((url, idx) => (
+                          <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden border bg-white shadow-sm">
+                            <img src={url} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
+                            {idx === 0 && (
+                              <span className="absolute top-1.5 left-1.5 bg-emerald-600 text-white text-[9px] font-bold uppercase px-2 py-0.5 rounded-full shadow">
+                                Utama
+                              </span>
+                            )}
+                            {/* ACTION OVERLAY */}
+                            <div className="absolute inset-0 bg-slate-950/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 p-1">
+                              {idx > 0 && (
+                                <Button
+                                  type="button"
+                                  variant="secondary"
+                                  size="icon"
+                                  className="h-7 w-7 rounded-full text-slate-800"
+                                  onClick={() => handleMovePhoto(idx, idx - 1)}
+                                  title="Geser ke kiri"
+                                >
+                                  <ArrowLeft className="h-3.5 w-3.5" />
+                                </Button>
+                              )}
+                              {idx < formData.imageUrls.length - 1 && (
+                                <Button
+                                  type="button"
+                                  variant="secondary"
+                                  size="icon"
+                                  className="h-7 w-7 rounded-full text-slate-800"
+                                  onClick={() => handleMovePhoto(idx, idx + 1)}
+                                  title="Geser ke kanan"
+                                >
+                                  <ArrowRight className="h-3.5 w-3.5" />
+                                </Button>
+                              )}
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                className="h-7 w-7 rounded-full"
+                                onClick={() => handleRemovePhoto(idx)}
+                                title="Hapus foto"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    )}
-                    <div className="flex items-center gap-4">
-                      <Input type="file" accept="image/*" onChange={handleFileChange} disabled={isUploading || isSubmitting} className="max-w-xs" />
-                      {isUploading && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
-                    </div>
-                    <p className="text-[10px] text-muted-foreground uppercase font-bold">Format JPG/PNG. Sistem akan otomatis mengompresi gambar sebelum diunggah ke Cloudinary.</p>
-                  </>
-                ) : (
-                  <>
-                    <div className="space-y-3">
-                      <Input
-                        type="url"
-                        value={formData.videoUrl ?? ''}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, videoUrl: e.target.value }))}
-                        placeholder="https://www.youtube.com/watch?v=..."
-                        disabled={isSubmitting}
-                        required
-                      />
-                      <p className="text-[10px] text-muted-foreground uppercase font-bold">
-                        Dapat menggunakan link YouTube, TikTok, atau Instagram.
-                      </p>
-                    </div>
-                    {formData.imageUrl && (
-                      <div className="relative aspect-video w-full max-w-md overflow-hidden rounded-lg border bg-muted">
-                        <img src={getOptimizedImageUrl(formData.imageUrl)} alt="Preview Video" className="h-full w-full object-cover" />
+
+                      {/* LIVE PREVIEW OF GRID LAYOUT */}
+                      <div className="mt-4 pt-4 border-t space-y-2">
+                        <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                          Pratinjau Layout Tampilan ({formData.imageUrls.length} Foto):
+                        </p>
+                        <div className="max-w-md rounded-2xl border bg-white p-3 shadow-inner">
+                          <NewsImageGrid imageUrls={formData.imageUrls} title={formData.title || 'Pratinjau'} interactive={false} />
+                        </div>
                       </div>
-                    )}
-                    <div className="flex items-center gap-4">
-                      <Input type="file" accept="image/*" onChange={handleFileChange} disabled={isUploading || isSubmitting} className="max-w-xs" />
-                      {isUploading && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
                     </div>
-                    <p className="text-[10px] text-muted-foreground uppercase font-bold">
-                      Upload gambar preview untuk ditampilkan di kartu berita video.
-                    </p>
-                  </>
-                )}
-              </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <Input
+                    type="url"
+                    value={formData.videoUrl ?? ''}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, videoUrl: e.target.value }))}
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    disabled={isSubmitting}
+                    required
+                  />
+                  <p className="text-[10px] text-muted-foreground uppercase font-bold">
+                    Dapat menggunakan link YouTube, TikTok, atau Instagram.
+                  </p>
+                  {formData.imageUrls.length > 0 && (
+                    <div className="relative aspect-video w-full max-w-md overflow-hidden rounded-lg border bg-muted">
+                      <img src={formData.imageUrls[0]} alt="Preview Video" className="h-full w-full object-cover" />
+                    </div>
+                  )}
+                  <div className="flex items-center gap-4">
+                    <Input type="file" accept="image/*" onChange={handleFileChange} disabled={isUploading || isSubmitting} className="max-w-xs" />
+                    {isUploading && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground uppercase font-bold">
+                    Upload gambar preview untuk ditampilkan di kartu berita video.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
           <div className="flex items-center space-x-2 bg-amber-50 p-4 rounded-xl border border-amber-100">
-            <Checkbox 
-              id="isHeadline" 
-              checked={formData.isHeadline} 
+            <Checkbox
+              id="isHeadline"
+              checked={formData.isHeadline}
               onCheckedChange={(checked) => setFormData(p => ({ ...p, isHeadline: !!checked }))}
             />
             <Label htmlFor="isHeadline" className="flex items-center gap-2 cursor-pointer font-bold text-amber-900">
@@ -405,33 +530,33 @@ export function NewsForm({ initialData }: NewsFormProps) {
 
           <div className="space-y-2">
             <Label htmlFor="title">Judul Kegiatan (Maskot)</Label>
-            <Input 
-              id="title" 
-              value={formData.title ?? ''} 
-              onChange={e => setFormData(p => ({ ...p, title: e.target.value }))} 
+            <Input
+              id="title"
+              value={formData.title ?? ''}
+              onChange={e => setFormData(p => ({ ...p, title: e.target.value }))}
               placeholder="Contoh: Musyawarah Desa Pangawaren 2026"
-              required 
+              required
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="subtitle">Sub Judul</Label>
-            <Input 
-              id="subtitle" 
-              value={formData.subtitle ?? ''} 
-              onChange={e => setFormData(p => ({ ...p, subtitle: e.target.value }))} 
+            <Input
+              id="subtitle"
+              value={formData.subtitle ?? ''}
+              onChange={e => setFormData(p => ({ ...p, subtitle: e.target.value }))}
               placeholder="Ringkasan singkat berita..."
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="date">Tanggal Berita</Label>
-            <Input 
-              id="date" 
-              value={formData.date ?? ''} 
-              onChange={e => setFormData(p => ({ ...p, date: e.target.value }))} 
+            <Input
+              id="date"
+              value={formData.date ?? ''}
+              onChange={e => setFormData(p => ({ ...p, date: e.target.value }))}
               placeholder="Contoh: Jumat, 24 Apr 2026"
-              required 
+              required
             />
           </div>
 
@@ -450,10 +575,10 @@ export function NewsForm({ initialData }: NewsFormProps) {
                 Buat dengan AI
               </Button>
             </div>
-            <Textarea 
-              id="content" 
-              value={formData.content ?? ''} 
-              onChange={e => setFormData(p => ({ ...p, content: e.target.value }))} 
+            <Textarea
+              id="content"
+              value={formData.content ?? ''}
+              onChange={e => setFormData(p => ({ ...p, content: e.target.value }))}
               placeholder="Tulis narasi lengkap berita di sini..."
               rows={15}
             />
@@ -461,12 +586,12 @@ export function NewsForm({ initialData }: NewsFormProps) {
 
           <div className="space-y-2">
             <Label htmlFor="author">Pembuat Berita</Label>
-            <Input 
-              id="author" 
-              value={formData.author ?? ''} 
-              onChange={e => setFormData(p => ({ ...p, author: e.target.value }))} 
+            <Input
+              id="author"
+              value={formData.author ?? ''}
+              onChange={e => setFormData(p => ({ ...p, author: e.target.value }))}
               placeholder="Nama Penulis / Tim Media Desa"
-              required 
+              required
             />
           </div>
 

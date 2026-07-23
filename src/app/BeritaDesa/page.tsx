@@ -12,6 +12,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { NewsImageGrid } from '@/components/news-image-grid';
 
 export default function PublicBeritaListPage() {
   const firestore = useFirestore();
@@ -25,11 +26,11 @@ export default function PublicBeritaListPage() {
 
   const { headline, trending, feed } = useMemo(() => {
     if (!allNews) return { headline: null, trending: [], feed: [] };
-    
+
     const sorted = [...allNews];
     const headlines = sorted.filter(n => n.isHeadline);
     const mainHeadline = headlines.length > 0 ? headlines[0] : sorted[0];
-    
+
     const others = sorted.filter(n => n.id !== mainHeadline.id);
     const topPicks = others.slice(0, 5);
     const remainingFeed = others.slice(5);
@@ -59,7 +60,7 @@ export default function PublicBeritaListPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8 space-y-10">
-        
+
         {/* TOP PICKS */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           {isLoading ? (
@@ -68,8 +69,12 @@ export default function PublicBeritaListPage() {
             <Link key={item.id} href={`/BeritaDesa/${item.id}`} className="group">
               <div className="flex flex-col gap-2">
                 <div className="aspect-video rounded-xl overflow-hidden shadow-sm bg-slate-100 relative flex items-center justify-center">
-                  {item.imageUrl ? (
-                    <img src={item.imageUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                  {item.imageUrl || (item.imageUrls && item.imageUrls.length > 0) ? (
+                    <img
+                      src={item.imageUrls?.[0] || item.imageUrl}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      alt={item.title}
+                    />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center bg-slate-900 text-white">
                       <div className="flex flex-col items-center gap-3">
@@ -89,15 +94,16 @@ export default function PublicBeritaListPage() {
 
         {/* MAIN ROW */}
         <div className="grid lg:grid-cols-12 gap-8">
-          
+
           <div className="lg:col-span-8">
             {isLoading ? (
                <Skeleton className="h-[500px] rounded-3xl" />
             ) : headline && (
                <Link href={`/BeritaDesa/${headline.id}`} className="group relative block rounded-[2.5rem] overflow-hidden shadow-2xl h-[500px] border-4 border-white">
                   <img
-                    src={headline.imageUrl || 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=1200'}
+                    src={headline.imageUrls?.[0] || headline.imageUrl || 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=1200'}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    alt={headline.title}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/20 to-transparent" />
                   <div className="absolute bottom-0 left-0 p-8 md:p-12 space-y-6 w-full">
@@ -152,43 +158,70 @@ export default function PublicBeritaListPage() {
           </div>
         </div>
 
-        {/* FEED */}
+        {/* FEED / BERITA TERBARU WITH MULTI-PHOTO GRID LAYOUTS */}
         <div className="space-y-8 pt-10 border-t border-slate-200">
-           <h2 className="text-2xl font-semibold text-slate-900 uppercase tracking-tighter font-display">Berita <span className="text-primary italic">Terbaru</span></h2>
+           <h2 className="text-2xl font-semibold text-slate-900 uppercase tracking-tighter font-display">
+             Berita <span className="text-primary italic">Terbaru</span>
+           </h2>
 
            <div className="grid lg:grid-cols-12 gap-8">
-              <div className="lg:col-span-8 space-y-6">
+              <div className="lg:col-span-8 space-y-8">
                 {isLoading ? (
-                    Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-40 rounded-3xl" />)
-                ) : feed.map((item) => (
-                    <Link key={item.id} href={`/BeritaDesa/${item.id}`} className="flex flex-col md:flex-row gap-6 group bg-white p-4 rounded-[2rem] border border-slate-100 hover:shadow-lg transition-all">
-                        <div className="w-full md:w-[260px] aspect-video rounded-2xl overflow-hidden shrink-0 bg-slate-100 relative flex items-center justify-center">
-                       {item.imageUrl ? (
-                         <img src={item.imageUrl} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                       ) : (
-                         <div className="flex h-full w-full items-center justify-center bg-slate-900 text-white">
-                           <div className="flex flex-col items-center gap-2 text-center px-4">
-                             <PlayCircle className="h-10 w-10 text-emerald-400" />
-                             <span className="text-[10px] uppercase tracking-[0.25em]">Video</span>
+                    Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-64 rounded-3xl" />)
+                ) : feed.map((item) => {
+                    const hasPhotos = (item.imageUrls && item.imageUrls.length > 0) || Boolean(item.imageUrl);
+                    return (
+                      <div key={item.id} className="group bg-white p-6 rounded-[2.5rem] border border-slate-200/80 hover:shadow-xl transition-all duration-300 space-y-4 font-sans">
+                        {/* PHOTO GRID LAYOUT (1, 2, 3, or 4+ PHOTOS) */}
+                        {hasPhotos ? (
+                          <NewsImageGrid
+                            imageUrls={item.imageUrls}
+                            imageUrl={item.imageUrl}
+                            title={item.title}
+                            interactive={true}
+                          />
+                        ) : (
+                          <div className="w-full aspect-video rounded-2xl overflow-hidden bg-slate-900 text-white flex items-center justify-center">
+                            <div className="flex flex-col items-center gap-2 text-center px-4">
+                              <PlayCircle className="h-12 w-12 text-emerald-400" />
+                              <span className="text-[10px] uppercase tracking-[0.25em]">Video Berita</span>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="space-y-3 pt-2">
+                           <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                              <span className="text-primary font-black">{item.date}</span>
+                              <span>Penulis: {item.author}</span>
                            </div>
-                         </div>
-                       )}
-                    </div>
-                        <div className="flex-1 space-y-3 py-2 font-sans">
-                           <p className="text-[9px] font-black text-primary uppercase tracking-widest">{item.date}</p>
-                           <h3 className="text-xl font-bold text-slate-900 leading-tight uppercase group-hover:text-primary transition-colors line-clamp-2">
-                            {item.title}
-                           </h3>
-                           <p className="text-sm text-slate-500 line-clamp-2 font-medium">
+                           <Link href={`/BeritaDesa/${item.id}`}>
+                             <h3 className="text-xl md:text-2xl font-bold text-slate-900 leading-tight uppercase group-hover:text-primary transition-colors line-clamp-2 font-display">
+                              {item.title}
+                             </h3>
+                           </Link>
+                           <p className="text-sm text-slate-600 line-clamp-3 leading-relaxed font-medium">
                               {item.subtitle}
                            </p>
+                           <div className="pt-2 flex items-center justify-between">
+                             <Link href={`/BeritaDesa/${item.id}`}>
+                               <Button variant="outline" size="sm" className="rounded-xl font-bold text-xs gap-2 border-primary text-primary hover:bg-primary hover:text-white transition-colors">
+                                 Baca Selengkapnya <ChevronRight className="h-4 w-4" />
+                               </Button>
+                             </Link>
+                             {(item.imageUrls?.length || (item.imageUrl ? 1 : 0)) > 1 && (
+                               <Badge variant="secondary" className="text-[10px] font-bold uppercase tracking-wider">
+                                 📷 {item.imageUrls?.length} Foto
+                               </Badge>
+                             )}
+                           </div>
                         </div>
-                    </Link>
-                ))}
+                      </div>
+                    );
+                })}
               </div>
 
               <div className="lg:col-span-4">
-                <Card className="rounded-[2rem] border-none overflow-hidden bg-accent text-white shadow-xl p-8 space-y-6 text-center">
+                <Card className="rounded-[2rem] border-none overflow-hidden bg-accent text-white shadow-xl p-8 space-y-6 text-center sticky top-28">
                    <Tag className="h-10 w-10 mx-auto text-white/30" />
                    <div className="space-y-2">
                       <h3 className="text-xl font-semibold font-display uppercase leading-tight">Ikuti Akun Resmi <span className="italic">Pangawaren</span></h3>

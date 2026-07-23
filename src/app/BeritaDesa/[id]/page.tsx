@@ -10,6 +10,7 @@ import { doc } from 'firebase/firestore';
 import { News } from '@/lib/types';
 import { getVideoEmbedUrl, getVideoPlatform } from '@/lib/video-utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import { NewsImageGrid } from '@/components/news-image-grid';
 
 export default function PublicBeritaDetailPage() {
   const params = useParams();
@@ -46,13 +47,13 @@ export default function PublicBeritaDetailPage() {
 
       <main className="flex-1">
         <article className="container mx-auto px-4 max-w-4xl py-12 md:py-20">
-          
+
           {/* HEADER BERITA */}
           <div className="text-center space-y-6 mb-12">
             <h1 className="text-3xl md:text-5xl font-semibold text-primary leading-tight tracking-tight uppercase font-display">
               {news.title}
             </h1>
-            
+
             <div className="flex flex-col items-center gap-2">
               <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider">
                 <span className="text-slate-900">{news.author}</span>
@@ -63,7 +64,7 @@ export default function PublicBeritaDetailPage() {
                 {news.date}
               </p>
             </div>
-            
+
             {news.subtitle && (
               <p className="text-xl text-slate-500 italic border-y border-slate-200 py-6 max-w-2xl mx-auto font-display">
                 "{news.subtitle}"
@@ -103,15 +104,16 @@ export default function PublicBeritaDetailPage() {
             </div>
           ) : (
             <figure className="mb-12 space-y-3">
-              <div className="rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-white">
-                <img 
-                  src={news.imageUrl} 
-                  alt={news.title} 
-                  className="w-full h-auto object-cover max-h-[600px]"
+              <div className="rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-white bg-white p-2">
+                <NewsImageGrid
+                  imageUrls={news.imageUrls}
+                  imageUrl={news.imageUrl}
+                  title={news.title}
+                  interactive={true}
                 />
               </div>
               <figcaption className="text-center text-[10px] text-slate-400 font-black uppercase tracking-[0.2em] px-4">
-                Kegiatan Pemerintah Desa Pangawaren.
+                Dokumentasi Kegiatan Pemerintah Desa Pangawaren.
               </figcaption>
             </figure>
           )}
