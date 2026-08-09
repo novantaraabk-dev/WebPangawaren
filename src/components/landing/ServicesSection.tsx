@@ -2,15 +2,55 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowRight, BarChart3, BookOpenText, FileText, Landmark, Megaphone, Newspaper, Users2, Info } from 'lucide-react';
+import { 
+  FileText, 
+  Users2 as Users, 
+  Landmark as Building2, 
+  MapPin, 
+  Megaphone, 
+  MessageSquareWarning, 
+  ArrowRight,
+  Info
+} from 'lucide-react';
+import { CardContourPattern } from './CardContourPattern';
 
 const services = [
-  { href: '/pelayanan-desa/', title: 'Pelayanan Desa', description: 'Akses layanan administrasi dan dokumen resmi dengan langkah yang sederhana.', icon: FileText },
-  { href: '/profil-desa/', title: 'Profil Desa', description: 'Kenali sejarah, struktur, dan identitas pemerintahan desa secara lengkap.', icon: Landmark },
-  { href: '/statistik/', title: 'Statistik', description: 'Lihat data kependudukan dan informasi desa secara realtime dan transparan.', icon: BarChart3 },
-  { href: '/BeritaDesa/', title: 'Berita Desa', description: 'Ikuti informasi dan kegiatan terbaru dari Pemerintah Desa Pangawaren.', icon: Newspaper },
-  { href: '/layanan-surat/', title: 'Layanan', description: 'Ajukan berbagai surat keterangan dan kebutuhan administrasi secara online.', icon: Users2 },
-  { href: '/pengumuman/', title: 'Pengumuman', description: 'Temukan pengumuman penting serta agenda desa yang harus diketahui.', icon: Megaphone },
+  {
+    title: 'Layanan Surat Online',
+    description: 'Permohonan surat keterangan dan dokumen kependudukan resmi desa secara praktis.',
+    icon: FileText,
+    href: '/layanan-surat',
+  },
+  {
+    title: 'Data Kependudukan',
+    description: 'Informasi dan statistik agregat demografi serta komposisi warga desa.',
+    icon: Users,
+    href: '/tata-kelola-desa',
+  },
+  {
+    title: 'Tata Kelola & APBDes',
+    description: 'Transparansi anggaran pendapatan, belanja desa, dan laporan keuangan wilayah.',
+    icon: Building2,
+    href: '/tata-kelola-desa',
+  },
+  {
+    title: 'Potensi Desa Pangawaren',
+    description: 'Jelajahi potensi wisata, UMKM lokal, pertanian, dan kekayaan seni budaya desa.',
+    icon: MapPin,
+    href: '/potensi-desa',
+  },
+  {
+    title: 'Berita & Pengumuman',
+    description: 'Pusat publikasi kabar terkini, kegiatan pemerintah, dan agenda resmi warga.',
+    icon: Megaphone,
+    href: '/BeritaDesa',
+  },
+  {
+    title: 'Pengaduan Warga',
+    description: 'Sampaikan aspirasi, saran, atau laporan secara terbuka dan mudah dipantau.',
+    icon: MessageSquareWarning,
+    href: '/pengaduan',
+  },
 ];
 
 export function ServicesSection() {
@@ -24,14 +64,19 @@ export function ServicesSection() {
           transition={{ duration: 0.45 }}
           className="max-w-2xl"
         >
-          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-700">Layanan Utama</p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
-            Layanan digital desa yang mudah dipahami dan diakses.
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 text-emerald-700 px-4 py-1.5 rounded-full mb-3 shadow-xs">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[11px] font-black uppercase tracking-widest">Portal Layanan Utama</span>
+          </div>
+
+          <h2 className="text-3xl sm:text-5xl font-black text-slate-900 font-display italic tracking-tight leading-tight">
+            Layanan Digital Desa <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 not-italic">Cepat & Transparan</span>
           </h2>
-          <p className="mt-4 text-lg leading-8 text-slate-600">
-            Seluruh pelayanan desa dapat dijangkau secara cepat melalui portal digital yang dirancang untuk masyarakat.
+          <p className="mt-4 text-base md:text-lg leading-relaxed text-slate-600 font-medium">
+            Seluruh pelayanan desa dapat dijangkau secara mandiri dan transparan melalui portal digital yang dirancang khusus untuk kemudahan masyarakat.
           </p>
         </motion.div>
+
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
@@ -39,14 +84,15 @@ export function ServicesSection() {
           transition={{ duration: 0.45, delay: 0.1 }}
           className="w-full lg:max-w-md shrink-0"
         >
-          <div className="p-5 bg-amber-50 border border-dashed border-amber-300 rounded-[2rem] flex items-center gap-4 shadow-[0_15px_35px_rgba(245,158,11,0.03)]">
-             <div className="p-3 bg-white rounded-2xl shadow-sm text-amber-600 shrink-0">
+          <div className="relative overflow-hidden p-5 bg-gradient-to-br from-amber-50 to-orange-50/60 border border-dashed border-amber-300 rounded-[2.25rem] flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
+             <CardContourPattern opacity={0.03} className="text-amber-600" />
+             <div className="p-3.5 bg-gradient-to-tr from-amber-500 to-orange-500 text-white rounded-2xl shadow-md shadow-amber-500/20 shrink-0 relative z-10">
                 <Info className="h-6 w-6" />
              </div>
-             <div className="space-y-0.5">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-amber-900">Transparansi Biaya</h3>
+             <div className="space-y-0.5 relative z-10">
+                <h3 className="text-xs font-black uppercase tracking-wider text-amber-900">Transparansi Biaya Admin</h3>
                 <p className="text-xs leading-relaxed font-semibold text-amber-800">
-                   Seluruh pelayanan administrasi di Desa Pangawaren adalah <strong className="text-amber-950 font-bold">GRATIS</strong> (Rp. 0,-) tanpa biaya apapun.
+                   Seluruh pelayanan administrasi di Desa Pangawaren adalah <strong className="text-amber-950 font-black underline">GRATIS (Rp. 0,-)</strong> tanpa biaya tambahan apapun.
                 </p>
              </div>
           </div>
@@ -60,18 +106,20 @@ export function ServicesSection() {
           return (
             <motion.article
               key={service.title}
-              initial={{ opacity: 0, y: 18 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.35, delay: index * 0.04 }}
-              whileHover={{ y: -6, scale: 1.01 }}
-              className="group relative overflow-hidden rounded-[1.75rem] border border-emerald-600/15 bg-white/90 backdrop-blur-sm p-7 shadow-[0_20px_45px_rgba(15,23,42,0.03)] transition-all duration-300 hover:border-emerald-500/35 hover:shadow-[0_30px_60px_rgba(16,185,129,0.06)]"
+              transition={{ duration: 0.4, delay: index * 0.05 }}
+              whileHover={{ y: -8, scale: 1.02 }}
+              className="group relative overflow-hidden rounded-[2.25rem] border border-slate-100 bg-white p-8 shadow-lg hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-300 flex flex-col justify-between"
             >
+              <CardContourPattern opacity={0.03} className="text-slate-400 group-hover:text-emerald-500 transition-colors duration-500" />
+              
               {/* Glowing Corner Accent */}
-              <div className="absolute -right-12 -top-12 h-28 w-28 rounded-full bg-emerald-500/5 blur-xl transition-all duration-500 group-hover:bg-emerald-500/10 group-hover:scale-125" />
+              <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-gradient-to-br from-emerald-500/10 to-teal-500/0 blur-2xl transition-all duration-500 group-hover:scale-150 group-hover:from-emerald-500/20" />
               
               {/* Subtle Dot Grid pattern */}
-              <div className="absolute right-5 top-5 text-slate-200 transition-colors duration-300 group-hover:text-emerald-200/50 pointer-events-none">
+              <div className="absolute right-6 top-6 text-slate-200 transition-colors duration-300 group-hover:text-emerald-300/40 pointer-events-none">
                 <svg width="40" height="40" fill="none" viewBox="0 0 40 40">
                   <pattern id={`card-dots-${index}`} x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
                     <circle cx="2" cy="2" r="1" fill="currentColor" />
@@ -80,16 +128,27 @@ export function ServicesSection() {
                 </svg>
               </div>
 
-              <Link href={service.href} className="relative z-10 flex h-full flex-col">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 transition-all duration-300 group-hover:bg-emerald-600 group-hover:text-white group-hover:rotate-6">
-                  <Icon className="h-6 w-6" />
+              <Link href={service.href} className="relative z-10 flex h-full flex-col justify-between">
+                <div>
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
+                    <Icon className="h-6 w-6" />
+                  </div>
+                  <h3 className="mt-6 text-2xl font-black text-slate-900 font-display italic tracking-tight transition-colors group-hover:text-emerald-700">
+                    {service.title}
+                  </h3>
+                  <p className="mt-3 text-sm leading-relaxed text-slate-500 font-medium">
+                    {service.description}
+                  </p>
                 </div>
-                <h3 className="mt-6 text-xl font-semibold text-slate-900 transition-colors group-hover:text-emerald-800">{service.title}</h3>
-                <p className="mt-3 flex-1 text-sm leading-7 text-slate-600">{service.description}</p>
-                <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-emerald-700">
-                  Buka halaman
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1.5" />
-                </span>
+
+                <div className="mt-8 pt-4 border-t border-slate-100 flex items-center justify-between">
+                  <span className="text-xs font-black uppercase tracking-wider text-emerald-700 group-hover:underline">
+                    Akses Halaman
+                  </span>
+                  <div className="h-9 w-9 rounded-full bg-slate-50 group-hover:bg-emerald-600 group-hover:text-white text-slate-400 flex items-center justify-center transition-all duration-300 shadow-sm">
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                  </div>
+                </div>
               </Link>
             </motion.article>
           );

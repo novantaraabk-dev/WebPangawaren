@@ -18,6 +18,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { CardContourPattern } from '@/components/landing/CardContourPattern';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ShieldCheck, FileText, Image as ImageIcon, ExternalLink, Download, AlertCircle } from 'lucide-react';
@@ -250,9 +251,10 @@ export default function DesaAntiKorupsi() {
                                       return (
                                         <div 
                                           key={yr} 
-                                          className="bg-white border border-slate-200/80 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs hover:border-slate-300 transition-colors"
+                                          className="bg-white border border-slate-200/80 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs hover:border-slate-300 transition-colors relative overflow-hidden"
                                         >
-                                          <div className="flex items-center gap-1.5 shrink-0">
+                                          <CardContourPattern opacity={0.03} className="text-slate-400" />
+                                          <div className="flex items-center gap-1.5 shrink-0 relative z-10">
                                             <span className="px-2.5 py-0.5 rounded-md bg-amber-100 text-amber-950 text-[10px] font-black uppercase font-mono tracking-wide border border-amber-300/60">
                                               Tahun {yr}
                                             </span>

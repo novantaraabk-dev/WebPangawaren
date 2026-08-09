@@ -10,6 +10,7 @@ import { collection, query, orderBy, limit } from 'firebase/firestore';
 import { Announcement } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { CardContourPattern } from '@/components/landing/CardContourPattern';
 
 export default function PengumumanPage() {
   const firestore = useFirestore();
@@ -86,7 +87,9 @@ export default function PengumumanPage() {
 
           {announcements?.map((announcement) => (
             <Link key={announcement.id} href={`/pengumuman/${announcement.id}`}>
-              <Card className="group cursor-pointer overflow-hidden rounded-[2.5rem] border-none shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 bg-white flex flex-col h-full">
+              <Card className="group cursor-pointer overflow-hidden rounded-[2.5rem] border-none shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 bg-white flex flex-col h-full relative">
+                <CardContourPattern opacity={0.03} className="text-slate-400" />
+                <div className="relative z-10 flex flex-col h-full">
                 <div className="relative aspect-video w-full overflow-hidden bg-slate-100">
                   {announcement.imageUrl ? (
                     <img 
@@ -128,6 +131,7 @@ export default function PengumumanPage() {
                     </div>
                   </div>
                 </CardContent>
+                </div>
               </Card>
             </Link>
           ))}

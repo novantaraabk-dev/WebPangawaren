@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useMemoFirebase, useDoc, useFirestore } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { VillageProfileInfo } from '@/lib/types';
+import { CardContourPattern } from './CardContourPattern';
 
 export function CtaSection() {
   const firestore = useFirestore();
@@ -20,57 +21,58 @@ export function CtaSection() {
   const pengaduanImageUrl = profileData?.pengaduanImageUrl || 'https://picsum.photos/seed/pengaduan/600/800';
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8 lg:py-28">
+    <section className="mx-auto max-w-7xl px-4 py-12 md:py-16 sm:px-6 lg:px-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.2 }}
         transition={{ duration: 0.35 }}
-        className="overflow-hidden rounded-[2.25rem] border border-emerald-200 bg-gradient-to-br from-emerald-800 via-emerald-700 to-emerald-900 shadow-[0_30px_80px_rgba(6,95,70,0.25)]"
+        className="relative overflow-hidden rounded-[2.25rem] border border-emerald-200 bg-gradient-to-br from-emerald-800 via-emerald-700 to-emerald-900 shadow-xl shadow-emerald-950/20"
       >
-        <div className="grid gap-0 lg:grid-cols-[auto_1fr_auto] lg:items-stretch">
+        <CardContourPattern opacity={0.03} className="text-emerald-200" />
+        <div className="grid gap-0 lg:grid-cols-[auto_1fr_auto] lg:items-center">
 
-          {/* LEFT: Layanan Pengaduan Card */}
+          {/* LEFT: Layanan Pengaduan Poster Image - Fits natural height */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.4, delay: 0.1 }}
-            className="relative hidden lg:flex flex-col items-center justify-center overflow-hidden bg-black/20 p-3"
-            style={{ width: '280px', minWidth: '250px' }}
+            className="relative hidden lg:flex items-center justify-center bg-black/25 p-3 self-stretch"
           >
             <Link
               href="/nomor-penting/"
-              className="relative w-full h-full min-h-[340px] flex items-center justify-center group overflow-hidden rounded-2xl"
+              className="relative aspect-[3/4] h-56 md:h-60 flex items-center justify-center group overflow-hidden rounded-2xl border border-white/10 shadow-lg"
               aria-label="Layanan Pengaduan Masyarakat"
             >
               <Image
                 src={pengaduanImageUrl}
                 alt="Layanan Pengaduan Masyarakat"
                 fill
-                sizes="300px"
-                className="object-contain transition-transform duration-300 group-hover:scale-[1.02]"
+                sizes="240px"
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
                 priority
               />
             </Link>
           </motion.div>
 
           {/* CENTER: Main CTA Content */}
-          <div className="p-8 text-white sm:p-12 flex flex-col justify-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold uppercase tracking-[0.25em] text-emerald-100 w-fit">
-              <Sparkles className="h-4 w-4" />
-              Layanan Desa Modern
+          <div className="p-6 sm:p-8 md:p-10 text-white flex flex-col justify-center space-y-3">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-100 w-fit backdrop-blur-md shadow-xs">
+              <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
+              <Sparkles className="h-3.5 w-3.5 text-amber-300" />
+              Portal Desa Digital
             </div>
-            <h2 className="mt-6 text-3xl font-semibold tracking-tight sm:text-4xl">
-              Butuh pelayanan desa?
+            <h2 className="text-2xl sm:text-4xl font-black font-display italic tracking-tight leading-tight">
+              Butuh Pelayanan Desa? <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-white not-italic">Ajukan Sekarang</span>
             </h2>
-            <p className="mt-4 max-w-2xl text-lg leading-8 text-emerald-50/90">
-              Ajukan seluruh pelayanan administrasi desa secara online melalui Portal Desa Pangawaren, cepat, aman, dan bisa diakses dari mana saja.
+            <p className="max-w-xl text-sm sm:text-base leading-relaxed text-emerald-50/90 font-medium">
+              Ajukan seluruh pelayanan administrasi dan dokumen resmi desa secara online melalui Portal Desa Pangawaren — cepat, aman, transparan, dan dapat diakses dari mana saja.
             </p>
             {/* Mobile: Pengaduan button */}
-            <div className="mt-6 flex lg:hidden">
+            <div className="mt-4 flex lg:hidden">
               <Link href="/pengaduan/" aria-label="Buat pengaduan warga">
-                <Button className="h-11 rounded-full bg-red-500 px-6 font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-red-400">
+                <Button className="h-10 rounded-full bg-amber-400 px-6 font-black uppercase text-xs tracking-wider text-slate-950 transition-all duration-300 hover:bg-amber-300 shadow-md">
                   Layanan Pengaduan
                   <MessageSquareWarning className="h-4 w-4 ml-2" />
                 </Button>
@@ -78,20 +80,26 @@ export function CtaSection() {
             </div>
           </div>
 
-          {/* RIGHT: Service Card */}
-          <div className="p-8 sm:p-12 flex items-center">
-            <div className="rounded-[1.75rem] border border-white/15 bg-white/10 p-6 backdrop-blur-md w-full lg:min-w-[260px]">
+          {/* RIGHT: Action Card */}
+          <div className="p-6 sm:p-8 flex items-center justify-center">
+            <motion.div 
+              whileHover={{ scale: 1.02 }}
+              className="relative overflow-hidden rounded-[1.75rem] border border-white/20 bg-white/10 p-5 md:p-6 backdrop-blur-md w-full lg:w-[275px] shadow-xl flex flex-col justify-between space-y-4"
+            >
+              <CardContourPattern opacity={0.03} className="text-amber-200" />
               <div className="flex items-center gap-3 text-emerald-50">
-                <ShieldCheck className="h-6 w-6 text-amber-300" />
-                <p className="text-lg font-semibold">Layanan resmi, transparan, dan terpercaya</p>
+                <div className="p-2.5 bg-amber-400/20 rounded-xl shrink-0 border border-amber-300/30">
+                  <ShieldCheck className="h-6 w-6 text-amber-300" />
+                </div>
+                <p className="text-xs sm:text-sm font-bold leading-snug">Layanan resmi & 100% gratis tanpa pungutan</p>
               </div>
-              <Link href="/layanan-surat/" aria-label="Ajukan layanan desa">
-                <Button className="mt-8 h-12 rounded-full bg-amber-400 px-7 text-base font-semibold text-slate-950 transition-all duration-300 hover:-translate-y-1 hover:bg-amber-300 w-full">
-                  Ajukan Layanan
-                  <ArrowRight className="h-4 w-4" />
+              <Link href="/layanan-surat/" className="w-full" aria-label="Ajukan layanan desa">
+                <Button className="h-11 rounded-full bg-amber-400 hover:bg-amber-300 px-4 text-[11px] sm:text-xs font-black uppercase tracking-wide text-slate-950 transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-amber-400/20 w-full flex items-center justify-center gap-1.5 whitespace-nowrap">
+                  <span>Ajukan Layanan Online</span>
+                  <ArrowRight className="h-4 w-4 shrink-0" />
                 </Button>
               </Link>
-            </div>
+            </motion.div>
           </div>
 
         </div>

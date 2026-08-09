@@ -8,6 +8,7 @@ import { doc } from 'firebase/firestore';
 import { FooterLogosInfo } from '@/lib/types';
 import Image from 'next/image';
 import { useMemo } from 'react';
+import { CardContourPattern } from './CardContourPattern';
 
 export function Footer() {
   const firestore = useFirestore();
@@ -42,8 +43,9 @@ export function Footer() {
   }, [footerLogosData]);
 
   return (
-    <footer className="relative z-10 border-t border-slate-200 bg-slate-950 text-slate-300">
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <footer className="relative z-10 border-t border-slate-200 bg-slate-950 text-slate-300 overflow-hidden">
+      <CardContourPattern opacity={0.04} className="text-slate-400" />
+      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 relative z-10">
         <div className="grid gap-10 lg:grid-cols-4">
           <div className="space-y-5">
             <Logo />

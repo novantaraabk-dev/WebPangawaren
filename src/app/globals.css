@@ -34,7 +34,7 @@
 
     --radius: 1.25rem;
 
-    --sidebar-background: 152 64% 16%;
+    --sidebar-background: 152 64% 22%;
     --sidebar-foreground: 210 40% 97%;
     --sidebar-primary: 45 95% 54%;
     --sidebar-primary-foreground: 152 64% 16%;
@@ -131,5 +131,60 @@ div[class*="shadow"][class*="bg-card"][class*="rounded-"]:hover,
 .no-scrollbar {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
+}
+
+/* ============================================================
+   CUSTOM SCROLLBAR - Minimalist thin line, no native OS box
+   Works on Windows Chrome/Edge/Firefox
+   ============================================================ */
+
+/* Global: thin pill-line thumb, transparent/invisible track */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-track-piece,
+::-webkit-scrollbar-corner {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 9999px;
+  border: none;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.6);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
+}
+
+/* Sidebar (bg-primary/dark-green) - hide native scrollbar completely (use no-scrollbar class) */
+[data-sidebar="content"],
+[data-sidebar="sidebar"] {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+[data-sidebar="content"]::-webkit-scrollbar,
+[data-sidebar="sidebar"]::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 

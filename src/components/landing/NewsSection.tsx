@@ -10,6 +10,7 @@ import { ArrowRight, Video, Newspaper } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { News } from '@/lib/types';
 import { formatDisplayDate } from './landing-utils';
+import { CardContourPattern } from './CardContourPattern';
 
 export function NewsSection() {
   const firestore = useFirestore();
@@ -58,16 +59,20 @@ export function NewsSection() {
         className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
       >
         <div className="max-w-2xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-700">Berita Terbaru</p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
-            Berita Desa
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 text-emerald-700 px-4 py-1.5 rounded-full mb-3 shadow-xs">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[11px] font-black uppercase tracking-widest">Berita & Kegiatan Desa</span>
+          </div>
+
+          <h2 className="text-3xl sm:text-5xl font-black text-slate-900 font-display italic tracking-tight leading-tight">
+            Kabar & Informasi <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 not-italic">Desa Pangawaren</span>
           </h2>
-          <p className="mt-4 text-lg leading-8 text-slate-600">
-            Informasi dan kegiatan terbaru dari Pemerintah Desa Pangawaren.
+          <p className="mt-4 text-base md:text-lg leading-relaxed text-slate-600 font-medium">
+            Kumpulan publikasi berita terkini, agenda pembangunan, dan liputan kegiatan resmi Pemerintah Desa Pangawaren.
           </p>
         </div>
-        <Link href="/BeritaDesa/" className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700">
-          Lihat semua berita
+        <Link href="/BeritaDesa/" className="inline-flex items-center justify-center gap-2 text-xs font-black uppercase tracking-wider text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 px-6 py-3.5 rounded-2xl shadow-lg shadow-emerald-600/20 hover:scale-105 transition-all duration-300">
+          Lihat Semua Berita
           <ArrowRight className="h-4 w-4" />
         </Link>
       </motion.div>
@@ -97,10 +102,11 @@ export function NewsSection() {
             {duplicatedNews.map((item, idx) => (
               <motion.article
                 key={`${item.id}-${idx}`}
-                className="w-[340px] sm:w-[380px] shrink-0 group overflow-hidden rounded-[1.75rem] border border-emerald-600/20 hover:border-emerald-500/40 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.04)] transition-all duration-300"
+                className="w-[340px] sm:w-[380px] shrink-0 group overflow-hidden rounded-[2rem] border border-slate-100 bg-white shadow-lg hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-300 relative"
                 whileHover={{ y: -6 }}
               >
-                <div className="relative h-48 overflow-hidden">
+                <CardContourPattern opacity={0.03} className="text-emerald-500" />
+                <div className="relative h-48 overflow-hidden z-10">
                   <Image
                     src={item.imageUrl || 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=1200'}
                     alt={item.title}
@@ -108,7 +114,7 @@ export function NewsSection() {
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 </div>
-                <div className="p-6">
+                <div className="p-6 relative z-10">
                   <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
                     <Newspaper className="h-3.5 w-3.5 text-emerald-600" />
                     <span className="truncate max-w-[120px]">{item.author || 'Pemerintah Desa'}</span>
@@ -140,8 +146,9 @@ export function NewsSection() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.15 }}
         transition={{ duration: 0.5, delay: 0.1 }}
-        className="mt-16 rounded-[2rem] border border-emerald-600/20 bg-white p-6 shadow-[0_20px_45px_rgba(15,23,42,0.04)] lg:p-8"
+        className="mt-16 rounded-[2.25rem] border border-slate-100 bg-white p-6 shadow-xl lg:p-8 relative overflow-hidden"
       >
+        <CardContourPattern opacity={0.03} className="text-emerald-500" />
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-700">Video Profil Desa</p>

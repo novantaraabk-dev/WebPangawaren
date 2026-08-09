@@ -62,16 +62,22 @@ export function StatisticsSection() {
           className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
         >
           <div className="max-w-2xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-700">Statistik Desa</p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
-              Data terbaru mengenai kondisi Desa Pangawaren.
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-cyan-50 to-blue-50 border border-cyan-100 text-cyan-700 px-4 py-1.5 rounded-full mb-3 shadow-xs">
+              <span className="h-2 w-2 rounded-full bg-cyan-500 animate-pulse" />
+              <span className="text-[11px] font-black uppercase tracking-widest">Infografik & Statistik Desa</span>
+            </div>
+            <h2 className="text-3xl sm:text-5xl font-black text-slate-900 font-display italic tracking-tight">
+              Visualisasi Data <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 not-italic">Desa Pangawaren</span>
             </h2>
-            <p className="mt-4 text-lg leading-8 text-slate-600">
-              Informasi terbuka yang membantu masyarakat memahami kondisi wilayah dan perkembangan pelayanan desa.
+            <p className="mt-4 text-base md:text-lg leading-relaxed text-slate-600 font-medium">
+              Informasi statistik terbuka dan transparan mengenai kondisi demografi kependudukan, wilayah RT/RW, dan perkembangan Desa Pangawaren.
             </p>
           </div>
-          <a href="/statistik" className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700">
-            Lihat dashboard lengkap
+          <a 
+            href="/statistik" 
+            className="inline-flex items-center justify-center gap-2 text-xs font-black uppercase tracking-wider text-white bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 px-6 py-3.5 rounded-2xl shadow-lg shadow-cyan-600/20 hover:scale-105 transition-all duration-300"
+          >
+            Dashboard Lengkap
             <ArrowUpRight className="h-4 w-4" />
           </a>
         </motion.div>

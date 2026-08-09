@@ -3,17 +3,18 @@
 import React, { useState, useRef } from 'react';
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Upload, Plus, Trash2, Eye, Download } from 'lucide-react';
+import { ArrowLeft, Upload, Plus, Trash2, Eye, Download, Pencil, Save } from 'lucide-react';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, addDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, orderBy, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useCollection } from '@/firebase';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import * as XLSX from 'xlsx';
 import { ApbdesData, RealisasiApbdesData, ApbdesItem, ProdukHukumDesa } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -443,6 +444,16 @@ function AdminProdukHukumTab({ produkHukumList, isLoading, firestore }: any) {
     driveLink: '',
   });
 
+  const [editingProduk, setEditingProduk] = useState<any | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    jenis: 'perdes',
+    tahun: new Date().getFullYear(),
+    nama: '',
+    nomor: '',
+    driveLink: '',
+  });
+  const [isUpdating, setIsUpdating] = useState(false);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!firestore) return;
@@ -461,16 +472,69 @@ function AdminProdukHukumTab({ produkHukumList, isLoading, firestore }: any) {
         updatedAt: serverTimestamp(),
       });
 
-      toast({ title: 'Produk Hukum ditambahkan' });
+      toast({ title: 'Berhasil', description: 'Produk Hukum berhasil ditambahkan' });
       setFormData({ jenis: 'perdes', tahun: new Date().getFullYear(), nama: '', nomor: '', driveLink: '' });
     } catch (error: any) {
       toast({ title: 'Gagal menambahkan', description: error.message, variant: 'destructive' });
     }
   };
 
+  const handleOpenEdit = (produk: any) => {
+    setEditingProduk(produk);
+    setEditFormData({
+      jenis: produk.jenis || 'perdes',
+      tahun: produk.tahun || new Date().getFullYear(),
+      nama: produk.nama || '',
+      nomor: produk.nomor || '',
+      driveLink: produk.driveLink || '',
+    });
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!firestore || !editingProduk) return;
+
+    if (!editFormData.nama || !editFormData.nomor) {
+      toast({ title: 'Gagal', description: 'Nama dan Nomor harus diisi', variant: 'destructive' });
+      return;
+    }
+
+    setIsUpdating(true);
+    try {
+      const docRef = doc(firestore, 'produkHukumDesa', editingProduk.id);
+      await updateDoc(docRef, {
+        jenis: editFormData.jenis,
+        tahun: parseInt(editFormData.tahun.toString()),
+        nama: editFormData.nama,
+        nomor: editFormData.nomor,
+        driveLink: editFormData.driveLink,
+        updatedAt: serverTimestamp(),
+      });
+
+      toast({ title: 'Berhasil', description: 'Rincian produk hukum berhasil diperbarui' });
+      setEditingProduk(null);
+    } catch (error: any) {
+      toast({ title: 'Gagal memperbarui', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleDelete = async (id: string, nama: string) => {
+    if (!firestore) return;
+    if (!confirm(`Apakah Anda yakin ingin menghapus produk hukum "${nama}"?`)) return;
+
+    try {
+      await deleteDoc(doc(firestore, 'produkHukumDesa', id));
+      toast({ title: 'Berhasil', description: 'Produk Hukum telah dihapus' });
+    } catch (error: any) {
+      toast({ title: 'Gagal menghapus', description: error.message, variant: 'destructive' });
+    }
+  };
+
   return (
     <div className="grid lg:grid-cols-3 gap-8">
-      {/* Form */}
+      {/* Form Tambah */}
       <Card className="lg:col-span-1 rounded-2xl border-none shadow-lg">
         <CardContent className="p-6 space-y-6">
           <h3 className="text-lg font-black text-slate-900">Tambah Produk Hukum</h3>
@@ -496,7 +560,7 @@ function AdminProdukHukumTab({ produkHukumList, isLoading, firestore }: any) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                  {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map(year => (
                     <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
                   ))}
                 </SelectContent>
@@ -544,7 +608,7 @@ function AdminProdukHukumTab({ produkHukumList, isLoading, firestore }: any) {
         </CardContent>
       </Card>
 
-      {/* List */}
+      {/* List Produk Hukum */}
       <div className="lg:col-span-2 space-y-4">
         <h3 className="text-lg font-black text-slate-900">Daftar Produk Hukum</h3>
         {isLoading ? (
@@ -561,32 +625,151 @@ function AdminProdukHukumTab({ produkHukumList, isLoading, firestore }: any) {
           </Card>
         ) : (
           <div className="space-y-3">
-            {produkHukumList?.map((produk: any) => (
-              <Card key={produk.id} className="rounded-xl border-none shadow-sm">
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-black bg-primary/10 text-primary px-2 py-1 rounded">{produk.jenis.toUpperCase()}</span>
-                        <span className="text-xs text-slate-500 font-bold">{produk.tahun}</span>
+            {produkHukumList?.map((produk: any) => {
+              const typeLabel = PRODUK_HUKUM_TYPES.find(t => t.value === produk.jenis)?.label || produk.jenis.toUpperCase();
+              return (
+                <Card key={produk.id} className="rounded-xl border-none shadow-sm hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex-1 space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-[10px] font-black bg-primary/10 text-primary px-2.5 py-0.5 rounded-md uppercase tracking-wider">
+                            {typeLabel}
+                          </span>
+                          <span className="text-xs font-bold text-slate-400">
+                            Tahun {produk.tahun}
+                          </span>
+                        </div>
+                        <p className="font-bold text-slate-900 text-base">{produk.nama}</p>
+                        <p className="text-xs font-medium text-slate-500">Nomor: {produk.nomor}</p>
                       </div>
-                      <p className="font-bold text-slate-900 line-clamp-1">{produk.nama}</p>
-                      <p className="text-sm text-slate-600">Nomor: {produk.nomor}</p>
-                    </div>
-                    {produk.driveLink && (
-                      <a href={produk.driveLink} target="_blank" rel="noopener noreferrer" className="ml-2">
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <Eye className="h-4 w-4" />
+
+                      {/* Action buttons */}
+                      <div className="flex items-center gap-1 shrink-0 self-end sm:self-center">
+                        {produk.driveLink && (
+                          <a href={produk.driveLink} target="_blank" rel="noopener noreferrer" title="Buka Document Drive">
+                            <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-lg border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-bold">
+                              <Eye className="h-3.5 w-3.5 text-blue-600" />
+                              <span className="hidden sm:inline">Lihat</span>
+                            </Button>
+                          </a>
+                        )}
+
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleOpenEdit(produk)}
+                          className="h-8 gap-1.5 rounded-lg border-amber-200 bg-amber-50/70 text-amber-800 hover:bg-amber-100 text-xs font-bold"
+                          title="Edit Rincian Produk Hukum"
+                        >
+                          <Pencil className="h-3.5 w-3.5 text-amber-600" />
+                          <span>Edit</span>
                         </Button>
-                      </a>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleDelete(produk.id, produk.nama)}
+                          className="h-8 gap-1.5 rounded-lg border-red-200 bg-red-50/70 text-red-700 hover:bg-red-100 text-xs font-bold"
+                          title="Hapus Produk Hukum"
+                        >
+                          <Trash2 className="h-3.5 w-3.5 text-red-600" />
+                          <span className="hidden sm:inline">Hapus</span>
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>
+
+      {/* EDIT MODAL DIALOG */}
+      <Dialog open={!!editingProduk} onOpenChange={(open) => !open && setEditingProduk(null)}>
+        <DialogContent className="max-w-md rounded-2xl p-6 bg-white shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-black text-slate-900 flex items-center gap-2">
+              <Pencil className="h-5 w-5 text-amber-600" />
+              <span>Edit Rincian Produk Hukum</span>
+            </DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleUpdate} className="space-y-4 mt-2">
+            <div>
+              <Label className="font-bold text-xs">Jenis Produk</Label>
+              <Select value={editFormData.jenis} onValueChange={(v) => setEditFormData({...editFormData, jenis: v})}>
+                <SelectTrigger className="rounded-lg border-slate-300">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PRODUK_HUKUM_TYPES.map(type => (
+                    <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="font-bold text-xs">Tahun</Label>
+              <Select value={editFormData.tahun.toString()} onValueChange={(v) => setEditFormData({...editFormData, tahun: parseInt(v)})}>
+                <SelectTrigger className="rounded-lg border-slate-300">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                    <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="font-bold text-xs">Nama Produk</Label>
+              <Input
+                value={editFormData.nama}
+                onChange={(e) => setEditFormData({...editFormData, nama: e.target.value})}
+                placeholder="Nama lengkap produk hukum"
+                className="rounded-lg border-slate-300"
+                required
+              />
+            </div>
+
+            <div>
+              <Label className="font-bold text-xs">Nomor</Label>
+              <Input
+                value={editFormData.nomor}
+                onChange={(e) => setEditFormData({...editFormData, nomor: e.target.value})}
+                placeholder="e.g. 1/2026"
+                className="rounded-lg border-slate-300"
+                required
+              />
+            </div>
+
+            <div>
+              <Label className="font-bold text-xs">Link Google Drive (Optional)</Label>
+              <Input
+                value={editFormData.driveLink}
+                onChange={(e) => setEditFormData({...editFormData, driveLink: e.target.value})}
+                placeholder="https://drive.google.com/..."
+                className="rounded-lg border-slate-300"
+                type="url"
+              />
+            </div>
+
+            <DialogFooter className="flex items-center gap-2 pt-4 border-t border-slate-100">
+              <Button type="button" variant="outline" onClick={() => setEditingProduk(null)} className="rounded-lg font-bold">
+                Batal
+              </Button>
+              <Button type="submit" disabled={isUpdating} className="rounded-lg font-bold bg-primary hover:bg-slate-800">
+                <Save className="h-4 w-4 mr-2" />
+                Simpan Perubahan
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

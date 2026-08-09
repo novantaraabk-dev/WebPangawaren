@@ -34,6 +34,7 @@ import { collection, query, orderBy, doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { VillageMap } from '@/components/village-map';
+import { CardContourPattern } from '@/components/landing/CardContourPattern';
 
 type Official = {
   id: string;
@@ -700,8 +701,10 @@ function GaleriTab({ youtubeEmbedUrl, newsData, isLoadingNews }: { youtubeEmbedU
 // Reuse OfficialCard for internal Kenali tab
 function OfficialCard({ official, isSmall = false }: { official: Official, isSmall?: boolean }) {
   return (
-    <div className={`group bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 overflow-hidden`}>
-      <div className="relative aspect-[4/5] w-full bg-slate-100 overflow-hidden">
+    <div className={`group bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 overflow-hidden relative`}>
+      <CardContourPattern opacity={0.03} className="text-slate-400" />
+      <div className="relative z-10">
+        <div className="relative aspect-[4/5] w-full bg-slate-100 overflow-hidden">
         {official.imageUrl ? (
           <img src={official.imageUrl} alt={official.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
         ) : (
@@ -718,6 +721,7 @@ function OfficialCard({ official, isSmall = false }: { official: Official, isSma
         <p className={`${isSmall ? 'text-[8px]' : 'text-[10px]'} font-bold text-primary uppercase tracking-widest italic`}>
           {official.position}
         </p>
+      </div>
       </div>
     </div>
   );

@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { CardContourPattern } from '@/components/landing/CardContourPattern';
 import { summarizeComplaintFeedback } from '@/ai/flows/summarize-complaint-feedback-flow';
 import { Complaint, CitizenProfile } from '@/lib/types';
 import {
@@ -151,7 +152,9 @@ export function ComplaintSystem() {
   return (
     <div className="max-w-7xl mx-auto grid lg:grid-cols-3 gap-8">
       <div className="lg:col-span-1">
-        <Card className="rounded-3xl shadow-sm overflow-hidden border-none bg-white">
+        <Card className="rounded-3xl shadow-sm overflow-hidden border-none bg-white relative">
+          <CardContourPattern opacity={0.03} className="text-slate-400" />
+          <div className="relative z-10">
           <CardHeader className="bg-primary text-white p-8">
             <CardTitle className="text-xl font-black uppercase tracking-tight">Buat Pengaduan</CardTitle>
             <CardDescription className="text-white/60 font-medium">
@@ -205,11 +208,14 @@ export function ComplaintSystem() {
               KIRIM PENGADUAN
             </Button>
           </CardContent>
+          </div>
         </Card>
       </div>
 
       <div className="lg:col-span-2">
-        <Card className="rounded-3xl shadow-sm border-none bg-white">
+        <Card className="rounded-3xl shadow-sm border-none bg-white relative overflow-hidden">
+          <CardContourPattern opacity={0.03} className="text-slate-400" />
+          <div className="relative z-10">
           <CardHeader className="p-8 border-b border-slate-50">
             <CardTitle className="text-xl font-black uppercase tracking-tight text-slate-900">
                {isAdmin ? 'Seluruh Pengaduan Warga' : 'Riwayat Pengaduan Saya'}
@@ -327,6 +333,7 @@ export function ComplaintSystem() {
                 </Accordion>
             )}
           </CardContent>
+          </div>
         </Card>
       </div>
     </div>

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, BarChart3, TrendingUp, FileText, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { CardContourPattern } from '@/components/landing/CardContourPattern';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -169,6 +170,24 @@ export default function TataKelolaDesa() {
     { id: 'produk', label: 'Produk Hukum Desa', icon: FileText },
   ];
 
+  const formatBidangLabel = (value: string) => {
+    if (!value) return '';
+    const cleaned = value.replace(/^(Bidang|BIDANG)\s+/i, '');
+    return cleaned.length > 18 ? `${cleaned.substring(0, 18)}...` : cleaned;
+  };
+
+  const formatSumberLabel = (value: string) => {
+    if (!value) return '';
+    return value.length > 12 ? `${value.substring(0, 12)}...` : value;
+  };
+
+  const formatCurrencyYAxis = (val: number) => {
+    if (val >= 1e9) return `Rp ${(val / 1e9).toFixed(1)}M`;
+    if (val >= 1e6) return `Rp ${(val / 1e6).toFixed(0)}jt`;
+    if (val >= 1e3) return `Rp ${(val / 1e3).toFixed(0)}rb`;
+    return `Rp ${val}`;
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 font-sans">
       {/* HEADER */}
@@ -236,11 +255,12 @@ export default function TataKelolaDesa() {
           <div className="space-y-8">
             {isLoadingApbdes ? (
               <Skeleton className="h-96 rounded-3xl" />
-                        ) : currentApbdes ? (
+            ) : currentApbdes ? (
               <>
                 {/* APBDes Overview Card */}
-                <Card className="rounded-[2.5rem] border-none shadow-xl bg-gradient-to-br from-blue-50 to-indigo-50/50">
-                  <CardContent className="p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <Card className="relative overflow-hidden rounded-[2.5rem] border-none shadow-xl bg-gradient-to-br from-blue-50 to-indigo-50/50">
+                  <CardContourPattern opacity={0.03} className="text-blue-600" />
+                  <CardContent className="p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
                     <div className="space-y-2">
                       <span className="text-xs font-black bg-blue-100 text-blue-800 px-3 py-1 rounded-full uppercase tracking-wider">Anggaran Pendapatan & Belanja Desa</span>
                       <h3 className="text-3xl font-black text-slate-900">APBDes Tahun {selectedYear}</h3>
@@ -258,16 +278,17 @@ export default function TataKelolaDesa() {
                 {/* Charts Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   {/* Chart 1: Per Bidang */}
-                  <Card className="rounded-[2.5rem] border-none shadow-xl">
-                    <CardContent className="p-8 space-y-6">
+                  <Card className="relative overflow-hidden rounded-[2.5rem] border-none shadow-xl">
+                    <CardContourPattern opacity={0.03} className="text-slate-400" />
+                    <CardContent className="p-8 space-y-6 relative z-10">
                       <div>
                         <h4 className="text-xl font-black text-slate-900 font-display">Perbandingan Total per Bidang</h4>
                         <p className="text-sm text-slate-500 font-medium">Rincian alokasi anggaran belanja untuk setiap bidang pembangunan.</p>
                       </div>
                       
                       {apbdesChartData.length > 0 ? (
-                        <ResponsiveContainer width="100%" height={320}>
-                          <BarChart data={apbdesChartData} margin={{ top: 20, right: 10, left: 10, bottom: 20 }}>
+                        <ResponsiveContainer width="100%" height={380}>
+                          <BarChart data={apbdesChartData} margin={{ top: 20, right: 10, left: 15, bottom: 85 }}>
                             <defs>
                               <linearGradient id="apbdesColorBidang" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.9}/>
@@ -281,19 +302,24 @@ export default function TataKelolaDesa() {
                               axisLine={false} 
                               tickLine={false}
                               interval={0}
-                              tickFormatter={(value) => value.length > 15 ? `${value.substring(0, 15)}...` : value}
+                              angle={-35}
+                              textAnchor="end"
+                              height={85}
+                              tickFormatter={formatBidangLabel}
                             />
                             <YAxis 
                               tick={{ fill: '#64748b', fontSize: 10 }} 
                               axisLine={false} 
                               tickLine={false}
-                              tickFormatter={(val) => `Rp ${(val/1e6)}jt`} 
+                              width={65}
+                              tickFormatter={formatCurrencyYAxis} 
                             />
                             <Tooltip 
+                              cursor={{ fill: 'rgba(241, 245, 249, 0.6)' }}
                               contentStyle={{ backgroundColor: '#ffffff', borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)' }}
                               formatter={(value: any) => [`Rp ${value.toLocaleString('id-ID')}`, 'Rencana Anggaran']}
                             />
-                            <Bar dataKey="nominal" fill="url(#apbdesColorBidang)" radius={[8, 8, 0, 0]} />
+                            <Bar dataKey="nominal" fill="url(#apbdesColorBidang)" radius={[8, 8, 0, 0]} maxBarSize={48} />
                           </BarChart>
                         </ResponsiveContainer>
                       ) : (
@@ -311,8 +337,8 @@ export default function TataKelolaDesa() {
                       </div>
                       
                       {apbdesSumberChartData.length > 0 ? (
-                        <ResponsiveContainer width="100%" height={320}>
-                          <BarChart data={apbdesSumberChartData} margin={{ top: 20, right: 10, left: 10, bottom: 20 }}>
+                        <ResponsiveContainer width="100%" height={380}>
+                          <BarChart data={apbdesSumberChartData} margin={{ top: 20, right: 10, left: 15, bottom: 85 }}>
                             <defs>
                               <linearGradient id="apbdesColorSumber" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.9}/>
@@ -325,18 +351,25 @@ export default function TataKelolaDesa() {
                               tick={{ fill: '#64748b', fontSize: 10, fontWeight: 'bold' }} 
                               axisLine={false} 
                               tickLine={false}
+                              interval={0}
+                              angle={-35}
+                              textAnchor="end"
+                              height={85}
+                              tickFormatter={formatSumberLabel}
                             />
                             <YAxis 
                               tick={{ fill: '#64748b', fontSize: 10 }} 
                               axisLine={false} 
                               tickLine={false}
-                              tickFormatter={(val) => `Rp ${(val/1e6)}jt`} 
+                              width={65}
+                              tickFormatter={formatCurrencyYAxis} 
                             />
                             <Tooltip 
+                              cursor={{ fill: 'rgba(241, 245, 249, 0.6)' }}
                               contentStyle={{ backgroundColor: '#ffffff', borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)' }}
                               formatter={(value: any) => [`Rp ${value.toLocaleString('id-ID')}`, 'Rencana Anggaran']}
                             />
-                            <Bar dataKey="nominal" fill="url(#apbdesColorSumber)" radius={[8, 8, 0, 0]} />
+                            <Bar dataKey="nominal" fill="url(#apbdesColorSumber)" radius={[8, 8, 0, 0]} maxBarSize={48} />
                           </BarChart>
                         </ResponsiveContainer>
                       ) : (
@@ -431,8 +464,8 @@ export default function TataKelolaDesa() {
                       </div>
                       
                       {realisasiChartData.length > 0 ? (
-                        <ResponsiveContainer width="100%" height={320}>
-                          <BarChart data={realisasiChartData} margin={{ top: 20, right: 10, left: 10, bottom: 20 }}>
+                        <ResponsiveContainer width="100%" height={380}>
+                          <BarChart data={realisasiChartData} margin={{ top: 20, right: 10, left: 15, bottom: 85 }}>
                             <defs>
                               <linearGradient id="realisasiColorBidang" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="5%" stopColor="#10b981" stopOpacity={0.9}/>
@@ -446,19 +479,24 @@ export default function TataKelolaDesa() {
                               axisLine={false} 
                               tickLine={false}
                               interval={0}
-                              tickFormatter={(value) => value.length > 15 ? `${value.substring(0, 15)}...` : value}
+                              angle={-35}
+                              textAnchor="end"
+                              height={85}
+                              tickFormatter={formatBidangLabel}
                             />
                             <YAxis 
                               tick={{ fill: '#64748b', fontSize: 10 }} 
                               axisLine={false} 
                               tickLine={false}
-                              tickFormatter={(val) => `Rp ${(val/1e6)}jt`} 
+                              width={65}
+                              tickFormatter={formatCurrencyYAxis} 
                             />
                             <Tooltip 
+                              cursor={{ fill: 'rgba(241, 245, 249, 0.6)' }}
                               contentStyle={{ backgroundColor: '#ffffff', borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)' }}
                               formatter={(value: any) => [`Rp ${value.toLocaleString('id-ID')}`, 'Realisasi Anggaran']}
                             />
-                            <Bar dataKey="nominal" fill="url(#realisasiColorBidang)" radius={[8, 8, 0, 0]} />
+                            <Bar dataKey="nominal" fill="url(#realisasiColorBidang)" radius={[8, 8, 0, 0]} maxBarSize={48} />
                           </BarChart>
                         </ResponsiveContainer>
                       ) : (
@@ -476,8 +514,8 @@ export default function TataKelolaDesa() {
                       </div>
                       
                       {realisasiSumberChartData.length > 0 ? (
-                        <ResponsiveContainer width="100%" height={320}>
-                          <BarChart data={realisasiSumberChartData} margin={{ top: 20, right: 10, left: 10, bottom: 20 }}>
+                        <ResponsiveContainer width="100%" height={380}>
+                          <BarChart data={realisasiSumberChartData} margin={{ top: 20, right: 10, left: 15, bottom: 85 }}>
                             <defs>
                               <linearGradient id="realisasiColorSumber" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.9}/>
@@ -490,18 +528,25 @@ export default function TataKelolaDesa() {
                               tick={{ fill: '#64748b', fontSize: 10, fontWeight: 'bold' }} 
                               axisLine={false} 
                               tickLine={false}
+                              interval={0}
+                              angle={-35}
+                              textAnchor="end"
+                              height={85}
+                              tickFormatter={formatSumberLabel}
                             />
                             <YAxis 
                               tick={{ fill: '#64748b', fontSize: 10 }} 
                               axisLine={false} 
                               tickLine={false}
-                              tickFormatter={(val) => `Rp ${(val/1e6)}jt`} 
+                              width={65}
+                              tickFormatter={formatCurrencyYAxis} 
                             />
                             <Tooltip 
+                              cursor={{ fill: 'rgba(241, 245, 249, 0.6)' }}
                               contentStyle={{ backgroundColor: '#ffffff', borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)' }}
                               formatter={(value: any) => [`Rp ${value.toLocaleString('id-ID')}`, 'Realisasi Anggaran']}
                             />
-                            <Bar dataKey="nominal" fill="url(#realisasiColorSumber)" radius={[8, 8, 0, 0]} />
+                            <Bar dataKey="nominal" fill="url(#realisasiColorSumber)" radius={[8, 8, 0, 0]} maxBarSize={48} />
                           </BarChart>
                         </ResponsiveContainer>
                       ) : (

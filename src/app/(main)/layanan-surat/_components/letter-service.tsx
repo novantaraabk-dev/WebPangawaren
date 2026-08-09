@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { CardContourPattern } from '@/components/landing/CardContourPattern';
 import { 
   FileText, 
   ShieldCheck, 
@@ -113,7 +114,8 @@ export function LetterService({ isAdmin = false }: LetterServiceProps) {
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
                 >
-                  <CardContent className="p-10 flex flex-col h-full items-center text-center">
+                  <CardContourPattern opacity={0.03} className="text-slate-400" />
+                  <CardContent className="p-10 flex flex-col h-full items-center text-center relative z-10">
                     <div className={cn("w-24 h-24 rounded-[2rem] mb-8 flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:rotate-12 shadow-lg", opt.color)}>
                       <opt.icon className="h-12 w-12" />
                     </div>

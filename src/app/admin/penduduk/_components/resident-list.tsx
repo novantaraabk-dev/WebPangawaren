@@ -32,7 +32,13 @@ import {
   ShieldAlert,
   Database,
   BarChart3,
+  Download,
+  FileSpreadsheet,
+  FileText,
 } from 'lucide-react';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { Resident } from '@/lib/types';
 import { useFirestore } from '@/firebase';
 import {
@@ -74,9 +80,151 @@ export function ResidentList() {
   const [isDeletingAll, setIsDeletingAll] = useState(false);
   const [isSeeding, setIsSeeding] = useState(false);
   const [isRecalculating, setIsRecalculating] = useState(false);
+  const [isExportingExcel, setIsExportingExcel] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
 
   const [residents, setResidents] = useState<Resident[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+
+  const getExportDataList = async (scope: 'view' | 'all'): Promise<Resident[]> => {
+    if (scope === 'view' && residents.length > 0) {
+      return residents;
+    }
+    if (!firestore) return [];
+
+    const snapshot = await getDocs(collection(firestore, 'residents'));
+    const list: Resident[] = [];
+    snapshot.forEach(d => list.push({ id: d.id, ...d.data() } as Resident));
+    return list;
+  };
+
+  const handleExportExcel = async (scope: 'view' | 'all' = 'view') => {
+    setIsExportingExcel(true);
+    toast({ title: "Memproses Ekspor Excel...", description: "Mohon tunggu sebentar data sedang disiapkan." });
+
+    try {
+      const dataList = await getExportDataList(scope);
+      if (dataList.length === 0) {
+        toast({ title: "Data Kosong", description: "Tidak ada data penduduk yang bisa diekspor.", variant: "destructive" });
+        return;
+      }
+
+      const rows = dataList.map((r, index) => ({
+        'No': index + 1,
+        'NIK': r.nik || '',
+        'No. KK': r.noKk || '',
+        'Nama Lengkap': (r.fullName || '').toUpperCase(),
+        'Jenis Kelamin': r.gender || '',
+        'Tempat Lahir': r.placeOfBirth || '',
+        'Tanggal Lahir': r.dateOfBirth || '',
+        'Agama': r.religion || '',
+        'Status Perkawinan': r.maritalStatus || '',
+        'Pekerjaan': r.occupation || '',
+        'Hubungan Keluarga (SHDK)': r.relationshipToHeadOfFamily || '',
+        'RT': r.rt || '',
+        'RW': r.rw || '',
+        'Dusun': (r as any).dusun || '',
+        'Alamat': r.address || '',
+        'Pendidikan': (r as any).education || '',
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Data Penduduk');
+
+      const dateStr = new Date().toISOString().slice(0, 10);
+      XLSX.writeFile(workbook, `Data_Penduduk_Desa_Pangawaren_${dateStr}.xlsx`);
+
+      toast({ title: "Ekspor Excel Berhasil", description: `${rows.length} data penduduk berhasil diunduh.` });
+    } catch (error: any) {
+      console.error("Export Excel error:", error);
+      toast({ title: "Gagal Ekspor Excel", description: error.message, variant: "destructive" });
+    } finally {
+      setIsExportingExcel(false);
+    }
+  };
+
+  const handleExportPdf = async (scope: 'view' | 'all' = 'view') => {
+    setIsExportingPdf(true);
+    toast({ title: "Memproses Ekspor PDF...", description: "Mohon tunggu dokumen PDF sedang dibuat." });
+
+    try {
+      const dataList = await getExportDataList(scope);
+      if (dataList.length === 0) {
+        toast({ title: "Data Kosong", description: "Tidak ada data penduduk yang bisa diekspor.", variant: "destructive" });
+        return;
+      }
+
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+      // Title Header
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('PEMERINTAH KABUPATEN CILACAP', doc.internal.pageSize.width / 2, 12, { align: 'center' });
+      doc.setFontSize(12);
+      doc.text('KECAMATAN KARANGPUCUNG - DESA PANGAWAREN', doc.internal.pageSize.width / 2, 18, { align: 'center' });
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text('LAPORAN DATA KEPENDUDUKAN DESA PANGAWAREN', doc.internal.pageSize.width / 2, 23, { align: 'center' });
+
+      doc.setLineWidth(0.5);
+      doc.line(14, 26, doc.internal.pageSize.width - 14, 26);
+
+      const tableColumn = ["No", "NIK", "No. KK", "Nama Lengkap", "JK", "Tgl Lahir", "Agama", "SHDK", "Alamat / RT RW"];
+      const tableRows = dataList.map((r, index) => [
+        index + 1,
+        r.nik || '-',
+        r.noKk || '-',
+        (r.fullName || '-').toUpperCase(),
+        r.gender || '-',
+        r.dateOfBirth || '-',
+        r.religion || '-',
+        r.relationshipToHeadOfFamily || '-',
+        `${r.address || ''} RT ${r.rt || '-'}/RW ${r.rw || '-'}`
+      ]);
+
+      autoTable(doc, {
+        startY: 29,
+        head: [tableColumn],
+        body: tableRows,
+        theme: 'grid',
+        styles: { fontSize: 7, cellPadding: 1.5 },
+        headStyles: { fillColor: [16, 185, 129], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'center' },
+        columnStyles: {
+          0: { halign: 'center', cellWidth: 8 },
+          1: { cellWidth: 28 },
+          2: { cellWidth: 28 },
+          3: { fontStyle: 'bold' },
+          4: { halign: 'center', cellWidth: 10 },
+          5: { halign: 'center', cellWidth: 22 },
+          6: { cellWidth: 18 },
+          7: { cellWidth: 26 },
+        }
+      });
+
+      const totalPages = (doc as any).internal.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setFontSize(7);
+        doc.text(
+          `Halaman ${i} dari ${totalPages} - Dicetak dari Sistem Digital Pangawaren (${new Date().toLocaleDateString('id-ID')})`,
+          doc.internal.pageSize.width - 14,
+          doc.internal.pageSize.height - 8,
+          { align: 'right' }
+        );
+      }
+
+      const dateStr = new Date().toISOString().slice(0, 10);
+      doc.save(`Data_Penduduk_Desa_Pangawaren_${dateStr}.pdf`);
+
+      toast({ title: "Ekspor PDF Berhasil", description: `${dataList.length} data penduduk berhasil diunduh.` });
+    } catch (error: any) {
+      console.error("Export PDF error:", error);
+      toast({ title: "Gagal Ekspor PDF", description: error.message, variant: "destructive" });
+    } finally {
+      setIsExportingPdf(false);
+    }
+  };
   const [hasSearched, setHasSearched] = useState(false);
   const [totalCount, setTotalCount] = useState<number | null>(null);
 
@@ -356,7 +504,49 @@ export function ResidentList() {
             </Button>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="border-emerald-600 text-emerald-700 hover:bg-emerald-50 font-bold" disabled={isExportingExcel}>
+                  {isExportingExcel ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileSpreadsheet className="mr-2 h-4 w-4 text-emerald-600" />}
+                  Ekspor Excel
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="text-xs uppercase font-bold text-slate-400">Pilihan Ekspor Excel</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => handleExportExcel('view')} disabled={residents.length === 0}>
+                  <FileSpreadsheet className="mr-2 h-4 w-4 text-emerald-600" />
+                  <span>Ekspor Data Tampil ({residents.length})</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExportExcel('all')}>
+                  <Download className="mr-2 h-4 w-4 text-emerald-600" />
+                  <span>Ekspor Semua Database ({totalCount ?? 0})</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="border-red-600 text-red-700 hover:bg-red-50 font-bold" disabled={isExportingPdf}>
+                  {isExportingPdf ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4 text-red-600" />}
+                  Ekspor PDF
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="text-xs uppercase font-bold text-slate-400">Pilihan Ekspor PDF</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => handleExportPdf('view')} disabled={residents.length === 0}>
+                  <FileText className="mr-2 h-4 w-4 text-red-600" />
+                  <span>Ekspor Data Tampil ({residents.length})</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExportPdf('all')}>
+                  <Download className="mr-2 h-4 w-4 text-red-600" />
+                  <span>Ekspor Semua Database ({totalCount ?? 0})</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <Button variant="outline" size="sm" onClick={() => setIsImportOpen(true)}>
               <FileUp className="mr-2 h-4 w-4" />
               Impor Excel

@@ -13,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { NewsImageGrid } from '@/components/news-image-grid';
+import { CardContourPattern } from '@/components/landing/CardContourPattern';
 
 export default function PublicBeritaListPage() {
   const firestore = useFirestore();
@@ -123,8 +124,9 @@ export default function PublicBeritaListPage() {
           </div>
 
           <div className="lg:col-span-4 space-y-8">
-            <Card className="rounded-[2rem] border-none bg-primary text-white overflow-hidden shadow-xl">
-               <CardContent className="p-8 space-y-6">
+            <Card className="relative overflow-hidden rounded-[2rem] border-none bg-primary text-white shadow-xl">
+               <CardContourPattern opacity={0.03} className="text-secondary" />
+               <CardContent className="p-8 space-y-6 relative z-10">
                   <div className="flex items-center justify-between border-b border-white/10 pb-4">
                     <h3 className="text-lg font-semibold uppercase font-display italic">Info <span className="text-secondary">Penting</span></h3>
                     <TrendingUp className="h-5 w-5 text-secondary" />
@@ -171,7 +173,9 @@ export default function PublicBeritaListPage() {
                 ) : feed.map((item) => {
                     const hasPhotos = (item.imageUrls && item.imageUrls.length > 0) || Boolean(item.imageUrl);
                     return (
-                      <div key={item.id} className="group bg-white p-6 rounded-[2.5rem] border border-slate-200/80 hover:shadow-xl transition-all duration-300 space-y-4 font-sans">
+                      <div key={item.id} className="group bg-white p-6 rounded-[2.5rem] border border-slate-200/80 hover:shadow-xl transition-all duration-300 font-sans relative overflow-hidden">
+                        <CardContourPattern opacity={0.03} className="text-slate-400" />
+                        <div className="relative z-10 space-y-4">
                         {/* PHOTO GRID LAYOUT (1, 2, 3, or 4+ PHOTOS) */}
                         {hasPhotos ? (
                           <NewsImageGrid
@@ -216,12 +220,15 @@ export default function PublicBeritaListPage() {
                            </div>
                         </div>
                       </div>
+                      </div>
                     );
                 })}
               </div>
 
               <div className="lg:col-span-4">
-                <Card className="rounded-[2rem] border-none overflow-hidden bg-accent text-white shadow-xl p-8 space-y-6 text-center sticky top-28">
+                <Card className="relative overflow-hidden rounded-[2rem] border-none bg-accent text-white shadow-xl p-8 space-y-6 text-center sticky top-28">
+                   <CardContourPattern opacity={0.03} className="text-white" />
+                   <div className="relative z-10 space-y-6">
                    <Tag className="h-10 w-10 mx-auto text-white/30" />
                    <div className="space-y-2">
                       <h3 className="text-xl font-semibold font-display uppercase leading-tight">Ikuti Akun Resmi <span className="italic">Pangawaren</span></h3>
@@ -230,7 +237,8 @@ export default function PublicBeritaListPage() {
                    <Button className="bg-secondary text-primary font-black uppercase tracking-widest rounded-xl hover:bg-white w-full h-12">
                      Hubungi Admin
                    </Button>
-                </Card>
+                   </div>
+                 </Card>
               </div>
            </div>
         </div>

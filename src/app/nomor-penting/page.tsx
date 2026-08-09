@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { CardContourPattern } from '@/components/landing/CardContourPattern';
 import { cn } from '@/lib/utils';
 
 type ContactItem = {
@@ -256,10 +257,11 @@ export default function NomorPentingPage() {
                     <Card
                       key={i}
                       className={cn(
-                        'rounded-[2rem] border-none shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 bg-white group overflow-hidden'
+                        'rounded-[2rem] border-none shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 bg-white group overflow-hidden relative'
                       )}
                     >
-                      <CardContent className="p-0">
+                      <CardContourPattern opacity={0.03} className="text-slate-400" />
+                      <CardContent className="p-0 relative z-10">
                         <div className="flex items-stretch">
                           {/* Icon side */}
                           <div

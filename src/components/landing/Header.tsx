@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { CardContourPattern } from './CardContourPattern';
 
 const primaryLinks = [
   { href: '/pelayanan-desa/', label: 'Pelayanan Desa' },
@@ -88,13 +89,14 @@ export function Header() {
   return (
     <header
       className={cn(
-        'fixed top-0 left-0 z-50 w-full border-b transition-all duration-300',
+        'fixed top-0 left-0 z-50 w-full border-b transition-all duration-300 overflow-hidden',
         isScrolled
           ? 'border-slate-200/80 bg-white/85 backdrop-blur-xl shadow-[0_8px_30px_rgba(15,23,42,0.06)]'
           : 'border-transparent bg-transparent backdrop-blur-none'
       )}
     >
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <CardContourPattern opacity={0.03} className={cn("transition-opacity", isScrolled ? "text-slate-900" : "text-white")} />
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 relative z-10">
         <Link href="/" className={cn('transition-colors', isScrolled ? 'text-slate-900' : 'text-white')} aria-label="Beranda Portal Portal Desa Pangawaren">
           <Logo />
         </Link>
