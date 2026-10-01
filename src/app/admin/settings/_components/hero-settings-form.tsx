@@ -99,47 +99,79 @@ export function HeroSettingsForm() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <ImageIcon className="h-5 w-5" />
-          Gambar Utama Beranda (Hero)
-        </CardTitle>
-        <CardDescription>Ganti gambar besar yang tampil di bagian atas halaman depan website.</CardDescription>
+    <Card className="rounded-3xl border border-slate-200/90 bg-white shadow-xs hover:shadow-md transition-all flex flex-col justify-between overflow-hidden h-full">
+      <CardHeader className="p-6 pb-4 border-b border-slate-100 bg-slate-50/50">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+            <ImageIcon className="h-5 w-5" />
+          </div>
+          <div>
+            <CardTitle className="text-base font-bold text-slate-800">
+              Gambar Utama Beranda (Hero)
+            </CardTitle>
+            <CardDescription className="text-xs text-slate-500">
+              Ganti gambar latar utama yang tampil di bagian atas halaman beranda website.
+            </CardDescription>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <CardContent className="p-6 flex-1 flex flex-col justify-between space-y-6">
+        <form onSubmit={handleSubmit} className="flex-1 flex flex-col justify-between space-y-6">
           <div className="space-y-4">
-            <Label>Pratinjau Gambar</Label>
-            <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl border-2 border-dashed bg-muted flex items-center justify-center">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Pratinjau Gambar Hero
+              </Label>
+              <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                Orientasi Lanskap (16:9)
+              </span>
+            </div>
+            
+            <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/70 flex items-center justify-center group shadow-inner">
               {imagePreview ? (
-                <img src={imagePreview} alt="Hero Preview" className="h-full w-full object-cover" />
+                <img src={imagePreview} alt="Hero Preview" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" />
               ) : (
-                <p className="text-sm text-muted-foreground">Belum ada gambar kustom</p>
+                <div className="flex flex-col items-center justify-center text-slate-400 gap-2 p-6 text-center">
+                  <ImageIcon className="h-8 w-8 stroke-1" />
+                  <p className="text-xs font-medium">Belum ada gambar kustom. Menggunakan gambar default sistem.</p>
+                </div>
               )}
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="hero-upload">Pilih File Gambar (JPG/PNG)</Label>
-            <div className="flex items-center gap-4">
+            <Label htmlFor="hero-upload" className="text-xs font-bold text-slate-700">
+              Pilih Berkas Gambar Baru
+            </Label>
+            <div className="flex items-center gap-3">
               <Input
                 id="hero-upload"
                 type="file"
-                accept="image/jpeg, image/png"
+                accept="image/jpeg, image/png, image/webp"
                 onChange={handleFileChange}
                 disabled={isSaving || isUploading}
-                className="max-w-sm"
+                className="rounded-xl border-slate-200 text-xs file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer"
               />
-              {isUploading && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
+              {isUploading && <Loader2 className="h-5 w-5 animate-spin text-emerald-600 shrink-0" />}
             </div>
-            <p className="text-[10px] text-muted-foreground uppercase font-bold">Maksimal 700KB. Gunakan orientasi lanskap (melebar).</p>
+            <p className="text-[11px] text-slate-500 font-medium">
+              Format: JPG, PNG, atau WEBP. Ukuran file maksimal: <span className="font-bold text-slate-700">700 KB</span>.
+            </p>
           </div>
 
-          <Button type="submit" disabled={isSaving || isUploading || !imageUrl}>
-            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-            Simpan Gambar Hero
-          </Button>
+          <div className="flex items-center justify-between pt-4 border-t border-slate-100 mt-auto">
+            <p className="text-xs text-slate-400 hidden sm:block">
+              Perubahan langsung aktif di beranda
+            </p>
+            <Button
+              type="submit"
+              disabled={isSaving || isUploading || !imageUrl}
+              className="h-11 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider gap-2 shadow-md shadow-emerald-600/15 active:scale-95 transition-all w-full sm:w-auto"
+            >
+              {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              <span>Simpan Gambar Hero</span>
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>

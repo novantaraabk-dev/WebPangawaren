@@ -3,48 +3,10 @@
 import Link from 'next/link';
 import { Facebook, Instagram, Youtube, Mail, MapPin, Phone, Clock3 } from 'lucide-react';
 import { Logo } from '@/components/logo';
-import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
-import { FooterLogosInfo } from '@/lib/types';
-import Image from 'next/image';
-import { useMemo } from 'react';
-import { CardContourPattern } from './CardContourPattern';
 
 export function Footer() {
-  const firestore = useFirestore();
-
-  const footerLogosRef = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return doc(firestore, 'footerLogos', 'default');
-  }, [firestore]);
-
-  const { data: footerLogosData } = useDoc<FooterLogosInfo>(footerLogosRef, { suppressGlobalError: true });
-
-  const activeLogo = useMemo(() => {
-    if (!footerLogosData) return [];
-    return [
-      {
-        url: footerLogosData.logo1Url,
-        link: footerLogosData.logo1Link,
-      },
-      {
-        url: footerLogosData.logo2Url,
-        link: footerLogosData.logo2Link,
-      },
-      {
-        url: footerLogosData.logo3Url,
-        link: footerLogosData.logo3Link,
-      },
-      {
-        url: footerLogosData.logo4Url,
-        link: footerLogosData.logo4Link,
-      },
-    ].filter(logo => logo.url);
-  }, [footerLogosData]);
-
   return (
-    <footer className="relative z-10 border-t border-slate-200 bg-slate-950 text-slate-300 overflow-hidden">
-      <CardContourPattern opacity={0.04} className="text-slate-400" />
+    <footer className="relative z-10 bg-slate-950 text-slate-300 overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 relative z-10">
         <div className="grid gap-10 lg:grid-cols-4">
           <div className="space-y-5">
@@ -95,37 +57,13 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 border-t border-white/10 pt-6 flex flex-col-reverse gap-6 md:flex-row md:items-center md:justify-between">
-          <div className="text-center text-sm text-slate-500 md:text-left">
+        <div className="mt-12 border-t border-white/10 pt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-center sm:text-left">
+          <div className="text-sm text-slate-500">
             © 2026 Pemerintah Desa Pangawaren. Semua hak cipta dilindungi.
           </div>
-          {activeLogo.length > 0 && (
-            <div className="flex flex-wrap items-center justify-center gap-6 md:justify-end">
-              {activeLogo.map((logo, idx) => (
-                <div key={idx} className="flex h-20 w-auto items-center justify-center">
-                  {logo.link ? (
-                    <a href={logo.link} target="_blank" rel="noopener noreferrer" className="flex h-full items-center justify-center">
-                      <Image
-                        src={logo.url!}
-                        alt={`Logo ${idx + 1}`}
-                        width={80}
-                        height={80}
-                        className="h-16 w-auto object-contain"
-                      />
-                    </a>
-                  ) : (
-                    <Image
-                      src={logo.url!}
-                      alt={`Logo ${idx + 1}`}
-                      width={80}
-                      height={80}
-                      className="h-16 w-auto object-contain"
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="text-xs text-slate-600">
+            Kecamatan Karangpucung, Kabupaten Cilacap, Jawa Tengah
+          </div>
         </div>
       </div>
     </footer>

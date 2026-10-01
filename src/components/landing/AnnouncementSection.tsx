@@ -77,16 +77,6 @@ export function AnnouncementSection() {
               {/* Glowing Corner Accent */}
               <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-gradient-to-br from-emerald-500/10 to-teal-500/0 blur-2xl transition-all duration-500 group-hover:scale-150 group-hover:from-emerald-500/20" />
               
-              {/* Subtle Dot Grid pattern */}
-              <div className="absolute right-6 top-6 text-slate-200 transition-colors duration-300 group-hover:text-emerald-300/40 pointer-events-none">
-                <svg width="40" height="40" fill="none" viewBox="0 0 40 40">
-                  <pattern id={`announcement-dots-${index}`} x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
-                    <circle cx="2" cy="2" r="1" fill="currentColor" />
-                  </pattern>
-                  <rect width="40" height="40" fill={`url(#announcement-dots-${index})`} />
-                </svg>
-              </div>
-
               <div className="relative z-10 flex flex-col md:flex-row items-center gap-6">
                 {/* Image Thumbnail Container */}
                 <div className="relative w-full md:w-52 h-44 md:h-36 shrink-0 rounded-2xl overflow-hidden bg-slate-100 border border-slate-100/80 shadow-inner group-hover:shadow-md transition-shadow">

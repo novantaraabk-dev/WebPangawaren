@@ -38,6 +38,7 @@ import { Badge } from '@/components/ui/badge';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { addDoc, collection, serverTimestamp, query, orderBy, limit, where } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import { WhatsAppIcon } from '@/components/icons/whatsapp-icon';
 import { getCitizenProfile } from '@/lib/citizens';
 
 export function ComplaintSystem() {
@@ -207,6 +208,39 @@ export function ComplaintSystem() {
               )}
               KIRIM PENGADUAN
             </Button>
+
+            <div className="relative my-4 text-center">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-100" />
+              </div>
+              <span className="relative bg-white px-3 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                Atau Pengaduan Cepat
+              </span>
+            </div>
+
+            <a
+              href="https://wa.me/6285111318412?text=Halo%20Admin%20Pelayanan%20Desa%20Pangawaren%2C%20saya%20ingin%20menyampaikan%20pengaduan."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border-2 border-emerald-500/20 bg-emerald-50/60 hover:bg-emerald-50 hover:border-emerald-500/40 transition-all duration-200 group active:scale-[0.98]"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-md shadow-emerald-500/30 group-hover:scale-105 transition-transform shrink-0">
+                  <WhatsAppIcon className="w-5 h-5" />
+                </div>
+                <div className="text-left">
+                  <p className="text-[10px] font-black uppercase tracking-wider text-emerald-800">
+                    Lapor via WhatsApp
+                  </p>
+                  <p className="text-xs font-black text-slate-800">
+                    0851-1131-8412
+                  </p>
+                </div>
+              </div>
+              <span className="text-[11px] font-black text-emerald-700 bg-white px-3 py-1.5 rounded-xl border border-emerald-200 shadow-xs group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                Kirim WA
+              </span>
+            </a>
           </CardContent>
           </div>
         </Card>

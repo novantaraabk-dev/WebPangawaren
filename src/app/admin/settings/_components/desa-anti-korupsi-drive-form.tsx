@@ -93,18 +93,24 @@ export function DesaAntiKorupsiDriveForm() {
     }
   };
 
-  if (isLoading) return <Skeleton className="h-96 w-full rounded-2xl" />;
+  if (isLoading) return <Skeleton className="h-96 w-full rounded-3xl" />;
 
   return (
-    <Card className="border border-slate-200 rounded-3xl overflow-hidden shadow-sm bg-white col-span-2">
+    <Card className="border border-slate-200/90 rounded-3xl overflow-hidden shadow-xs hover:shadow-md transition-all bg-white w-full">
       <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-6">
-        <CardTitle className="flex items-center gap-2 text-slate-800">
-          <FolderGit className="h-5 w-5 text-emerald-600" />
-          Folder Google Drive per Sub-Menu Desa Anti Korupsi
-        </CardTitle>
-        <CardDescription className="text-xs">
-          Petakan sub-menu anti korupsi ke folder Google Drive spesifik agar berkas yang diunggah otomatis masuk ke folder tersebut. Jika dikosongkan, unggahan akan masuk ke Folder Utama (Root) default.
-        </CardDescription>
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+            <FolderGit className="h-5 w-5" />
+          </div>
+          <div>
+            <CardTitle className="text-base font-bold text-slate-800">
+              Folder Google Drive per Sub-Menu Desa Anti Korupsi
+            </CardTitle>
+            <CardDescription className="text-xs text-slate-500">
+              Petakan sub-menu anti korupsi ke folder Google Drive spesifik agar berkas yang diunggah otomatis masuk ke folder tersebut. Jika dikosongkan, berkas akan masuk ke Folder Utama (Root).
+            </CardDescription>
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -149,7 +155,7 @@ export function DesaAntiKorupsiDriveForm() {
                               value={folderMappings[item.id] || ''}
                               onChange={(e) => handleInputChange(item.id, e.target.value)}
                               disabled={isSaving}
-                              className="rounded-xl border-slate-200 bg-white focus-visible:ring-emerald-500 text-xs h-9"
+                              className="rounded-xl border-slate-200 bg-white focus-visible:ring-emerald-500 text-xs h-9 font-mono"
                             />
                           </div>
                         ))}
@@ -161,14 +167,17 @@ export function DesaAntiKorupsiDriveForm() {
             ))}
           </Accordion>
 
-          <div className="flex justify-end border-t border-slate-100 pt-4">
+          <div className="flex items-center justify-between border-t border-slate-100 pt-4">
+            <p className="text-xs text-slate-400 hidden sm:block">
+              Folder drive otomatis tersambung saat upload bukti berkas
+            </p>
             <Button 
               type="submit" 
               disabled={isSaving}
-              className="rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold uppercase tracking-wider text-xs px-6 h-10 shadow-lg shadow-emerald-600/10"
+              className="h-11 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider gap-2 shadow-md shadow-emerald-600/15 active:scale-95 transition-all w-full sm:w-auto"
             >
               {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-              Simpan Folder Sub-Menu
+              <span>Simpan Folder Sub-Menu</span>
             </Button>
           </div>
         </form>

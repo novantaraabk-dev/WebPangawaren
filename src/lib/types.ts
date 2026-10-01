@@ -193,7 +193,15 @@ export type ProdukHukumDesa = {
   updatedAt?: Timestamp;
 };
 
+export type PartnerLogoItem = {
+  id: string;
+  name?: string;
+  url: string;
+  link?: string;
+};
+
 export type FooterLogosInfo = {
+  items?: PartnerLogoItem[];
   logo1Url?: string;
   logo2Url?: string;
   logo3Url?: string;

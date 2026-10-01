@@ -84,8 +84,8 @@ export function ServicesSection() {
           transition={{ duration: 0.45, delay: 0.1 }}
           className="w-full lg:max-w-md shrink-0"
         >
-          <div className="relative overflow-hidden p-5 bg-gradient-to-br from-amber-50 to-orange-50/60 border border-dashed border-amber-300 rounded-[2.25rem] flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
-             <CardContourPattern opacity={0.03} className="text-amber-600" />
+          <div className="relative overflow-hidden isolate p-5 bg-gradient-to-br from-amber-50 to-orange-50/60 border border-dashed border-amber-300 rounded-[2.25rem] flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
+             <CardContourPattern opacity={0.15} className="text-amber-600" />
              <div className="p-3.5 bg-gradient-to-tr from-amber-500 to-orange-500 text-white rounded-2xl shadow-md shadow-amber-500/20 shrink-0 relative z-10">
                 <Info className="h-6 w-6" />
              </div>
@@ -111,22 +111,12 @@ export function ServicesSection() {
               viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.4, delay: index * 0.05 }}
               whileHover={{ y: -8, scale: 1.02 }}
-              className="group relative overflow-hidden rounded-[2.25rem] border border-slate-100 bg-white p-8 shadow-lg hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-300 flex flex-col justify-between"
+              className="group relative overflow-hidden isolate rounded-[2.25rem] border border-slate-100 bg-white p-8 shadow-lg hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-300 flex flex-col justify-between"
             >
-              <CardContourPattern opacity={0.03} className="text-slate-400 group-hover:text-emerald-500 transition-colors duration-500" />
+              <CardContourPattern opacity={0.15} />
               
               {/* Glowing Corner Accent */}
               <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-gradient-to-br from-emerald-500/10 to-teal-500/0 blur-2xl transition-all duration-500 group-hover:scale-150 group-hover:from-emerald-500/20" />
-              
-              {/* Subtle Dot Grid pattern */}
-              <div className="absolute right-6 top-6 text-slate-200 transition-colors duration-300 group-hover:text-emerald-300/40 pointer-events-none">
-                <svg width="40" height="40" fill="none" viewBox="0 0 40 40">
-                  <pattern id={`card-dots-${index}`} x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
-                    <circle cx="2" cy="2" r="1" fill="currentColor" />
-                  </pattern>
-                  <rect width="40" height="40" fill={`url(#card-dots-${index})`} />
-                </svg>
-              </div>
 
               <Link href={service.href} className="relative z-10 flex h-full flex-col justify-between">
                 <div>
@@ -141,11 +131,11 @@ export function ServicesSection() {
                   </p>
                 </div>
 
-                <div className="mt-8 pt-4 border-t border-slate-100 flex items-center justify-between">
-                  <span className="text-xs font-black uppercase tracking-wider text-emerald-700 group-hover:underline">
+                <div className="mt-8 pt-2 flex items-center justify-between">
+                  <span className="text-xs font-black uppercase tracking-wider text-emerald-700">
                     Akses Halaman
                   </span>
-                  <div className="h-9 w-9 rounded-full bg-slate-50 group-hover:bg-emerald-600 group-hover:text-white text-slate-400 flex items-center justify-center transition-all duration-300 shadow-sm">
+                  <div className="h-9 w-9 rounded-full bg-slate-50 group-hover:bg-emerald-600 group-hover:text-white text-slate-400 flex items-center justify-center transition-all duration-300 shadow-xs">
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                   </div>
                 </div>

@@ -32,8 +32,8 @@ export function SambutanSection() {
           whileHover={{ y: -6, scale: 1.01 }}
           className="lg:col-span-4 flex justify-center"
         >
-          <Card className="w-full max-w-[340px] rounded-[2.5rem] overflow-hidden border border-emerald-100 bg-white shadow-xl hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-300 flex flex-col group relative">
-            <CardContourPattern opacity={0.03} className="text-emerald-600" />
+          <Card className="w-full max-w-[340px] rounded-[2.5rem] overflow-hidden isolate border border-emerald-100 bg-white shadow-xl hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-300 flex flex-col group relative">
+            <CardContourPattern opacity={0.15} className="text-emerald-600" />
             <div className="aspect-[3/4] relative bg-slate-100 flex-grow overflow-hidden z-10">
               <Image
                 src={imageUrl}
@@ -48,10 +48,12 @@ export function SambutanSection() {
                 Kepala Desa
               </div>
             </div>
-            <div className="p-6 text-center bg-gradient-to-br from-emerald-900 via-teal-950 to-slate-900 text-white relative z-10">
-              <CardContourPattern opacity={0.03} className="text-emerald-200" />
-              <h3 className="text-xl font-black uppercase tracking-tight font-display italic">SUHUD</h3>
-              <p className="text-[10px] font-black text-amber-400 uppercase tracking-[0.3em] mt-1">Pemerintah Desa Pangawaren</p>
+            <div className="p-6 text-center bg-gradient-to-br from-emerald-900 via-teal-950 to-slate-900 text-white relative isolate overflow-hidden">
+              <CardContourPattern opacity={0.15} className="text-emerald-200" />
+              <div className="relative z-10">
+                <h3 className="text-xl font-black uppercase tracking-tight font-display italic">SUHUD</h3>
+                <p className="text-[10px] font-black text-amber-400 uppercase tracking-[0.3em] mt-1">Pemerintah Desa Pangawaren</p>
+              </div>
             </div>
           </Card>
         </motion.div>

@@ -85,77 +85,94 @@ export function DriveSettingsForm() {
     }
   };
 
-  if (isLoading) return <Skeleton className="h-64 w-full rounded-2xl" />;
+  if (isLoading) return <Skeleton className="h-64 w-full rounded-3xl" />;
 
   return (
-    <Card className="h-full flex flex-col justify-between">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Cloud className="h-5 w-5 text-primary" />
-          Konfigurasi Google Drive
-        </CardTitle>
-        <CardDescription>
-          Atur lokasi penyimpanan berkas lampiran pengajuan surat secara dinamis.
-        </CardDescription>
+    <Card className="rounded-3xl border border-slate-200/90 bg-white shadow-xs hover:shadow-md transition-all flex flex-col justify-between overflow-hidden h-full">
+      <CardHeader className="p-6 pb-4 border-b border-slate-100 bg-slate-50/50">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
+            <Cloud className="h-5 w-5" />
+          </div>
+          <div>
+            <CardTitle className="text-base font-bold text-slate-800">
+              Konfigurasi Google Drive (Pelayanan Surat)
+            </CardTitle>
+            <CardDescription className="text-xs text-slate-500">
+              Atur lokasi folder penyimpanan berkas lampiran warga dan webhook Apps Script.
+            </CardDescription>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col justify-between">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="drive-link" className="text-sm font-semibold">
-              Link Folder Google Drive (Arsip)
-            </Label>
-            <Input
-              id="drive-link"
-              placeholder="https://drive.google.com/drive/folders/..."
-              value={googleDriveLink}
-              onChange={(e) => setGoogleDriveLink(e.target.value)}
-              disabled={isSaving}
-              className="w-full"
-            />
-            <p className="text-xs text-muted-foreground">
-              Pintasan folder Drive dari panel admin.
-            </p>
+      <CardContent className="p-6 flex-1 flex flex-col justify-between space-y-6">
+        <form onSubmit={handleSubmit} className="flex-1 flex flex-col justify-between space-y-5">
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="drive-link" className="text-xs font-bold text-slate-700">
+                Tautan Folder Google Drive (Arsip Pelayanan)
+              </Label>
+              <Input
+                id="drive-link"
+                placeholder="https://drive.google.com/drive/folders/..."
+                value={googleDriveLink}
+                onChange={(e) => setGoogleDriveLink(e.target.value)}
+                disabled={isSaving}
+                className="rounded-xl border-slate-200 text-xs h-10 font-mono"
+              />
+              <p className="text-[11px] text-slate-500">
+                Pintasan folder Google Drive untuk tombol pintas di panel admin surat.
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="root-id" className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+                <FolderKey className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+                <span>ID Folder Utama (ROOT_FOLDER_ID)</span>
+              </Label>
+              <Input
+                id="root-id"
+                placeholder="Contoh: 1h7bN7GMASbXOgOhxjMHXEkxR-yg5p0iq"
+                value={rootFolderId}
+                onChange={(e) => setRootFolderId(e.target.value)}
+                disabled={isSaving}
+                className="font-mono text-xs rounded-xl border-slate-200 h-10"
+              />
+              <p className="text-[11px] text-slate-500">
+                ID folder Google Drive tempat sistem membuat subfolder per-pengajuan surat.
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="script-url" className="text-xs font-bold text-slate-700">
+                Apps Script Web App URL
+              </Label>
+              <Input
+                id="script-url"
+                placeholder="https://script.google.com/macros/s/.../exec"
+                value={appsScriptUrl}
+                onChange={(e) => setAppsScriptUrl(e.target.value)}
+                disabled={isSaving}
+                className="rounded-xl border-slate-200 text-xs h-10 font-mono"
+              />
+              <p className="text-[11px] text-slate-500">
+                URL endpoint Web App dari Google Apps Script untuk otomatisasi upload berkas warga.
+              </p>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="root-id" className="flex items-center gap-1.5 text-sm font-semibold">
-              <FolderKey className="h-4 w-4 text-muted-foreground shrink-0" />
-              ID Folder Utama (ROOT_FOLDER_ID)
-            </Label>
-            <Input
-              id="root-id"
-              placeholder="Contoh: 1h7bN7GMASbXOgOhxjMHXEkxR-yg5p0iq"
-              value={rootFolderId}
-              onChange={(e) => setRootFolderId(e.target.value)}
-              disabled={isSaving}
-              className="font-mono text-xs w-full"
-            />
-            <p className="text-xs text-muted-foreground">
-              ID folder tempat sistem membuat folder per-pengajuan.
+          <div className="flex items-center justify-between pt-4 border-t border-slate-100 mt-auto">
+            <p className="text-xs text-slate-400 hidden sm:block">
+              Terintegrasi dengan sistem persuratan
             </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="script-url" className="text-sm font-semibold">
-              Apps Script Web App URL
-            </Label>
-            <Input
-              id="script-url"
-              placeholder="https://script.google.com/macros/s/.../exec"
-              value={appsScriptUrl}
-              onChange={(e) => setAppsScriptUrl(e.target.value)}
+            <Button
+              type="submit"
               disabled={isSaving}
-              className="w-full text-xs"
-            />
-            <p className="text-xs text-muted-foreground">
-              URL endpoint Web App dari Google Apps Script.
-            </p>
+              className="h-11 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider gap-2 shadow-md shadow-emerald-600/15 active:scale-95 transition-all w-full sm:w-auto"
+            >
+              {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              <span>Simpan Konfigurasi Drive</span>
+            </Button>
           </div>
-
-          <Button type="submit" disabled={isSaving} className="w-full sm:w-auto mt-2">
-            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-            Simpan Konfigurasi
-          </Button>
         </form>
       </CardContent>
     </Card>

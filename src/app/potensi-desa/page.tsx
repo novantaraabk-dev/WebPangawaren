@@ -110,32 +110,42 @@ function PotensiDesaContent() {
         </div>
 
         {/* Categories Tab Navigation */}
-        <div className="bg-white rounded-[2.5rem] p-3 border shadow-sm flex flex-wrap lg:flex-nowrap justify-center gap-2 mb-16 max-w-5xl mx-auto">
-          {POTENSI_CATEGORIES.map((tab) => {
-            const TabIcon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  setActiveTab(tab.id);
-                  // Update URL parameter without full refresh
-                  const url = new URL(window.location.href);
-                  url.searchParams.set('tab', tab.id);
-                  window.history.pushState({}, '', url.toString());
-                }}
-                className={cn(
-                  "flex items-center justify-center gap-3 px-6 py-4 rounded-[2rem] transition-all duration-300 whitespace-nowrap group flex-1 md:flex-initial",
-                  isActive
-                    ? "bg-primary text-white shadow-xl shadow-primary/20 scale-[1.02]"
-                    : "text-slate-500 hover:bg-slate-50 hover:text-primary"
-                )}
-              >
-                <TabIcon className={cn("h-5 w-5 transition-transform group-hover:scale-110", isActive ? "text-secondary" : "text-slate-400")} />
-                <span className="font-black uppercase text-[10px] tracking-widest">{tab.label}</span>
-              </button>
-            );
-          })}
+        <div className="w-full max-w-6xl mx-auto mb-14 md:mb-16 px-2">
+          <div className="bg-white/95 backdrop-blur-md rounded-2xl lg:rounded-full p-1.5 md:p-2 border border-slate-200/90 shadow-sm flex flex-wrap lg:flex-nowrap items-center justify-between gap-1 md:gap-1.5">
+            {POTENSI_CATEGORIES.map((tab) => {
+              const TabIcon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                    // Update URL parameter without full refresh
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('tab', tab.id);
+                    window.history.pushState({}, '', url.toString());
+                  }}
+                  className={cn(
+                    "flex items-center justify-center gap-2 md:gap-2.5 px-3.5 xl:px-5 py-2.5 md:py-3 rounded-xl lg:rounded-full transition-all duration-200 whitespace-nowrap group flex-1 cursor-pointer select-none",
+                    isActive
+                      ? "bg-primary text-white shadow-md shadow-primary/20 font-black"
+                      : "text-slate-600 hover:text-primary hover:bg-slate-100/70 font-bold"
+                  )}
+                >
+                  <TabIcon
+                    className={cn(
+                      "h-4 w-4 xl:h-4.5 xl:w-4.5 shrink-0 transition-transform group-hover:scale-110",
+                      isActive ? "text-secondary" : "text-slate-400 group-hover:text-primary"
+                    )}
+                  />
+                  <span className="uppercase text-[11px] xl:text-xs tracking-wider font-display">
+                    {tab.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Content Area */}

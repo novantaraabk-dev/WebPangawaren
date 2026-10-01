@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save } from 'lucide-react';
+import { Loader2, Save, FileText } from 'lucide-react';
 import { doc, setDoc } from 'firebase/firestore';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { KopSuratInfo } from '@/lib/types';
@@ -57,7 +57,7 @@ export function SettingsForm() {
       setFormState({ letterheadImageUrl: base64String });
       setImagePreview(base64String);
       setIsUploading(false);
-      toast({ title: "Gambar Siap Disimpan", description: "Pratinjau telah diperbarui. Klik 'Simpan Perubahan' untuk menerapkan gambar baru." });
+      toast({ title: "Gambar Siap Disimpan", description: "Pratinjau telah diperbarui. Klik 'Simpan Kop Surat' untuk menerapkan." });
     };
 
     reader.onerror = () => {
@@ -76,7 +76,7 @@ export function SettingsForm() {
     try {
       await setDoc(kopSuratRef, formState, { merge: true });
       toast({
-        title: "Templete Kop Berhasil Diperbarui",
+        title: "Templat Kop Berhasil Diperbarui",
         description: "Gambar kop surat telah berhasil disimpan.",
       });
     } catch (error) {
@@ -92,63 +92,98 @@ export function SettingsForm() {
   };
   
   if (isDataLoading) {
-      return (
-          <Card>
-              <CardHeader>
-                  <Skeleton className="h-8 w-1/2" />
-                  <Skeleton className="h-4 w-3/4" />
-              </CardHeader>
-              <CardContent>
-                  <div className="space-y-8">
-                       <Skeleton className="h-48 w-full" />
-                       <Skeleton className="h-11 w-48" />
-                  </div>
-              </CardContent>
-          </Card>
-      )
+    return (
+      <Card className="rounded-3xl border border-slate-200/90 bg-white shadow-xs overflow-hidden h-full">
+        <CardHeader className="p-6 pb-4 border-b border-slate-100 bg-slate-50/50">
+          <Skeleton className="h-8 w-1/2 rounded-xl" />
+          <Skeleton className="h-4 w-3/4 rounded-lg mt-2" />
+        </CardHeader>
+        <CardContent className="p-6 space-y-6">
+          <Skeleton className="h-48 w-full rounded-2xl" />
+          <Skeleton className="h-11 w-48 rounded-xl" />
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
-    <Card className="h-full flex flex-col justify-between">
-      <CardHeader>
-        <CardTitle>Templete Kop Surat</CardTitle>
-        <CardDescription>Unggah satu gambar kop surat yang sudah jadi. Gambar ini akan digunakan di semua dokumen yang dicetak.</CardDescription>
+    <Card className="rounded-3xl border border-slate-200/90 bg-white shadow-xs hover:shadow-md transition-all flex flex-col justify-between overflow-hidden h-full">
+      <CardHeader className="p-6 pb-4 border-b border-slate-100 bg-slate-50/50">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+            <FileText className="h-5 w-5" />
+          </div>
+          <div>
+            <CardTitle className="text-base font-bold text-slate-800">
+              Templat Kop Surat Resmi
+            </CardTitle>
+            <CardDescription className="text-xs text-slate-500">
+              Unggah gambar kop surat siap pakai yang akan otomatis tercetak di bagian atas seluruh surat pelayanan.
+            </CardDescription>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-8">
-            <div className="space-y-4">
-                <Label>Pratinjau Kop Surat</Label>
-                <div className="p-4 border-2 border-dashed rounded-md flex items-center justify-center bg-muted/50 min-h-48">
-                   {imagePreview ? (
-                        <img src={imagePreview} alt="Pratinjau Kop Surat" className="object-contain max-w-full h-auto rounded-md"/>
-                   ) : (
-                        <p className="text-sm text-muted-foreground">Tidak ada gambar kop surat</p>
-                   )}
-                </div>
+      <CardContent className="p-6 flex-1 flex flex-col justify-between space-y-6">
+        <form onSubmit={handleSubmit} className="flex-1 flex flex-col justify-between space-y-6">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Pratinjau Kop Surat Dokumen
+              </Label>
+              <span className="text-[11px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200">
+                Format Standar Cetak A4 / F4
+              </span>
             </div>
-        
-            <div className="space-y-2">
-                <Label htmlFor="logo-upload">Unggah Gambar Kop Surat Baru</Label>
-                <div className="flex items-center gap-2">
-                    <Input
-                        id="logo-upload"
-                        type="file"
-                        accept="image/png, image/jpeg"
-                        onChange={handleFileChange}
-                        disabled={isSaving || isUploading}
-                        className="pt-2 flex-grow"
-                    />
-                    {isUploading && <Loader2 className="h-5 w-5 animate-spin" />}
+
+            <div className="p-4 sm:p-6 border-2 border-dashed border-slate-200 rounded-2xl flex items-center justify-center bg-slate-50/70 min-h-44 shadow-inner">
+              {imagePreview ? (
+                <img
+                  src={imagePreview}
+                  alt="Pratinjau Kop Surat"
+                  className="object-contain max-h-44 w-auto rounded-lg shadow-xs bg-white border border-slate-200/60 p-1"
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center text-slate-400 gap-2 p-4 text-center">
+                  <FileText className="h-8 w-8 stroke-1 text-slate-400" />
+                  <p className="text-xs font-medium">Belum ada gambar kop surat kustom.</p>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                    Ukuran maks: 700KB. Format: PNG, JPG.
-                </p>
+              )}
             </div>
-            
-            <Button type="submit" disabled={isSaving || isUploading || !formState.letterheadImageUrl || formState.letterheadImageUrl === defaultKopInfo.letterheadImageUrl}>
-                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                Simpan Perubahan
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="kop-upload" className="text-xs font-bold text-slate-700">
+              Unggah Berkas Gambar Kop Surat Baru
+            </Label>
+            <div className="flex items-center gap-3">
+              <Input
+                id="kop-upload"
+                type="file"
+                accept="image/png, image/jpeg"
+                onChange={handleFileChange}
+                disabled={isSaving || isUploading}
+                className="rounded-xl border-slate-200 text-xs file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer"
+              />
+              {isUploading && <Loader2 className="h-5 w-5 animate-spin text-indigo-600 shrink-0" />}
+            </div>
+            <p className="text-[11px] text-slate-500 font-medium">
+              Format: PNG atau JPG. Ukuran ideal ~1200 × 240 px. Maksimal <span className="font-bold text-slate-700">700 KB</span>.
+            </p>
+          </div>
+
+          <div className="flex items-center justify-between pt-4 border-t border-slate-100 mt-auto">
+            <p className="text-xs text-slate-400 hidden sm:block">
+              Digunakan saat cetak PDF surat
+            </p>
+            <Button
+              type="submit"
+              disabled={isSaving || isUploading || !formState.letterheadImageUrl || formState.letterheadImageUrl === defaultKopInfo.letterheadImageUrl}
+              className="h-11 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider gap-2 shadow-md shadow-emerald-600/15 active:scale-95 transition-all w-full sm:w-auto"
+            >
+              {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              <span>Simpan Kop Surat</span>
             </Button>
+          </div>
         </form>
       </CardContent>
     </Card>

@@ -32,15 +32,17 @@ export function AboutSection() {
           className="relative"
         >
           <div className="absolute inset-0 -translate-y-4 rotate-2 rounded-[2.5rem] bg-gradient-to-br from-emerald-200/50 to-teal-200/50 blur-sm" />
-          <div className="relative overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white p-3 shadow-2xl shadow-emerald-500/10 transition-all duration-300">
-            <CardContourPattern opacity={0.03} className="text-emerald-600" />
-            <Image
-              src={imageUrl}
-              alt="Kantor Desa Pangawaren"
-              width={900}
-              height={700}
-              className="h-[420px] w-full rounded-[2rem] object-cover transition-transform duration-700 hover:scale-105"
-            />
+          <div className="relative overflow-hidden isolate rounded-[2.5rem] border border-slate-100 bg-white p-3 shadow-2xl shadow-emerald-500/10 transition-all duration-300">
+            <CardContourPattern opacity={0.15} className="text-emerald-600" />
+            <div className="relative z-10 overflow-hidden rounded-[2rem]">
+              <Image
+                src={imageUrl}
+                alt="Kantor Desa Pangawaren"
+                width={900}
+                height={700}
+                className="h-[420px] w-full object-cover transition-transform duration-700 hover:scale-105"
+              />
+            </div>
           </div>
         </motion.div>
 

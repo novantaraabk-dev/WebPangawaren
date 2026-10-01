@@ -146,40 +146,42 @@ export function NewsSection() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.15 }}
         transition={{ duration: 0.5, delay: 0.1 }}
-        className="mt-16 rounded-[2.25rem] border border-slate-100 bg-white p-6 shadow-xl lg:p-8 relative overflow-hidden"
+        className="mt-16 rounded-[2.25rem] border border-slate-100 bg-white p-6 shadow-xl lg:p-8 relative overflow-hidden isolate"
       >
-        <CardContourPattern opacity={0.03} className="text-emerald-500" />
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-700">Video Profil Desa</p>
-            <h3 className="mt-3 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
-              Video Profil Resmi Desa Pangawaren
-            </h3>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
-              Tonton video profil desa untuk melihat layanan, potensi wilayah, dan visi pembangunan Desa Pangawaren.
-            </p>
-          </div>
-        </div>
-        <div className="mt-8 overflow-hidden rounded-[1.75rem] border border-slate-200 bg-slate-900/10 aspect-video">
-          {youtubeEmbedUrl ? (
-            <iframe
-              src={youtubeEmbedUrl}
-              title="Video Profil Desa Pangawaren"
-              className="h-full w-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-          ) : (
-            <div className="flex h-full min-h-[320px] items-center justify-center bg-slate-950 text-center text-slate-200">
-              <div className="space-y-3 px-6">
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-600 text-white">
-                  <Video className="h-6 w-6" />
-                </div>
-                <p className="text-lg font-semibold">Video profil desa belum dikonfigurasi.</p>
-                <p className="text-sm text-slate-300">Silakan atur tautan YouTube di halaman Pengaturan Admin.</p>
-              </div>
+        <CardContourPattern />
+        <div className="relative z-10">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-700">Video Profil Desa</p>
+              <h3 className="mt-3 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+                Video Profil Resmi Desa Pangawaren
+              </h3>
+              <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
+                Tonton video profil desa untuk melihat layanan, potensi wilayah, dan visi pembangunan Desa Pangawaren.
+              </p>
             </div>
-          )}
+          </div>
+          <div className="mt-8 overflow-hidden rounded-[1.75rem] border border-slate-200 bg-slate-900/10 aspect-video">
+            {youtubeEmbedUrl ? (
+              <iframe
+                src={youtubeEmbedUrl}
+                title="Video Profil Desa Pangawaren"
+                className="h-full w-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            ) : (
+              <div className="flex h-full min-h-[320px] items-center justify-center bg-slate-950 text-center text-slate-200">
+                <div className="space-y-3 px-6">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-600 text-white">
+                    <Video className="h-6 w-6" />
+                  </div>
+                  <p className="text-lg font-semibold">Video profil desa belum dikonfigurasi.</p>
+                  <p className="text-sm text-slate-300">Silakan atur tautan YouTube di halaman Pengaturan Admin.</p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </motion.div>
     </section>

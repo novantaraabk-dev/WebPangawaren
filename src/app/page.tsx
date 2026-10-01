@@ -11,6 +11,7 @@ import { NewsSection } from '@/components/landing/NewsSection';
 import { AnnouncementSection } from '@/components/landing/AnnouncementSection';
 import { ComplaintSection } from '@/components/landing/ComplaintSection';
 import { CtaSection } from '@/components/landing/CtaSection';
+import { PartnerLogosSection } from '@/components/landing/PartnerLogosSection';
 import { Footer } from '@/components/landing/Footer';
 import { BackgroundPattern } from '@/components/landing/BackgroundPattern';
 
@@ -30,6 +31,7 @@ export default function LandingPage() {
         <AnnouncementSection />
         <CtaSection />
       </main>
+      <PartnerLogosSection />
       <Footer />
     </div>
   );

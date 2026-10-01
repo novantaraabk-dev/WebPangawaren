@@ -1,4 +1,7 @@
+'use client';
+
 import React from 'react';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
 interface CardContourPatternProps {
@@ -6,62 +9,25 @@ interface CardContourPatternProps {
   opacity?: number;
 }
 
-export function CardContourPattern({ className, opacity = 0.025 }: CardContourPatternProps) {
+export function CardContourPattern({ className, opacity }: CardContourPatternProps) {
+  // If opacity was explicitly specified and not the deprecated 0.03, use it;
+  // otherwise default to a balanced, clearly visible but subtle opacity (0.18).
+  const effectiveOpacity = typeof opacity === 'number' && opacity > 0.05 ? opacity : 0.18;
+
   return (
     <div 
       className={cn("absolute inset-0 pointer-events-none overflow-hidden select-none z-0", className)}
-      style={{ opacity }}
+      style={{ opacity: effectiveOpacity }}
+      aria-hidden="true"
     >
-      <svg
-        className="w-full h-full"
-        width="100%"
-        height="100%"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <defs>
-          <pattern
-            id="geometric-interlocking-contour"
-            x="0"
-            y="0"
-            width="140"
-            height="140"
-            patternUnits="userSpaceOnUse"
-          >
-            <g stroke="currentColor" fill="none" strokeWidth="1.5" strokeLinecap="round">
-              {/* Concentric Circles at (0,0) */}
-              <circle cx="0" cy="0" r="14" />
-              <circle cx="0" cy="0" r="28" />
-              <circle cx="0" cy="0" r="42" />
-              <circle cx="0" cy="0" r="56" />
-
-              {/* Concentric Circles at (140,0) */}
-              <circle cx="140" cy="0" r="14" />
-              <circle cx="140" cy="0" r="28" />
-              <circle cx="140" cy="0" r="42" />
-              <circle cx="140" cy="0" r="56" />
-
-              {/* Concentric Circles at Center Offset (70,70) */}
-              <circle cx="70" cy="70" r="14" />
-              <circle cx="70" cy="70" r="28" />
-              <circle cx="70" cy="70" r="42" />
-              <circle cx="70" cy="70" r="56" />
-
-              {/* Concentric Circles at (0,140) */}
-              <circle cx="0" cy="140" r="14" />
-              <circle cx="0" cy="140" r="28" />
-              <circle cx="0" cy="140" r="42" />
-              <circle cx="0" cy="140" r="56" />
-
-              {/* Concentric Circles at (140,140) */}
-              <circle cx="140" cy="140" r="14" />
-              <circle cx="140" cy="140" r="28" />
-              <circle cx="140" cy="140" r="42" />
-              <circle cx="140" cy="140" r="56" />
-            </g>
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#geometric-interlocking-contour)" />
-      </svg>
+      <Image
+        src="/images/card-wave-bg.png"
+        alt=""
+        fill
+        sizes="(max-width: 768px) 100vw, 600px"
+        className="object-cover object-center pointer-events-none select-none mix-blend-multiply"
+        priority
+      />
     </div>
   );
 }

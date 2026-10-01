@@ -27,10 +27,10 @@ export function CtaSection() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.2 }}
         transition={{ duration: 0.35 }}
-        className="relative overflow-hidden rounded-[2.25rem] border border-emerald-200 bg-gradient-to-br from-emerald-800 via-emerald-700 to-emerald-900 shadow-xl shadow-emerald-950/20"
+        className="relative overflow-hidden isolate rounded-[2.25rem] border border-emerald-200 bg-gradient-to-br from-emerald-800 via-emerald-700 to-emerald-900 shadow-xl shadow-emerald-950/20"
       >
-        <CardContourPattern opacity={0.03} className="text-emerald-200" />
-        <div className="grid gap-0 lg:grid-cols-[auto_1fr_auto] lg:items-center">
+        <CardContourPattern opacity={0.15} className="text-emerald-200" />
+        <div className="grid gap-0 lg:grid-cols-[auto_1fr_auto] lg:items-center relative z-10">
 
           {/* LEFT: Layanan Pengaduan Poster Image - Fits natural height */}
           <motion.div
@@ -38,7 +38,7 @@ export function CtaSection() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.4, delay: 0.1 }}
-            className="relative hidden lg:flex items-center justify-center bg-black/25 p-3 self-stretch"
+            className="relative z-10 hidden lg:flex items-center justify-center bg-black/25 p-3 self-stretch"
           >
             <Link
               href="/nomor-penting/"
@@ -57,7 +57,7 @@ export function CtaSection() {
           </motion.div>
 
           {/* CENTER: Main CTA Content */}
-          <div className="p-6 sm:p-8 md:p-10 text-white flex flex-col justify-center space-y-3">
+          <div className="p-6 sm:p-8 md:p-10 text-white flex flex-col justify-center space-y-3 relative z-10">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-100 w-fit backdrop-blur-md shadow-xs">
               <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
               <Sparkles className="h-3.5 w-3.5 text-amber-300" />
@@ -81,24 +81,26 @@ export function CtaSection() {
           </div>
 
           {/* RIGHT: Action Card */}
-          <div className="p-6 sm:p-8 flex items-center justify-center">
+          <div className="p-6 sm:p-8 flex items-center justify-center relative z-10">
             <motion.div 
               whileHover={{ scale: 1.02 }}
-              className="relative overflow-hidden rounded-[1.75rem] border border-white/20 bg-white/10 p-5 md:p-6 backdrop-blur-md w-full lg:w-[275px] shadow-xl flex flex-col justify-between space-y-4"
+              className="relative overflow-hidden isolate rounded-[1.75rem] border border-white/20 bg-white/10 p-5 md:p-6 backdrop-blur-md w-full lg:w-[275px] shadow-xl flex flex-col justify-between space-y-4"
             >
-              <CardContourPattern opacity={0.03} className="text-amber-200" />
-              <div className="flex items-center gap-3 text-emerald-50">
-                <div className="p-2.5 bg-amber-400/20 rounded-xl shrink-0 border border-amber-300/30">
-                  <ShieldCheck className="h-6 w-6 text-amber-300" />
+              <CardContourPattern opacity={0.15} className="text-amber-200" />
+              <div className="relative z-10 flex flex-col justify-between space-y-4 h-full">
+                <div className="flex items-center gap-3 text-emerald-50">
+                  <div className="p-2.5 bg-amber-400/20 rounded-xl shrink-0 border border-amber-300/30">
+                    <ShieldCheck className="h-6 w-6 text-amber-300" />
+                  </div>
+                  <p className="text-xs sm:text-sm font-bold leading-snug">Layanan resmi & 100% gratis tanpa pungutan</p>
                 </div>
-                <p className="text-xs sm:text-sm font-bold leading-snug">Layanan resmi & 100% gratis tanpa pungutan</p>
+                <Link href="/layanan-surat/" className="w-full" aria-label="Ajukan layanan desa">
+                  <Button className="h-11 rounded-full bg-amber-400 hover:bg-amber-300 px-4 text-[11px] sm:text-xs font-black uppercase tracking-wide text-slate-950 transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-amber-400/20 w-full flex items-center justify-center gap-1.5 whitespace-nowrap">
+                    <span>Ajukan Layanan Online</span>
+                    <ArrowRight className="h-4 w-4 shrink-0" />
+                  </Button>
+                </Link>
               </div>
-              <Link href="/layanan-surat/" className="w-full" aria-label="Ajukan layanan desa">
-                <Button className="h-11 rounded-full bg-amber-400 hover:bg-amber-300 px-4 text-[11px] sm:text-xs font-black uppercase tracking-wide text-slate-950 transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-amber-400/20 w-full flex items-center justify-center gap-1.5 whitespace-nowrap">
-                  <span>Ajukan Layanan Online</span>
-                  <ArrowRight className="h-4 w-4 shrink-0" />
-                </Button>
-              </Link>
             </motion.div>
           </div>
 

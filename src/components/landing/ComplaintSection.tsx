@@ -15,14 +15,14 @@ export function ComplaintSection() {
         viewport={{ once: true, amount: 0.2 }}
         transition={{ duration: 0.5 }}
         whileHover={{ scale: 1.005 }}
-        className="relative overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white shadow-2xl shadow-emerald-500/5 transition-all duration-300"
+        className="relative overflow-hidden isolate rounded-[2.5rem] border border-slate-100 bg-white shadow-2xl shadow-emerald-500/5 transition-all duration-300"
       >
-        <CardContourPattern opacity={0.03} className="text-emerald-600" />
+        <CardContourPattern opacity={0.15} className="text-emerald-600" />
         {/* Decorative pattern */}
         <div className="absolute top-0 right-0 h-64 w-64 translate-x-16 -translate-y-16 rounded-full bg-gradient-to-br from-emerald-500/10 to-teal-500/0 blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 h-48 w-48 -translate-x-12 translate-y-12 rounded-full bg-gradient-to-tr from-amber-500/10 to-orange-500/0 blur-2xl pointer-events-none" />
 
-        <div className="relative grid items-center gap-8 p-8 lg:grid-cols-[1fr_auto] lg:gap-12 lg:p-12">
+        <div className="relative z-10 grid items-center gap-8 p-8 lg:grid-cols-[1fr_auto] lg:gap-12 lg:p-12">
           {/* Content */}
           <div className="space-y-6">
             <div className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 text-emerald-700 px-4 py-1.5 rounded-full shadow-xs">
