@@ -78,7 +78,8 @@ export const antiKorupsiData: AntiKorupsiMainMenu[] = [
           { id: "1.5.1", title: "Peraturan tentang Pakta Integritas" },
           { id: "1.5.2", title: "Dokumen Pakta Integritas yang Ditandatangani Perangkat Desa" },
           { id: "1.5.3", title: "Undangan Penyusunan Regulasi Terkait Perangkat Desa" },
-          { id: "1.5.4", title: "Notulen, Daftar Hadir, Dokumentasi Penyusunan Regulasi" }
+          { id: "1.5.4", title: "Notulen, Daftar Hadir, Dokumentasi Penyusunan Regulasi" },
+          { id: "1.5.5", title: "Dokumen Pencanangan" }
         ]
       }
     ]

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
@@ -26,6 +26,7 @@ interface StatisticsChartsProps {
 }
 
 export function StatisticsCharts({ statsDoc, isLoading }: StatisticsChartsProps) {
+  const [territoryMode, setTerritoryMode] = useState<'rw' | 'dusun' | 'rt'>('rw');
   const firestore = useFirestore();
   const profileRef = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -36,14 +37,22 @@ export function StatisticsCharts({ statsDoc, isLoading }: StatisticsChartsProps)
 
   const population = statsDoc?.total ?? 0;
   const totalKK = statsDoc?.totalKK ?? (population > 0 ? Math.round(population / 4) : 0);
+  const totalRT = statsDoc?.totalRT ?? 30;
+  const totalRW = statsDoc?.totalRW ?? 10;
+  const totalDusun = statsDoc?.dusunDistribution?.length ?? (statsDoc?.dusunData ? Object.keys(statsDoc.dusunData).length : 3);
   const areaKm = profile?.areaKm || profile?.area || profile?.luas || null;
 
   const maleCount = statsDoc?.maleCount ?? 0;
   const femaleCount = statsDoc?.femaleCount ?? 0;
   const otherCount = statsDoc?.otherCount ?? 0;
 
-  const malePct = population > 0 ? ((maleCount / population) * 100).toFixed(1) : '0.0';
-  const femalePct = population > 0 ? ((femaleCount / population) * 100).toFixed(1) : '0.0';
+  const malePct = statsDoc?.malePercent !== undefined 
+    ? statsDoc.malePercent 
+    : (population > 0 ? ((maleCount / population) * 100).toFixed(1) : '0.0');
+
+  const femalePct = statsDoc?.femalePercent !== undefined 
+    ? statsDoc.femalePercent 
+    : (population > 0 ? ((femaleCount / population) * 100).toFixed(1) : '0.0');
 
   const genderData = useMemo(() => {
     return [
@@ -53,19 +62,57 @@ export function StatisticsCharts({ statsDoc, isLoading }: StatisticsChartsProps)
     ];
   }, [maleCount, femaleCount, otherCount]);
 
-  const rtDistribution = useMemo(() => {
-    if (!statsDoc?.rtData || statsDoc.rtData.length === 0) {
-      // Fallback default sample data if not populated yet
-      return Array.from({ length: 8 }).map((_, i) => ({
-        rt: `RT ${String(i + 1).padStart(2, '0')}`,
-        count: Math.floor(120 + Math.sin(i + 1) * 35)
+  const rwDistribution = useMemo(() => {
+    if (!statsDoc?.rwData || statsDoc.rwData.length === 0) {
+      return Array.from({ length: 10 }).map((_, i) => ({
+        name: `RW ${String(i + 1).padStart(2, '0')}`,
+        count: 0,
       }));
     }
-    return statsDoc.rtData.slice(0, 10).map((item: any) => ({
-      rt: typeof item.rt === 'number' ? `RT ${String(item.rt).padStart(2, '0')}` : String(item.rt),
-      count: item.count
+    return statsDoc.rwData.map((item: any) => ({
+      name: item.name || `RW ${String(item.rw || 1).padStart(2, '0')}`,
+      count: item.value ?? item.count ?? 0,
     }));
   }, [statsDoc]);
+
+  const dusunDistribution = useMemo(() => {
+    if (statsDoc?.dusunDistribution && statsDoc.dusunDistribution.length > 0) {
+      return statsDoc.dusunDistribution.map((item: any) => ({
+        name: item.name,
+        count: item.value ?? item.total ?? 0,
+      }));
+    }
+    if (statsDoc?.dusunData) {
+      return Object.entries(statsDoc.dusunData).map(([name, data]: [string, any]) => ({
+        name,
+        count: data?.total ?? 0,
+      }));
+    }
+    return [
+      { name: 'Dusun Pangawaren', count: 2092 },
+      { name: 'Dusun Kawungcarang', count: 2504 },
+      { name: 'Dusun Karangmangun', count: 1475 },
+    ];
+  }, [statsDoc]);
+
+  const rtDistribution = useMemo(() => {
+    if (!statsDoc?.rtData || statsDoc.rtData.length === 0) {
+      return Array.from({ length: 10 }).map((_, i) => ({
+        name: `RT ${String(i + 1).padStart(2, '0')}`,
+        count: 0,
+      }));
+    }
+    return statsDoc.rtData.slice(0, 15).map((item: any) => ({
+      name: item.name ? item.name.replace(' - ', ' / ') : (typeof item.rt === 'number' ? `RT ${String(item.rt).padStart(2, '0')}` : String(item.rt || 'RT')),
+      count: item.value ?? item.count ?? 0,
+    }));
+  }, [statsDoc]);
+
+  const currentDistribution = useMemo(() => {
+    if (territoryMode === 'rw') return rwDistribution;
+    if (territoryMode === 'dusun') return dusunDistribution;
+    return rtDistribution;
+  }, [territoryMode, rwDistribution, dusunDistribution, rtDistribution]);
 
   if (isLoading) {
     return (
@@ -199,7 +246,7 @@ export function StatisticsCharts({ statsDoc, isLoading }: StatisticsChartsProps)
               </div>
             </div>
             <h4 className="text-3xl font-black font-display tracking-tight leading-none mb-1">
-              18 <span className="text-sm font-bold">RT</span> / 6 <span className="text-sm font-bold">RW</span>
+              {totalRT} <span className="text-sm font-bold">RT</span> / {totalRW} <span className="text-sm font-bold">RW</span>
             </h4>
             <p className="text-xs font-bold text-pink-100 uppercase tracking-wider">Wilayah RT & RW</p>
           </div>
@@ -225,7 +272,7 @@ export function StatisticsCharts({ statsDoc, isLoading }: StatisticsChartsProps)
               </div>
             </div>
             <h4 className="text-3xl font-black font-display tracking-tight leading-none mb-1">
-              4 <span className="text-sm font-bold">Dusun</span>
+              {totalDusun} <span className="text-sm font-bold">Dusun</span>
             </h4>
             <p className="text-xs font-bold text-amber-100 uppercase tracking-wider">Wilayah Dusun</p>
           </div>
@@ -356,7 +403,7 @@ export function StatisticsCharts({ statsDoc, isLoading }: StatisticsChartsProps)
           </div>
         </motion.div>
 
-        {/* RIGHT BOX: Colorful Horizontal Arrow / Pill Bar Chart (Sebaran per RT) */}
+        {/* RIGHT BOX: Colorful Horizontal Arrow / Pill Bar Chart (Sebaran Wilayah) */}
         <motion.div
           initial={{ opacity: 0, scale: 0.96 }}
           whileInView={{ opacity: 1, scale: 1 }}
@@ -368,23 +415,69 @@ export function StatisticsCharts({ statsDoc, isLoading }: StatisticsChartsProps)
           
           <div className="relative z-10 flex flex-col justify-between h-full flex-1">
             <div>
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                 <span className="text-[10px] font-black uppercase tracking-widest text-purple-600 bg-purple-50 px-3.5 py-1 rounded-full border border-purple-100">
                   Sebaran Wilayah
                 </span>
-                <TrendingUp className="h-5 w-5 text-slate-400" />
+
+                {/* Segmented Filter Pills */}
+                <div className="flex items-center gap-1 bg-slate-100/90 p-1 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setTerritoryMode('rw')}
+                    className={cn(
+                      "px-3 py-1 text-[11px] font-bold rounded-lg transition-all",
+                      territoryMode === 'rw'
+                        ? "bg-white text-purple-700 shadow-xs font-extrabold"
+                        : "text-slate-500 hover:text-slate-900"
+                    )}
+                  >
+                    10 RW
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTerritoryMode('dusun')}
+                    className={cn(
+                      "px-3 py-1 text-[11px] font-bold rounded-lg transition-all",
+                      territoryMode === 'dusun'
+                        ? "bg-white text-purple-700 shadow-xs font-extrabold"
+                        : "text-slate-500 hover:text-slate-900"
+                    )}
+                  >
+                    3 Dusun
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTerritoryMode('rt')}
+                    className={cn(
+                      "px-3 py-1 text-[11px] font-bold rounded-lg transition-all",
+                      territoryMode === 'rt'
+                        ? "bg-white text-purple-700 shadow-xs font-extrabold"
+                        : "text-slate-500 hover:text-slate-900"
+                    )}
+                  >
+                    RT
+                  </button>
+                </div>
               </div>
+
               <h3 className="text-2xl font-black text-slate-900 font-display italic tracking-tight">
-                Sebaran Penduduk <span className="text-purple-600 not-italic">Per RT</span>
+                Sebaran Penduduk <span className="text-purple-600 not-italic">
+                  {territoryMode === 'rw' ? 'Per RW' : territoryMode === 'dusun' ? 'Per Dusun' : 'Per RT'}
+                </span>
               </h3>
               <p className="text-xs font-medium text-slate-500 mt-1">
-                Grafik alokasi jumlah penduduk pada masing-masing wilayah RT Desa Pangawaren.
+                {territoryMode === 'rw'
+                  ? 'Grafik alokasi jumlah penduduk pada masing-masing 10 RW Desa Pangawaren.'
+                  : territoryMode === 'dusun'
+                  ? 'Grafik alokasi penduduk di 3 Dusun: Pangawaren, Kawungcarang, dan Karangmangun.'
+                  : 'Grafik alokasi penduduk per wilayah RT Desa Pangawaren (30 RT terdaftar).'}
               </p>
             </div>
 
             <div className="w-full h-[320px] my-4">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={rtDistribution} layout="vertical" margin={{ top: 10, right: 30, left: 15, bottom: 5 }}>
+                <BarChart data={currentDistribution} layout="vertical" margin={{ top: 10, right: 30, left: 15, bottom: 5 }}>
                   <defs>
                     <linearGradient id="barGrad1" x1="0" y1="0" x2="1" y2="0">
                       <stop offset="0%" stopColor="#06b6d4" />
@@ -413,7 +506,14 @@ export function StatisticsCharts({ statsDoc, isLoading }: StatisticsChartsProps)
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
                   <XAxis type="number" tick={{ fill: '#64748b', fontSize: 10, fontWeight: 'bold' }} axisLine={false} tickLine={false} />
-                  <YAxis dataKey="rt" type="category" tick={{ fill: '#475569', fontSize: 11, fontWeight: 'bold' }} axisLine={false} tickLine={false} width={50} />
+                  <YAxis 
+                    dataKey="name" 
+                    type="category" 
+                    tick={{ fill: '#475569', fontSize: 11, fontWeight: 'bold' }} 
+                    axisLine={false} 
+                    tickLine={false} 
+                    width={territoryMode === 'dusun' ? 130 : territoryMode === 'rt' ? 95 : 60} 
+                  />
                   <Tooltip 
                     cursor={{ fill: 'rgba(241, 245, 249, 0.6)' }}
                     contentStyle={{ backgroundColor: '#ffffff', borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}
@@ -422,9 +522,9 @@ export function StatisticsCharts({ statsDoc, isLoading }: StatisticsChartsProps)
                   <Bar 
                     dataKey="count" 
                     radius={[0, 12, 12, 0]} 
-                    barSize={18}
+                    barSize={territoryMode === 'dusun' ? 28 : territoryMode === 'rt' ? 14 : 18}
                   >
-                    {rtDistribution.map((_: any, index: number) => (
+                    {currentDistribution.map((_: any, index: number) => (
                       <Cell key={`bar-${index}`} fill={BAR_GRADIENTS[index % BAR_GRADIENTS.length]} />
                     ))}
                   </Bar>
@@ -434,7 +534,7 @@ export function StatisticsCharts({ statsDoc, isLoading }: StatisticsChartsProps)
 
             <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-slate-400 uppercase tracking-wider">
               <span>Metode Sensus Desa Digital</span>
-              <span className="text-purple-600">Update Terpisah Per RT</span>
+              <span className="text-purple-600 font-extrabold">{totalRW} RW • {totalRT} RT • {totalDusun} Dusun</span>
             </div>
           </div>
         </motion.div>

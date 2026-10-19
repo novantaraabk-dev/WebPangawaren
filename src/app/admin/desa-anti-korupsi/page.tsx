@@ -1308,7 +1308,7 @@ export default function AdminDesaAntiKorupsi() {
                       <div className="grid grid-cols-2 gap-3 max-h-60 overflow-y-auto pr-1">
                         {imageList.map((img, idx) => {
                           const fileId = extractFileIdFromUrl(img.url);
-                          const embedUrl = fileId ? `https://lh3.googleusercontent.com/d/${fileId}` : img.url;
+                          const embedUrl = fileId ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w600` : img.url;
                           return (
                             <div key={idx} className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 relative overflow-hidden flex flex-col justify-between">
                               {embedUrl && (
@@ -1316,6 +1316,7 @@ export default function AdminDesaAntiKorupsi() {
                                   <img 
                                     src={embedUrl} 
                                     alt={`Dokumentasi ${idx + 1}`} 
+                                    referrerPolicy="no-referrer"
                                     className="h-full w-full object-contain"
                                   />
                                 </div>

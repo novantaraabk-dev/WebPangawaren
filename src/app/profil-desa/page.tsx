@@ -514,27 +514,29 @@ function PetaTab() {
 
 function WilayahTab() {
   const dusuns = [
-    { name: 'DUSUN I', rw: 2, rt: 8, color: 'bg-primary' },
-    { name: 'DUSUN II', rw: 3, rt: 12, color: 'bg-secondary' },
-    { name: 'DUSUN III', rw: 2, rt: 10, color: 'bg-accent' },
-    { name: 'DUSUN IV', rw: 3, rt: 11, color: 'bg-slate-900' },
+    { name: 'DUSUN PANGAWAREN', rw: 3, rt: 11, desc: 'Mencakup RW 001 - RW 003', color: 'bg-primary' },
+    { name: 'DUSUN KAWUNGCARANG', rw: 5, rt: 12, desc: 'Mencakup RW 004 - RW 008', color: 'bg-emerald-600' },
+    { name: 'DUSUN KARANGMANGUN', rw: 2, rt: 7, desc: 'Mencakup RW 009 - RW 010', color: 'bg-amber-600' },
   ];
 
   return (
     <div className="space-y-12">
       <div className="max-w-2xl space-y-4">
         <h2 className="text-4xl font-black text-slate-900 uppercase font-display italic">Data <span className="text-primary not-italic">Wilayah</span></h2>
-        <p className="text-slate-500 font-medium leading-relaxed italic">Distribusi pembagian wilayah administratif Desa Pangawaren yang terdiri dari 4 Dusun utama.</p>
+        <p className="text-slate-500 font-medium leading-relaxed italic">Distribusi pembagian wilayah administratif Desa Pangawaren yang terdiri dari 3 Dusun, 10 RW, dan 30 RT.</p>
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-6 md:grid-cols-2 md:gap-8">
+      <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
         {dusuns.map((dusun, i) => (
           <Card key={i} className="rounded-3xl md:rounded-[3rem] border-none shadow-sm hover:shadow-2xl transition-all duration-500 bg-white overflow-hidden group">
             <div className={cn("h-3 w-full", dusun.color)} />
             <CardContent className="p-6 md:p-10 space-y-6 md:space-y-8">
-              <div className="flex justify-between items-center">
-                <h3 className="text-2xl font-black text-slate-800 tracking-tighter">{dusun.name}</h3>
-                <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-primary group-hover:text-white transition-all">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="text-xl md:text-2xl font-black text-slate-800 tracking-tighter">{dusun.name}</h3>
+                  <p className="text-xs font-semibold text-slate-500 mt-1">{dusun.desc}</p>
+                </div>
+                <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-primary group-hover:text-white transition-all shrink-0">
                   <Milestone className="h-6 w-6" />
                 </div>
               </div>

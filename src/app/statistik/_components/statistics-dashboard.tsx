@@ -12,8 +12,10 @@ import {
 import { 
   Users, Home, UserCheck, UserPlus, 
   Download, FileDown, Filter, Calendar, 
-  MapPin, Loader2, BarChart3, PieChart as PieChartIcon 
+  MapPin, Loader2, BarChart3, PieChart as PieChartIcon,
+  Landmark, Compass, Layers, CheckCircle2
 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -76,11 +78,18 @@ export function StatisticsDashboard() {
       };
     }
 
+    const calculatedRW = targetStats.totalRW ?? (targetStats.rwData ? targetStats.rwData.filter((r: any) => r.name !== 'RW Lainnya').length : 0);
+    const calculatedRT = targetStats.totalRT ?? (targetStats.rtData ? targetStats.rtData.length : 0);
+
     return {
       total: targetStats.total || 0,
       totalKK: targetStats.totalKK || 0,
+      totalRW: calculatedRW,
+      totalRT: calculatedRT,
       malePercent: targetStats.malePercent || 0,
       femalePercent: targetStats.femalePercent || 0,
+      maleCount: targetStats.maleCount || 0,
+      femaleCount: targetStats.femaleCount || 0,
       ageData: targetStats.ageData || [
         { name: 'Anak (0-14)', value: 0 },
         { name: 'Produktif (15-64)', value: 0 },
@@ -134,10 +143,12 @@ export function StatisticsDashboard() {
       startY: 40,
       head: [['Kategori', 'Jumlah']],
       body: [
-        ['Total Penduduk', stats?.total.toString() || '0'],
-        ['Total KK', stats?.totalKK.toString() || '0'],
-        ['Persentase Laki-Laki', `${stats?.malePercent}%`],
-        ['Persentase Perempuan', `${stats?.femalePercent}%`],
+        ['Total Penduduk', `${stats?.total.toLocaleString('id-ID')} Jiwa`],
+        ['Total Keluarga (KK)', `${stats?.totalKK.toLocaleString('id-ID')} KK`],
+        ['Total Rukun Warga (RW)', `${stats?.totalRW} RW`],
+        ['Total Rukun Tetangga (RT)', `${stats?.totalRT} RT`],
+        ['Persentase Laki-Laki', `${stats?.malePercent}% (${stats?.maleCount?.toLocaleString('id-ID') || 0} Jiwa)`],
+        ['Persentase Perempuan', `${stats?.femalePercent}% (${stats?.femaleCount?.toLocaleString('id-ID') || 0} Jiwa)`],
       ],
     });
 
@@ -191,16 +202,23 @@ export function StatisticsDashboard() {
           <div className="space-y-1.5">
             <label className="text-[9px] font-black uppercase text-slate-400 ml-1">Filter Wilayah</label>
             <Select value={filterDusun} onValueChange={setFilterDusun}>
-              <SelectTrigger className="w-[180px] h-12 rounded-xl border-slate-200">
-                <MapPin className="h-4 w-4 mr-2 text-primary/40" />
+              <SelectTrigger className="w-[220px] h-12 rounded-xl border-slate-200 bg-white font-bold text-xs text-slate-800 shadow-xs">
+                <MapPin className="h-4 w-4 mr-2 text-emerald-600" />
                 <SelectValue placeholder="Pilih Dusun" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Semua Wilayah">Seluruh Desa</SelectItem>
-                <SelectItem value="Dusun I">Dusun I</SelectItem>
-                <SelectItem value="Dusun II">Dusun II</SelectItem>
-                <SelectItem value="Dusun III">Dusun III</SelectItem>
-                <SelectItem value="Dusun IV">Dusun IV</SelectItem>
+              <SelectContent className="rounded-xl border-slate-200 bg-white shadow-lg">
+                <SelectItem value="Semua Wilayah" className="text-xs font-bold py-2">
+                  Seluruh Desa (10 RW • 30 RT)
+                </SelectItem>
+                <SelectItem value="Dusun Pangawaren" className="text-xs font-semibold py-2">
+                  Dusun Pangawaren (RW 01 - RW 03)
+                </SelectItem>
+                <SelectItem value="Dusun Kawungcarang" className="text-xs font-semibold py-2">
+                  Dusun Kawungcarang (RW 04 - RW 08)
+                </SelectItem>
+                <SelectItem value="Dusun Karangmangun" className="text-xs font-semibold py-2">
+                  Dusun Karangmangun (RW 09 - RW 10)
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -227,21 +245,77 @@ export function StatisticsDashboard() {
       </div>
 
       {/* SUMMARY CARDS */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-5">
         {[
-          { label: 'Total Penduduk', value: stats?.total.toLocaleString('id-ID'), icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
-          { label: 'Total Keluarga (KK)', value: stats?.totalKK.toLocaleString('id-ID'), icon: Home, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-          { label: 'Laki-Laki (%)', value: `${stats?.malePercent}%`, icon: UserCheck, color: 'text-amber-600', bg: 'bg-amber-50' },
-          { label: 'Perempuan (%)', value: `${stats?.femalePercent}%`, icon: UserPlus, color: 'text-rose-600', bg: 'bg-rose-50' },
+          { 
+            label: 'Total Penduduk', 
+            value: stats?.total.toLocaleString('id-ID'), 
+            unit: 'Jiwa', 
+            icon: Users, 
+            color: 'text-blue-600', 
+            bg: 'bg-blue-50', 
+            desc: filterDusun === 'Semua Wilayah' ? 'Seluruh Desa' : filterDusun 
+          },
+          { 
+            label: 'Total Keluarga', 
+            value: stats?.totalKK.toLocaleString('id-ID'), 
+            unit: 'Kepala Keluarga', 
+            icon: Home, 
+            color: 'text-emerald-600', 
+            bg: 'bg-emerald-50', 
+            desc: 'Terdata di SID' 
+          },
+          { 
+            label: 'Total RW', 
+            value: stats?.totalRW?.toString() || '0', 
+            unit: 'Rukun Warga', 
+            icon: Landmark, 
+            color: 'text-indigo-600', 
+            bg: 'bg-indigo-50', 
+            desc: filterDusun === 'Semua Wilayah' ? 'RW 001 - RW 010' : 'RW Wilayah Ini' 
+          },
+          { 
+            label: 'Total RT', 
+            value: stats?.totalRT?.toString() || '0', 
+            unit: 'Rukun Tetangga', 
+            icon: Compass, 
+            color: 'text-purple-600', 
+            bg: 'bg-purple-50', 
+            desc: filterDusun === 'Semua Wilayah' ? '30 RT Tersebar' : 'RT Wilayah Ini' 
+          },
+          { 
+            label: 'Laki-Laki', 
+            value: `${stats?.malePercent}%`, 
+            unit: stats?.maleCount ? `${stats.maleCount.toLocaleString('id-ID')} Jiwa` : undefined, 
+            icon: UserCheck, 
+            color: 'text-amber-600', 
+            bg: 'bg-amber-50', 
+            desc: 'Populasi Pria' 
+          },
+          { 
+            label: 'Perempuan', 
+            value: `${stats?.femalePercent}%`, 
+            unit: stats?.femaleCount ? `${stats.femaleCount.toLocaleString('id-ID')} Jiwa` : undefined, 
+            icon: UserPlus, 
+            color: 'text-rose-600', 
+            bg: 'bg-rose-50', 
+            desc: 'Populasi Wanita' 
+          },
         ].map((card, i) => (
-          <Card key={i} className="rounded-[2.5rem] border-none shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-500">
-            <CardContent className="p-8 flex flex-col items-center text-center space-y-4">
-              <div className={cn("p-4 rounded-3xl transition-transform group-hover:scale-110", card.bg, card.color)}>
-                <card.icon className="h-8 w-8" />
+          <Card key={i} className="rounded-3xl border border-slate-100 shadow-sm overflow-hidden group hover:shadow-xl hover:border-slate-200 transition-all duration-300 bg-white">
+            <CardContent className="p-5 flex flex-col items-center text-center space-y-2.5">
+              <div className={cn("p-3 rounded-2xl transition-transform group-hover:scale-110", card.bg, card.color)}>
+                <card.icon className="h-6 w-6" />
               </div>
-              <div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{card.label}</p>
-                <h3 className="text-3xl font-black text-slate-900 mt-1">{card.value}</h3>
+              <div className="w-full">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider">{card.label}</p>
+                <h3 className="text-2xl font-black text-slate-900 mt-0.5 tracking-tight">{card.value}</h3>
+                {card.unit && (
+                  <p className="text-[10px] font-extrabold text-slate-600 mt-0.5">{card.unit}</p>
+                )}
+                {card.desc && (
+                  <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1 opacity-75">{card.desc}</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -272,7 +346,7 @@ export function StatisticsDashboard() {
                   paddingAngle={8}
                   dataKey="value"
                 >
-                  {stats?.ageData.map((entry, index) => (
+                  {stats?.ageData.map((entry: any, index: number) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
@@ -336,7 +410,22 @@ export function StatisticsDashboard() {
       <div className="grid lg:grid-cols-2 gap-10">
         <Card className="rounded-[3rem] border-none shadow-sm overflow-hidden bg-white">
           <CardHeader className="p-10">
-            <CardTitle className="text-xl font-black uppercase italic">Kepadatan Per Wilayah (RW)</CardTitle>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <CardTitle className="text-xl font-black uppercase italic">Kepadatan Per Wilayah (RW)</CardTitle>
+                <CardDescription className="text-xs font-bold uppercase text-slate-400 mt-1 tracking-widest">
+                  {filterDusun === 'Semua Wilayah' ? 'Distribusi Penduduk di 10 RW' : `Distribusi RW di ${filterDusun}`}
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1">
+                  {stats?.totalRW} RW
+                </Badge>
+                <Badge className="bg-purple-100 text-purple-800 border border-purple-200 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1">
+                  {stats?.totalRT} RT
+                </Badge>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="p-10 h-[350px]">
             <ResponsiveContainer width="100%" height="100%">

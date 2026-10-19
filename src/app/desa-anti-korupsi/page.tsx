@@ -21,7 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { CardContourPattern } from '@/components/landing/CardContourPattern';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ShieldCheck, FileText, Image as ImageIcon, ExternalLink, Download, AlertCircle } from 'lucide-react';
+import { ShieldCheck, FileText, Image as ImageIcon, ExternalLink, Download, AlertCircle, Video, Play } from 'lucide-react';
 
 interface DBItemData {
   id: string; // matches item.id, e.g. "1.1.1"
@@ -49,11 +49,29 @@ const extractFileIdFromUrl = (url: string): string => {
   return idMatch ? idMatch[1] : url;
 };
 
+const isVideoFile = (name?: string, url?: string): boolean => {
+  if (!name && !url) return false;
+  const target = `${name || ''} ${url || ''}`.toLowerCase();
+  return (
+    target.includes('video') ||
+    /\.(mp4|mov|avi|mkv|webm|m4v|3gp)($|\?)/i.test(target)
+  );
+};
+
 const getEmbedImageUrl = (url: string): string => {
   if (!url) return '';
   if (url.includes('drive.google.com') || url.includes('docs.google.com')) {
     const fileId = extractFileIdFromUrl(url);
-    return fileId ? `https://lh3.googleusercontent.com/d/${fileId}` : url;
+    return fileId ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w1600` : url;
+  }
+  return url;
+};
+
+const getDrivePreviewUrl = (url: string): string => {
+  if (!url) return '';
+  if (url.includes('drive.google.com') || url.includes('docs.google.com')) {
+    const fileId = extractFileIdFromUrl(url);
+    return fileId ? `https://drive.google.com/file/d/${fileId}/preview` : url;
   }
   return url;
 };
@@ -99,6 +117,19 @@ export default function DesaAntiKorupsi() {
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
   const [activeItemTitle, setActiveItemTitle] = useState<string>('');
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+  const [viewMode, setViewMode] = useState<'image' | 'iframe'>('image');
+  const [imageLoadError, setImageLoadError] = useState<boolean>(false);
+
+  React.useEffect(() => {
+    if (!selectedImages || !selectedImages[activeImageIndex]) return;
+    const current = selectedImages[activeImageIndex];
+    setImageLoadError(false);
+    if (isVideoFile(current.name, current.url)) {
+      setViewMode('iframe');
+    } else {
+      setViewMode('image');
+    }
+  }, [activeImageIndex, selectedImages]);
   
   const firestore = useFirestore();
 
@@ -283,26 +314,37 @@ export default function DesaAntiKorupsi() {
                                               </a>
                                             ))}
 
-                                            {yearImages.map((img, idx) => (
-                                              <Button
-                                                key={`img-${yr}-${idx}`}
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => {
-                                                  setSelectedImages(yearImages);
-                                                  setActiveImageIndex(idx);
-                                                  setActiveItemTitle(`${item.title} (Tahun ${yr})`);
-                                                  setIsDialogOpen(true);
-                                                }}
-                                                title={img.name}
-                                                className="h-8 rounded-lg border-blue-200 bg-blue-50/70 text-blue-700 hover:bg-blue-100 hover:text-blue-900 text-[10px] font-bold uppercase tracking-wider max-w-full gap-1.5"
-                                              >
-                                                <ImageIcon className="h-3.5 w-3.5 text-blue-600 shrink-0" />
-                                                <span className="max-w-[140px] sm:max-w-[200px] truncate">
-                                                  {img.name}
-                                                </span>
-                                              </Button>
-                                            ))}
+                                            {yearImages.map((img, idx) => {
+                                              const isVid = isVideoFile(img.name, img.url);
+                                              return (
+                                                <Button
+                                                  key={`img-${yr}-${idx}`}
+                                                  variant="outline"
+                                                  size="sm"
+                                                  onClick={() => {
+                                                    setSelectedImages(yearImages);
+                                                    setActiveImageIndex(idx);
+                                                    setActiveItemTitle(`${item.title} (Tahun ${yr})`);
+                                                    setIsDialogOpen(true);
+                                                  }}
+                                                  title={img.name}
+                                                  className={`h-8 rounded-lg text-[10px] font-bold uppercase tracking-wider max-w-full gap-1.5 ${
+                                                    isVid
+                                                      ? 'border-purple-200 bg-purple-50/70 text-purple-700 hover:bg-purple-100 hover:text-purple-900'
+                                                      : 'border-blue-200 bg-blue-50/70 text-blue-700 hover:bg-blue-100 hover:text-blue-900'
+                                                  }`}
+                                                >
+                                                  {isVid ? (
+                                                    <Video className="h-3.5 w-3.5 text-purple-600 shrink-0" />
+                                                  ) : (
+                                                    <ImageIcon className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                                                  )}
+                                                  <span className="max-w-[140px] sm:max-w-[200px] truncate">
+                                                    {img.name}
+                                                  </span>
+                                                </Button>
+                                              );
+                                            })}
                                           </div>
                                         </div>
                                       );
@@ -337,67 +379,129 @@ export default function DesaAntiKorupsi() {
             </DialogTitle>
           </DialogHeader>
 
-          {selectedImages && selectedImages.length > 0 && (
-            <div className="space-y-4 mt-4">
-              {/* Main image preview */}
-              <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center">
-                <img
-                  src={getEmbedImageUrl(selectedImages[activeImageIndex]?.url || '')}
-                  alt={selectedImages[activeImageIndex]?.name || ''}
-                  className="h-full w-full object-contain"
-                />
+          {selectedImages && selectedImages.length > 0 && (() => {
+            const currentImg = selectedImages[activeImageIndex];
+            const fileId = extractFileIdFromUrl(currentImg?.url || '');
+            const isDrive = Boolean(fileId && (currentImg?.url?.includes('drive.google.com') || currentImg?.url?.includes('docs.google.com')));
+            const isVid = isVideoFile(currentImg?.name, currentImg?.url);
 
-                {/* Left / Right navigation buttons */}
-                {selectedImages.length > 1 && (
-                  <>
-                    <button
-                      onClick={() => setActiveImageIndex((prev) => (prev > 0 ? prev - 1 : selectedImages.length - 1))}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/60 hover:bg-black/85 text-white flex items-center justify-center transition-colors shadow-md text-xs font-bold"
-                    >
-                      &#10094;
-                    </button>
-                    <button
-                      onClick={() => setActiveImageIndex((prev) => (prev < selectedImages.length - 1 ? prev + 1 : 0))}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/60 hover:bg-black/85 text-white flex items-center justify-center transition-colors shadow-md text-xs font-bold"
-                    >
-                      &#10095;
-                    </button>
-                  </>
-                )}
-              </div>
-
-              {/* Caption */}
-              <p className="text-center text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                {selectedImages[activeImageIndex]?.name || `Foto ${activeImageIndex + 1}`}
-              </p>
-
-              {/* Thumbnail Row */}
-              {selectedImages.length > 1 && (
-                <div className="flex gap-2 justify-center overflow-x-auto py-1.5 border-t border-slate-100 max-w-full">
-                  {selectedImages.map((img, idx) => {
-                    const isActive = idx === activeImageIndex;
-                    const fileId = extractFileIdFromUrl(img.url);
-                    const thumbUrl = fileId ? `https://lh3.googleusercontent.com/d/${fileId}` : img.url;
-                    return (
+            return (
+              <div className="space-y-3 mt-3">
+                {/* Mode Toggle Bar for Google Drive resources */}
+                {isDrive && (
+                  <div className="flex items-center justify-between bg-slate-100 p-1 rounded-xl">
+                    <div className="flex items-center gap-1">
                       <button
-                        key={idx}
-                        onClick={() => setActiveImageIndex(idx)}
-                        className={`relative h-10 w-14 overflow-hidden rounded-lg border-2 transition-all shrink-0 ${
-                          isActive ? 'border-emerald-600 ring-2 ring-emerald-500/20 scale-105' : 'border-slate-200 hover:border-slate-400'
+                        type="button"
+                        onClick={() => {
+                          setImageLoadError(false);
+                          setViewMode('image');
+                        }}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                          viewMode === 'image' && !imageLoadError
+                            ? 'bg-white text-emerald-700 shadow-xs'
+                            : 'text-slate-600 hover:text-slate-900'
                         }`}
                       >
-                        <img
-                          src={thumbUrl}
-                          alt={`Thumb ${idx + 1}`}
-                          className="h-full w-full object-cover"
-                        />
+                        Mode Gambar
                       </button>
-                    );
-                  })}
+                      <button
+                        type="button"
+                        onClick={() => setViewMode('iframe')}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                          viewMode === 'iframe' || imageLoadError
+                            ? 'bg-white text-emerald-700 shadow-xs'
+                            : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                      >
+                        {isVid ? 'Putar Video' : 'Pratinjau Drive'}
+                      </button>
+                    </div>
+                    {isVid && (
+                      <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100 text-[10px] font-bold uppercase tracking-wider px-2 border-purple-200">
+                        Berkas Video
+                      </Badge>
+                    )}
+                  </div>
+                )}
+
+                {/* Main Preview Container */}
+                <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-slate-950 border border-slate-200 flex items-center justify-center">
+                  {(viewMode === 'iframe' || imageLoadError) && isDrive ? (
+                    <iframe
+                      src={getDrivePreviewUrl(currentImg?.url || '')}
+                      title={currentImg?.name || 'Pratinjau Google Drive'}
+                      className="h-full w-full border-0 rounded-xl bg-slate-950"
+                      allow="autoplay; fullscreen"
+                    />
+                  ) : (
+                    <img
+                      src={getEmbedImageUrl(currentImg?.url || '')}
+                      alt={currentImg?.name || ''}
+                      referrerPolicy="no-referrer"
+                      onError={() => {
+                        if (isDrive) {
+                          setImageLoadError(true);
+                          setViewMode('iframe');
+                        }
+                      }}
+                      className="h-full w-full object-contain"
+                    />
+                  )}
+
+                  {/* Left / Right navigation buttons */}
+                  {selectedImages.length > 1 && (
+                    <>
+                      <button
+                        onClick={() => setActiveImageIndex((prev) => (prev > 0 ? prev - 1 : selectedImages.length - 1))}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/60 hover:bg-black/85 text-white flex items-center justify-center transition-colors shadow-md text-xs font-bold z-10"
+                      >
+                        &#10094;
+                      </button>
+                      <button
+                        onClick={() => setActiveImageIndex((prev) => (prev < selectedImages.length - 1 ? prev + 1 : 0))}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/60 hover:bg-black/85 text-white flex items-center justify-center transition-colors shadow-md text-xs font-bold z-10"
+                      >
+                        &#10095;
+                      </button>
+                    </>
+                  )}
                 </div>
-              )}
-            </div>
-          )}
+
+                {/* Caption */}
+                <p className="text-center text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                  {currentImg?.name || `Foto ${activeImageIndex + 1}`}
+                </p>
+
+                {/* Thumbnail Row */}
+                {selectedImages.length > 1 && (
+                  <div className="flex gap-2 justify-center overflow-x-auto py-1.5 border-t border-slate-100 max-w-full">
+                    {selectedImages.map((img, idx) => {
+                      const isActive = idx === activeImageIndex;
+                      const tId = extractFileIdFromUrl(img.url);
+                      const thumbUrl = tId ? `https://drive.google.com/thumbnail?id=${tId}&sz=w300` : img.url;
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => setActiveImageIndex(idx)}
+                          className={`relative h-10 w-14 overflow-hidden rounded-lg border-2 transition-all shrink-0 bg-slate-100 ${
+                            isActive ? 'border-emerald-600 ring-2 ring-emerald-500/20 scale-105' : 'border-slate-200 hover:border-slate-400'
+                          }`}
+                        >
+                          <img
+                            src={thumbUrl}
+                            alt={`Thumb ${idx + 1}`}
+                            referrerPolicy="no-referrer"
+                            className="h-full w-full object-cover"
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           <div className="flex justify-between items-center mt-4 border-t border-slate-100 pt-3">
             {selectedImages && selectedImages.length > 1 && (

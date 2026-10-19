@@ -100,6 +100,30 @@ export const seedResidents = async (db: Firestore) => {
   await batch.commit();
 };
 
+export const DUSUN_NAMES = ["Dusun Pangawaren", "Dusun Kawungcarang", "Dusun Karangmangun"] as const;
+
+/**
+ * MENENTUKAN DUSUN PENDUDUK BERDASARKAN WILAYAH RW/ALAMAT
+ * Pembagian wilayah administratif Desa Pangawaren:
+ * - Dusun Pangawaren: RW 001 - RW 003 (11 RT)
+ * - Dusun Kawungcarang: RW 004 - RW 008 (12 RT)
+ * - Dusun Karangmangun: RW 009 - RW 010 (7 RT)
+ * Total: 10 RW dan 30 RT
+ */
+export function getResidentDusun(resident: any): string {
+  const rw = parseInt(resident.rw || '0', 10);
+  if (rw >= 1 && rw <= 3) return 'Dusun Pangawaren';
+  if (rw >= 4 && rw <= 8) return 'Dusun Kawungcarang';
+  if (rw >= 9 && rw <= 10) return 'Dusun Karangmangun';
+
+  const addr = (resident.address || '').toLowerCase();
+  if (addr.includes('pangawaren') || addr.includes('pengawaren')) return 'Dusun Pangawaren';
+  if (addr.includes('kawungcarang') || addr.includes('kawung carang')) return 'Dusun Kawungcarang';
+  if (addr.includes('karangmangun') || addr.includes('karang mangun')) return 'Dusun Karangmangun';
+
+  return 'Dusun Pangawaren';
+}
+
 /**
  * MENGHITUNG STATISTIK KELOMPOK
  */
@@ -135,15 +159,14 @@ export function calculateStatsForGroup(residents: any[]) {
   // Pekerjaan
   const jobMap: Record<string, number> = { 'Petani': 0, 'Buruh': 0, 'Swasta': 0, 'Pelajar': 0, 'PNS/TNI': 0, 'Lainnya': 0 };
 
-  // Sebaran RW
+  // Sebaran RW & RT
   const rwMap: Record<string, number> = {};
-
-  // Sebaran RT
-  const rtMap: Record<string, number> = {};
+  const rtSet = new Set<string>();
+  const rtDetailMap: Record<string, number> = {};
 
   residents.forEach(r => {
     // Kelompok Umur
-    const age = parseInt(r.age || '0');
+    const age = parseInt(r.age || '0', 10);
     if (age <= 14) ageGroups[0].value++;
     else if (age <= 64) ageGroups[1].value++;
     else ageGroups[2].value++;
@@ -166,19 +189,29 @@ export function calculateStatsForGroup(residents: any[]) {
     else jobMap['Lainnya']++;
 
     // RW
-    const rwRaw = String(r.rw || '').trim();
-    const rw = rwRaw ? `RW ${rwRaw.padStart(2, '0')}` : 'N/A';
-    rwMap[rw] = (rwMap[rw] || 0) + 1;
+    const rwNum = parseInt(r.rw || '0', 10);
+    const rwStr = rwNum > 0 ? `RW ${String(rwNum).padStart(2, '0')}` : (r.rw ? `RW ${r.rw}` : 'RW Lainnya');
+    rwMap[rwStr] = (rwMap[rwStr] || 0) + 1;
 
     // RT
-    const rtRaw = String(r.rt || '').trim();
-    const rt = rtRaw ? rtRaw.padStart(3, '0') : 'N/A';
-    rtMap[rt] = (rtMap[rt] || 0) + 1;
+    const rtNum = parseInt(r.rt || '0', 10);
+    const rtStr = rtNum > 0 ? `RT ${String(rtNum).padStart(2, '0')}` : (r.rt ? `RT ${r.rt}` : 'RT Lainnya');
+    
+    if (rwNum > 0 && rtNum > 0) {
+      const comboKey = `${rwStr} - ${rtStr}`;
+      rtSet.add(comboKey);
+      rtDetailMap[comboKey] = (rtDetailMap[comboKey] || 0) + 1;
+    }
   });
+
+  const totalRW = Object.keys(rwMap).filter(k => k !== 'RW Lainnya').length;
+  const totalRT = rtSet.size;
 
   return {
     total,
     totalKK: kkSet.size,
+    totalRW,
+    totalRT,
     malePercent,
     femalePercent,
     maleCount,
@@ -188,7 +221,7 @@ export function calculateStatsForGroup(residents: any[]) {
     eduData: Object.entries(eduMap).map(([name, value]) => ({ name, value })),
     jobData: Object.entries(jobMap).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value),
     rwData: Object.entries(rwMap).map(([name, value]) => ({ name, value })).sort((a, b) => a.name.localeCompare(b.name)),
-    rtData: Object.entries(rtMap).map(([name, value]) => ({ rt: name, count: value })).sort((a, b) => a.rt.localeCompare(b.rt)),
+    rtData: Object.entries(rtDetailMap).map(([name, value]) => ({ name, value })).sort((a, b) => a.name.localeCompare(b.name)),
   };
 }
 
@@ -206,17 +239,32 @@ export const recalculateStatistics = async (db: Firestore): Promise<any> => {
 
     const rootStats = calculateStatsForGroup(residents);
 
-    const dusunNames = ["Dusun I", "Dusun II", "Dusun III", "Dusun IV"];
+    const dusunNames = ["Dusun Pangawaren", "Dusun Kawungcarang", "Dusun Karangmangun"];
     const dusunData: Record<string, any> = {};
 
     dusunNames.forEach(dusun => {
-      const filtered = residents.filter(r => (r.address || '').toUpperCase().includes(dusun.toUpperCase()));
+      const filtered = residents.filter(r => getResidentDusun(r) === dusun);
       dusunData[dusun] = calculateStatsForGroup(filtered);
+    });
+
+    const dusunDistribution = dusunNames.map(name => {
+      const sub = dusunData[name] || {};
+      return {
+        name,
+        value: sub.total || 0,
+        totalKK: sub.totalKK || 0,
+        totalRW: sub.totalRW || 0,
+        totalRT: sub.totalRT || 0,
+        malePercent: sub.malePercent || 0,
+        femalePercent: sub.femalePercent || 0,
+      };
     });
 
     const finalStats = {
       ...rootStats,
       dusunData,
+      dusunDistribution,
+      dusunNames,
       updatedAt: serverTimestamp(),
     };
 

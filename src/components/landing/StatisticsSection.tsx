@@ -43,9 +43,9 @@ export function StatisticsSection() {
   const values = {
     residents: statsDoc?.total ?? 0,
     households: statsDoc?.totalKK ?? 0,
-    rt: 18,
-    rw: 6,
-    dusun: 4,
+    rt: statsDoc?.totalRT ?? 30,
+    rw: statsDoc?.totalRW ?? 10,
+    dusun: statsDoc?.dusunDistribution?.length ?? 3,
     requests: submissions?.length ?? 0,
   };
 
